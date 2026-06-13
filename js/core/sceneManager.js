@@ -166,7 +166,8 @@ const SceneManager = (() => {
 
   /**
    * Démarre un acte donné : charge les données de scènes (VN + exercices)
-   * pour ce monde/acte via VNParser, puis lance la séquence pédagogique.
+   * pour ce monde/acte via VNParser, bascule l'écran sur la vue "visual
+   * novel", puis lance la séquence pédagogique.
    */
   async function startAct(worldId, actIndex) {
     const actId = GameState.ACT_IDS[actIndex];
@@ -178,6 +179,7 @@ const SceneManager = (() => {
       return;
     }
 
+    showScreen("vn");
     runActSequence(worldId, actId, actData);
   }
 
