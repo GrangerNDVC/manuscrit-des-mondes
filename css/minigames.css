@@ -1,0 +1,127 @@
+/* ============================================================
+   LE MANUSCRIT DES MONDES — minigames.css
+   Conteneur commun à tous les mini-jeux (canvas + HUD)
+   ============================================================ */
+
+#screen-minigame {
+  position: relative;
+  background: var(--color-bg-deep);
+}
+
+.minigame-header {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-md) var(--space-lg);
+  background: linear-gradient(180deg, rgba(0,0,0,0.6), transparent);
+  z-index: 2;
+  font-family: var(--font-display);
+  color: var(--color-ink);
+}
+
+#minigame-title {
+  font-size: 1.2rem;
+  color: var(--world-accent);
+}
+
+#minigame-objective {
+  font-size: 0.95rem;
+  color: var(--color-ink-dim);
+}
+
+#minigame-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* Le rendu interne du canvas est géré en JS avec une résolution fixe
+     (ex. 800x450) et mis à l'échelle via CSS pour garder la cohérence
+     pixel-art entre tous les mini-jeux. */
+  image-rendering: pixelated;
+  background: #000;
+}
+
+/* ============================================================
+   HUD / Contrôles superposés (score, vies, jauge de notion...)
+   ============================================================ */
+
+.minigame-ui {
+  position: absolute;
+  bottom: var(--space-lg);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  display: flex;
+  gap: var(--space-md);
+  pointer-events: none; /* les contrôles tactiles individuels réactivent pointer-events */
+}
+
+.minigame-ui .hud-item {
+  background: rgba(0,0,0,0.5);
+  border: 1px solid var(--world-accent);
+  border-radius: var(--radius-md);
+  padding: var(--space-xs) var(--space-md);
+  font-family: var(--font-ui);
+  color: var(--color-ink);
+}
+
+/* --- Écran de résultat (succès / échec) affiché en overlay --- */
+
+.minigame-result {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  background: rgba(26,21,48,0.92);
+  z-index: 5;
+  text-align: center;
+}
+
+.minigame-result.hidden { display: none; }
+
+.minigame-result h2 {
+  font-family: var(--font-display);
+  font-size: 2rem;
+}
+
+.minigame-result.success h2 { color: var(--color-success); }
+.minigame-result.failure h2 { color: var(--color-danger); }
+
+/* ============================================================
+   Contrôles tactiles génériques (mobile) — optionnels,
+   chaque mini-jeu peut les peupler via #minigame-ui
+   ============================================================ */
+
+.touch-controls {
+  display: flex;
+  gap: var(--space-md);
+  pointer-events: all;
+}
+
+.touch-btn {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.12);
+  border: 2px solid var(--world-accent);
+  color: var(--color-ink);
+  font-size: 1.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.touch-btn:active {
+  background: var(--world-accent);
+}
+
+@media (max-width: 768px) {
+  #minigame-title { font-size: 1rem; }
+  #minigame-objective { display: none; }
+}

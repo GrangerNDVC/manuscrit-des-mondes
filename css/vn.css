@@ -1,0 +1,441 @@
+/* ============================================================
+   LE MANUSCRIT DES MONDES — vn.css
+   Visual Novel : fond, portraits, boîte de dialogue, choix
+   ============================================================ */
+
+#screen-vn {
+  position: relative;
+  overflow: hidden;
+}
+
+/* --- Fond de scène --- */
+
+.vn-background {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 0;
+}
+
+#vn-bg-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity var(--transition-medium);
+}
+
+/* --- Portraits des personnages --- */
+
+.vn-portraits {
+  position: absolute;
+  bottom: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.vn-portrait {
+  position: absolute;
+  bottom: 18%;
+  height: 75%;
+  width: auto;
+  object-fit: contain;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity var(--transition-medium), transform var(--transition-medium);
+}
+
+.vn-portrait.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.vn-portrait.speaking {
+  filter: drop-shadow(0 0 18px var(--world-accent));
+}
+
+.vn-portrait.dimmed {
+  opacity: 0.45;
+  filter: grayscale(0.5);
+}
+
+.portrait-left  { left: 4%; }
+.portrait-right { right: 4%; }
+
+/* ============================================================
+   BOÎTE DE DIALOGUE
+   ============================================================ */
+
+.vn-dialogue-box {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  min-height: 22%;
+  z-index: 2;
+  background: linear-gradient(180deg, rgba(26,21,48,0.0) 0%, rgba(26,21,48,0.92) 18%, rgba(26,21,48,0.96) 100%);
+  padding: var(--space-lg) var(--space-xl) var(--space-xl);
+  cursor: pointer;
+}
+
+.vn-speaker-name {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  color: var(--world-accent);
+  background: var(--color-bg-panel);
+  padding: var(--space-xs) var(--space-lg);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  border: 1px solid var(--world-accent);
+  margin-bottom: -1px;
+}
+
+.vn-text {
+  font-size: 1.25rem;
+  line-height: 1.6;
+  color: var(--color-ink);
+  min-height: 3.2em;
+  max-width: 80ch;
+}
+
+/* Curseur clignotant en fin de texte = invite à continuer */
+.vn-next-indicator {
+  position: absolute;
+  bottom: var(--space-md);
+  right: var(--space-xl);
+  background: none;
+  color: var(--color-accent-gold);
+  font-size: 1.4rem;
+  animation: vn-bounce 1.2s infinite;
+}
+
+@keyframes vn-bounce {
+  0%, 100% { transform: translateY(0); opacity: 0.6; }
+  50%      { transform: translateY(6px); opacity: 1; }
+}
+
+/* ============================================================
+   CHOIX / QCM (utilisés notamment par les "méchants" pour
+   les QCM de pré-évaluation, et par les choix narratifs)
+   ============================================================ */
+
+.vn-choices {
+  position: absolute;
+  bottom: 24%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  width: min(600px, 90%);
+}
+
+.vn-choices.hidden { display: none; }
+
+.vn-choice-btn {
+  background: var(--color-bg-panel);
+  border: 2px solid var(--world-accent);
+  color: var(--color-ink);
+  padding: var(--space-md) var(--space-lg);
+  border-radius: var(--radius-md);
+  font-size: 1.05rem;
+  text-align: left;
+  transition: background var(--transition-fast), transform var(--transition-fast);
+}
+
+.vn-choice-btn:hover {
+  background: var(--world-accent);
+  color: var(--color-bg-deep);
+  transform: translateX(4px);
+}
+
+.vn-choice-btn.correct {
+  border-color: var(--color-success);
+  background: var(--color-success);
+  color: #1a3322;
+}
+
+.vn-choice-btn.incorrect {
+  border-color: var(--color-danger);
+  background: var(--color-danger);
+  color: #fff;
+}
+
+/* ============================================================
+   TEXTE À TROUS (évaluation formative en contexte narratif)
+   ============================================================ */
+
+.vn-fill-blank {
+  position: absolute;
+  bottom: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  width: min(800px, 92%);
+  background: var(--color-bg-panel);
+  border: 2px solid var(--color-accent-gold);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  box-shadow: var(--shadow-panel);
+}
+
+.vn-fill-blank.hidden { display: none; }
+
+#vn-fill-text {
+  font-size: 1.2rem;
+  line-height: 1.8;
+  margin-bottom: var(--space-md);
+}
+
+/* Les "trous" cliquables / champs de saisie injectés par vnEngine.js */
+.fill-slot {
+  display: inline-block;
+  min-width: 2.5em;
+  padding: 0 var(--space-xs);
+  border-bottom: 2px dashed var(--color-accent-gold);
+  text-align: center;
+  font-weight: bold;
+  color: var(--color-accent-gold);
+  background: rgba(232,196,104,0.08);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.fill-slot.filled {
+  border-bottom-style: solid;
+  color: var(--color-ink);
+  background: rgba(157,140,255,0.15);
+}
+
+.fill-slot.correct  { border-color: var(--color-success); color: var(--color-success); }
+.fill-slot.incorrect { border-color: var(--color-danger); color: var(--color-danger); }
+
+/* ============================================================
+   EXERCICES — éléments communs
+   ============================================================ */
+
+.exercise-instructions {
+  font-size: 1rem;
+  color: var(--color-ink-dim);
+  margin-bottom: var(--space-md);
+}
+
+.vn-choice-btn.selected {
+  border-color: var(--color-accent-gold);
+  box-shadow: 0 0 12px var(--color-accent-gold);
+}
+
+/* ------------------------------------------------------------
+   "reorder" — groupes de mots
+   ------------------------------------------------------------ */
+
+.reorder-sequence {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+  min-height: 2.5em;
+}
+
+.reorder-slot {
+  padding: var(--space-xs) var(--space-md);
+  border: 2px dashed var(--color-accent-gold);
+  border-radius: var(--radius-md);
+  color: var(--color-ink-dim);
+  min-width: 3em;
+  text-align: center;
+}
+
+.reorder-slot.filled {
+  border-style: solid;
+  color: var(--color-ink);
+  background: rgba(157,140,255,0.15);
+}
+
+.reorder-slot.correct  { border-color: var(--color-success); color: var(--color-success); }
+.reorder-slot.incorrect { border-color: var(--color-danger); color: var(--color-danger); }
+
+.reorder-pool {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.reorder-chip {
+  background: var(--color-bg-deep);
+  border: 1px solid var(--world-accent);
+  color: var(--color-ink);
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+}
+
+.reorder-chip:hover { background: var(--world-accent); }
+
+/* ------------------------------------------------------------
+   "match" — associations principale/subordonnée
+   ------------------------------------------------------------ */
+
+.match-area {
+  display: flex;
+  gap: var(--space-lg);
+  justify-content: space-between;
+}
+
+.match-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.match-item {
+  background: var(--color-bg-deep);
+  border: 2px solid var(--world-accent);
+  color: var(--color-ink);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  text-align: left;
+  font-size: 0.95rem;
+}
+
+.match-item.selected {
+  border-color: var(--color-accent-gold);
+  box-shadow: 0 0 12px var(--color-accent-gold);
+}
+
+.match-item.matched {
+  opacity: 0.7;
+}
+
+.match-item.correct  { border-color: var(--color-success); }
+.match-item.incorrect { border-color: var(--color-danger); }
+
+/* ------------------------------------------------------------
+   "reorder_blocks" — paragraphes à remettre en ordre
+   ------------------------------------------------------------ */
+
+.reorder-blocks-sequence {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.reorder-block-slot {
+  padding: var(--space-sm) var(--space-md);
+  border: 2px dashed var(--color-accent-gold);
+  border-radius: var(--radius-md);
+  color: var(--color-ink-dim);
+  font-size: 0.95rem;
+}
+
+.reorder-block-slot.filled {
+  border-style: solid;
+  color: var(--color-ink);
+  background: rgba(157,140,255,0.15);
+}
+
+.reorder-block-slot.correct  { border-color: var(--color-success); color: var(--color-success); }
+.reorder-block-slot.incorrect { border-color: var(--color-danger); color: var(--color-danger); }
+
+.reorder-blocks-pool {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.reorder-block-chip {
+  background: var(--color-bg-deep);
+  border: 1px solid var(--world-accent);
+  color: var(--color-ink);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  text-align: left;
+  font-size: 0.95rem;
+}
+
+.reorder-block-chip:hover { background: var(--world-accent); }
+
+/* ------------------------------------------------------------
+   "select_relevant" — choix de l'information pertinente
+   ------------------------------------------------------------ */
+
+.select-relevant-context {
+  font-style: italic;
+  color: var(--color-ink-dim);
+  margin-bottom: var(--space-md);
+  line-height: 1.5;
+}
+
+.select-relevant-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+/* ------------------------------------------------------------
+   "narrative_order" — schéma narratif en 5 étapes
+   ------------------------------------------------------------ */
+
+.narrative-sequence {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-md);
+}
+
+.narrative-slot {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-xs) var(--space-md);
+  border: 2px dashed var(--color-accent-gold);
+  border-radius: var(--radius-md);
+}
+
+.narrative-slot.filled { border-style: solid; }
+.narrative-slot.correct  { border-color: var(--color-success); }
+.narrative-slot.incorrect { border-color: var(--color-danger); }
+
+.narrative-slot-label {
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  color: var(--world-accent);
+  min-width: 11em;
+  flex-shrink: 0;
+}
+
+.narrative-slot-content {
+  color: var(--color-ink);
+  font-size: 0.9rem;
+}
+
+.narrative-slot.empty .narrative-slot-content {
+  color: var(--color-ink-dim);
+}
+
+.narrative-pool {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.narrative-chip {
+  background: var(--color-bg-deep);
+  border: 1px solid var(--world-accent);
+  color: var(--color-ink);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  text-align: left;
+  font-size: 0.9rem;
+}
+
+.narrative-chip:hover { background: var(--world-accent); }
+
+@media (max-width: 768px) {
+  .vn-text { font-size: 1.05rem; }
+  .vn-dialogue-box { padding: var(--space-md); }
+  .vn-portrait { height: 60%; }
+}

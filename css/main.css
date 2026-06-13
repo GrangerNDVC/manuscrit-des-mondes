@@ -1,0 +1,322 @@
+/* ============================================================
+   LE MANUSCRIT DES MONDES — main.css
+   Design tokens & structure générale
+   ============================================================ */
+
+:root {
+  /* --- Palette globale (identité commune à tous les mondes) --- */
+  --color-bg-deep:      #1a1530;   /* violet nuit profond, fond de la bibliothèque */
+  --color-bg-panel:     #2b2347;   /* panneaux UI */
+  --color-ink:          #f4f1ea;   /* texte clair */
+  --color-ink-dim:      #c9c2e0;   /* texte secondaire */
+  --color-accent-gold:  #e8c468;   /* or — l'Esprit, les clés */
+  --color-accent-glow:  #9d8cff;   /* lueur magique */
+  --color-danger:       #d9534f;
+  --color-success:      #6fcf97;
+
+  /* --- Couleur d'accent par monde (sera surchargée par classe .world-N) --- */
+  --world-accent: var(--color-accent-glow);
+
+  /* --- Typographie --- */
+  --font-display: 'Cinzel', 'Georgia', serif;       /* titres, noms d'auteurs, ambiance "manuscrit" */
+  --font-body:    'Nunito', 'Segoe UI', sans-serif;  /* dialogues, lisible pour enfants */
+  --font-ui:      'Nunito', sans-serif;
+
+  /* --- Échelle d'espacement --- */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 32px;
+  --space-xl: 48px;
+
+  /* --- Rayons / ombres --- */
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --shadow-panel: 0 8px 32px rgba(0,0,0,0.45);
+
+  /* --- Vitesse des transitions --- */
+  --transition-fast: 0.2s;
+  --transition-medium: 0.5s;
+}
+
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: var(--font-body);
+  background: var(--color-bg-deep);
+  color: var(--color-ink);
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+button {
+  font-family: var(--font-ui);
+  cursor: pointer;
+  border: none;
+}
+
+button:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid var(--color-accent-gold);
+  outline-offset: 2px;
+}
+
+/* ============================================================
+   GESTION DES ÉCRANS (un seul visible à la fois)
+   ============================================================ */
+
+.screen {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.screen.active {
+  display: flex;
+}
+
+/* ============================================================
+   BOUTONS COMMUNS
+   ============================================================ */
+
+.btn-primary,
+.btn-secondary {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  letter-spacing: 0.05em;
+  padding: var(--space-md) var(--space-xl);
+  border-radius: var(--radius-lg);
+  margin: var(--space-sm);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--color-accent-gold), #b9893a);
+  color: #2b1f0a;
+  box-shadow: 0 4px 16px rgba(232, 196, 104, 0.4);
+}
+
+.btn-secondary {
+  background: rgba(255,255,255,0.08);
+  color: var(--color-ink);
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+.btn-primary:hover,
+.btn-secondary:hover {
+  transform: translateY(-2px);
+}
+
+.btn-skip {
+  position: absolute;
+  bottom: var(--space-lg);
+  right: var(--space-lg);
+  background: rgba(0,0,0,0.5);
+  color: var(--color-ink);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+}
+
+/* ============================================================
+   ÉCRAN MENU
+   ============================================================ */
+
+#screen-menu {
+  background: radial-gradient(circle at center, #2b2347 0%, var(--color-bg-deep) 80%);
+}
+
+.menu-content {
+  text-align: center;
+}
+
+.title-game {
+  font-family: var(--font-display);
+  font-size: 3rem;
+  line-height: 1.2;
+  margin-bottom: var(--space-xl);
+  color: var(--color-ink);
+  text-shadow: 0 0 24px var(--color-accent-glow);
+}
+
+.title-game span {
+  color: var(--color-accent-gold);
+}
+
+/* ============================================================
+   ÉCRAN INTRO (cinématique vidéo)
+   ============================================================ */
+
+#screen-intro {
+  background: #000;
+  position: relative;
+}
+
+#intro-video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Style des sous-titres natifs : on les rapproche du style du jeu */
+#intro-video::cue {
+  font-family: var(--font-body);
+  font-size: 1.3rem;
+  background: rgba(0,0,0,0.6);
+  color: var(--color-ink);
+}
+
+/* ============================================================
+   ÉCRAN CARTE DES MONDES
+   ============================================================ */
+
+#screen-map {
+  background: linear-gradient(180deg, var(--color-bg-deep) 0%, #100c20 100%);
+  padding: var(--space-xl);
+}
+
+.map-container {
+  width: 100%;
+  max-width: 1000px;
+  text-align: center;
+}
+
+.map-title {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  color: var(--color-accent-gold);
+  margin-bottom: var(--space-lg);
+}
+
+.map-worlds {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-lg);
+  margin-bottom: var(--space-lg);
+}
+
+.world-portal {
+  aspect-ratio: 3/4;
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-panel);
+  border: 2px solid var(--world-accent);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  color: var(--color-ink);
+  transition: transform var(--transition-fast);
+  position: relative;
+  overflow: hidden;
+}
+
+.world-portal:hover {
+  transform: scale(1.04);
+  box-shadow: 0 0 24px var(--world-accent);
+}
+
+.world-portal.locked {
+  opacity: 0.4;
+  filter: grayscale(0.8);
+  pointer-events: none;
+}
+
+.world-portal small {
+  font-family: var(--font-ui);
+  font-size: 0.75rem;
+  color: var(--color-ink-dim);
+  margin-top: var(--space-xs);
+}
+
+.map-keys {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-sm);
+}
+
+.key-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--color-accent-gold);
+  opacity: 0.25;
+}
+
+.key-icon.obtained {
+  opacity: 1;
+  background: var(--color-accent-gold);
+  box-shadow: 0 0 12px var(--color-accent-gold);
+}
+
+/* ============================================================
+   TRANSITION GLOBALE ENTRE ÉCRANS
+   ============================================================ */
+
+.transition-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: var(--color-bg-deep);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 1000;
+  transition: opacity var(--transition-medium);
+}
+
+.transition-overlay.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* ============================================================
+   THÈMES PAR MONDE
+   À appliquer en ajoutant la classe "world-1" etc. sur <body>
+   ============================================================ */
+
+body.world-1 { --world-accent: #5a7da6; } /* Hugo — bleu nuit / pierre */
+body.world-2 { --world-accent: #b08968; } /* Dumas — à ajuster */
+body.world-3 { --world-accent: #4d8c8c; } /* Verne — vert/cuivre */
+body.world-4 { --world-accent: #8c6db8; } /* Shakespeare */
+body.world-5 { --world-accent: #b85c5c; } /* Christie */
+body.world-6 { --world-accent: #6b8c5a; } /* Shelley */
+body.world-7 { --world-accent: #d4af6a; } /* Carroll */
+body.world-8 { --world-accent: #c9986a; } /* Galland */
+
+/* ============================================================
+   ACCESSIBILITÉ — réduction des animations
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 768px) {
+  .title-game { font-size: 2rem; }
+  .map-worlds { grid-template-columns: repeat(2, 1fr); }
+}
