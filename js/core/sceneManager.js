@@ -1,345 +1,296 @@
 /* ============================================================
-   LE MANUSCRIT DES MONDES — sceneManager.js
+   LE MANUSCRIT DES MONDES — mg-ponctuation.js
    ============================================================
-   Gère :
-   - la navigation entre écrans (menu, intro, carte, VN, mini-jeu)
-   - la machine à états pédagogique d'un acte :
-       QCM (méchant) -> scène VN -> exercice "texte à trous"
-         -> si échec : mini-jeu de remédiation (variante différente)
-            -> retour à l'exercice "texte à trous" (même texte)
-         -> si succès direct ou après mini-jeu : mini-jeu sommatif
-            -> retour VN (texte fixe à compléter = transfert différé)
-   - le déblocage des compagnons / clés / Tour Finale
+   Mini-jeu de ponctuation, variante "Tri des Barricades"
+   (Monde 1 — Hugo).
+
+   Principe pédagogique (ancrage visuel/spatial, Paivio) :
+   le joueur déplace $gavroche.png dans un couloir et doit
+   "attraper" le bon signe de ponctuation pour compléter la
+   phrase affichée en haut de l'écran, en évitant les
+   silhouettes de Thénardier (distracteurs/pénalités).
+
+   Ce module s'enregistre auprès de SceneManager sous la
+   notion "ponctuation", variante "barricades_hugo". D'autres
+   mondes enregistreront d'autres variantes pour la même
+   notion (ex. "duel_epee_dumas"), garantissant une répétition
+   espacée avec des modalités sensorielles différentes.
+
+   API attendue par sceneManager.playMinigameForNotion :
+     module.run({ worldId, actId, canvas, uiContainer, isRemediation })
+       -> Promise<{ passed: boolean, score: number, total: number }>
    ============================================================ */
 
-const SceneManager = (() => {
+(function registerPonctuationHugo() {
 
-  const screens = {
-    menu: document.getElementById("screen-menu"),
-    intro: document.getElementById("screen-intro"),
-    map: document.getElementById("screen-map"),
-    vn: document.getElementById("screen-vn"),
-    minigame: document.getElementById("screen-minigame")
-  };
-
-  const overlay = document.getElementById("transition-overlay");
+  const CANVAS_W = 800;
+  const CANVAS_H = 450;
 
   /**
-   * Registre des mini-jeux disponibles, par notion.
-   * Chaque entrée associe une notion pédagogique à la liste des
-   * variantes (un fichier/module par variante), pour permettre
-   * de piocher une variante non jouée lors d'une remédiation.
-   *
-   * Rempli au fur et à mesure par js/minigames/*.js via registerMinigame().
+   * Banque d'exercices : chaque entrée propose une phrase à
+   * compléter et la liste de signes "ramassables" (bons + leurres).
+   * Une nouvelle phrase est piochée à chaque lancement pour
+   * éviter la répétition d'occurrence (cf. consigne pédagogique).
    */
-  const minigameRegistry = {};
-
-  function registerMinigame(notionId, variantId, moduleRef) {
-    if (!minigameRegistry[notionId]) minigameRegistry[notionId] = {};
-    minigameRegistry[notionId][variantId] = moduleRef;
-  }
-
-  /**
-   * Choisit une variante de mini-jeu pour une notion donnée,
-   * en évitant les variantes déjà jouées si possible.
-   */
-  function pickMinigameVariant(notionId) {
-    const variants = minigameRegistry[notionId];
-    if (!variants) {
-      console.error(`Aucun mini-jeu enregistré pour la notion "${notionId}".`);
-      return null;
+  const EXERCISES = [
+    {
+      sentence: "Gavroche courait dans la rue ___",
+      correct: "!",
+      collectibles: ["!", ".", "?", ","]
+    },
+    {
+      sentence: "Il s'arrêta net ___ puis repartit aussitôt",
+      correct: ",",
+      collectibles: [",", ".", "!", ";"]
+    },
+    {
+      sentence: "Connais-tu le chemin des barricades ___",
+      correct: "?",
+      collectibles: ["?", ".", "!", ","]
+    },
+    {
+      sentence: "La nuit tombait sur Paris ___",
+      correct: ".",
+      collectibles: [".", "!", "?", ","]
     }
-    const played = GameState.getPlayedVariants(notionId);
-    const available = Object.keys(variants).filter(v => !played.includes(v));
-    const pool = available.length > 0 ? available : Object.keys(variants);
-    const chosen = pool[Math.floor(Math.random() * pool.length)];
-    return { variantId: chosen, module: variants[chosen] };
+  ];
+
+  function pickExercise() {
+    return EXERCISES[Math.floor(Math.random() * EXERCISES.length)];
   }
 
-  /**
-   * Affiche un écran donné avec transition fondu.
-   */
-  function showScreen(name) {
-    overlay.classList.add("active");
-    setTimeout(() => {
-      Object.values(screens).forEach(s => s.classList.remove("active"));
-      screens[name].classList.add("active");
-      GameState.get().currentScreen = name;
-      GameState.save();
-      overlay.classList.remove("active");
-    }, 250);
-  }
+  function run({ canvas, uiContainer, isRemediation }) {
+    return new Promise(resolve => {
 
-  /**
-   * Applique le thème CSS du monde courant (couleur d'accent, etc.)
-   * en posant une classe "world-N" sur <body>.
-   */
-  function applyWorldTheme(worldId) {
-    const index = GameState.WORLD_IDS.indexOf(worldId) + 1;
-    document.body.className = document.body.className
-      .replace(/world-\d/g, "")
-      .trim();
-    if (index > 0) document.body.classList.add(`world-${index}`);
-  }
+      canvas.width = CANVAS_W;
+      canvas.height = CANVAS_H;
+      const ctx = canvas.getContext("2d");
 
-  /* ============================================================
-     NAVIGATION PRINCIPALE
-     ============================================================ */
+      const exercise = pickExercise();
 
-  function goToMenu() {
-    showScreen("menu");
-  }
+      // --- État du joueur (sprite Gavroche) ---
+      // Sprite sheet RPG Maker MZ : 576x384px, cellules de 96x96px
+      // (grille 6 colonnes x 4 lignes). Le personnage occupe les
+      // colonnes 0-2 de chaque ligne (3 frames de marche par
+      // direction) ; colonnes 3-5 réservées à un éventuel 2e
+      // personnage sur la même feuille.
+      // Lignes : 0=bas, 1=gauche, 2=droite, 3=haut.
+      const SPRITE_CELL_W = 96;
+      const SPRITE_CELL_H = 96;
+      const DRAW_W = 48;  // taille d'affichage à l'écran (réduite du sprite source)
+      const DRAW_H = 64;
 
-  function goToIntro() {
-    showScreen("intro");
-  }
+      const SPRITE_ROWS = { down: 0, left: 1, right: 2, up: 3 };
+      const ANIM_FRAMES = 3;     // colonnes 0..2 utilisées pour le cycle
+      const ANIM_SPEED = 8;      // ticks de jeu entre deux frames
 
-  function goToMap() {
-    renderMap();
-    showScreen("map");
-  }
+      const player = {
+        x: 60, y: CANVAS_H / 2,
+        w: DRAW_W, h: DRAW_H,
+        speed: 4,
+        direction: "right",
+        animFrame: 0,
+        animTimer: 0,
+        moving: false
+      };
 
-  /**
-   * Construit dynamiquement la carte des 8 mondes + indicateurs de clés.
-   */
-  function renderMap() {
-    const container = document.getElementById("map-worlds");
-    const keysContainer = document.getElementById("map-keys");
-    const state = GameState.get();
-    container.innerHTML = "";
-    keysContainer.innerHTML = "";
+      // --- Génération des signes à collecter (positions aléatoires) ---
+      const items = exercise.collectibles.map((symbol, i) => ({
+        symbol,
+        x: 200 + i * 140,
+        y: 80 + Math.random() * (CANVAS_H - 200),
+        w: 40, h: 40,
+        collected: false,
+        isCorrect: symbol === exercise.correct
+      }));
 
-    GameState.WORLD_IDS.forEach((worldId, i) => {
-      const w = state.worlds[worldId];
-      const portal = document.createElement("div");
-      portal.className = "world-portal" + (w.unlocked ? "" : " locked");
-      const statusLabel = w.currentAct === -1 ? " ✓" : ` (acte ${w.currentAct + 1}/${GameState.ACT_IDS.length})`;
-      portal.innerHTML = `<span>Monde ${i + 1}</span><strong>${worldId}</strong><small>${statusLabel}</small>`;
-      if (w.unlocked) {
-        portal.addEventListener("click", () => enterWorld(worldId));
+      // --- Obstacles (Thénardier) : pénalité si touché ---
+      const obstacles = [
+        { x: 350, y: CANVAS_H - 100, w: 36, h: 48, vx: 1.5 },
+        { x: 550, y: 60, w: 36, h: 48, vx: -1.2 }
+      ];
+
+      let lives = 3;
+      let resultGiven = false;
+
+      // --- Image du sprite (sheet de marche, découpée à l'affichage) ---
+      const sprite = new Image();
+      sprite.src = "assets/sprites/characters/gavroche-marche.png";
+
+      // --- HUD ---
+      uiContainer.innerHTML = `
+        <div class="hud-item">Vies : <span id="mg-lives">${lives}</span></div>
+        <div class="hud-item" id="mg-sentence"></div>
+      `;
+      document.getElementById("mg-sentence").textContent = exercise.sentence;
+
+      // --- Contrôles clavier ---
+      const keys = {};
+      function onKeyDown(e) { keys[e.key] = true; }
+      function onKeyUp(e) { keys[e.key] = false; }
+      window.addEventListener("keydown", onKeyDown);
+      window.addEventListener("keyup", onKeyUp);
+
+      // --- Contrôles tactiles simples (mobile) ---
+      const touchState = { up: false, down: false, left: false, right: false };
+      uiContainer.insertAdjacentHTML("beforeend", `
+        <div class="touch-controls">
+          <button class="touch-btn" data-dir="left">◀</button>
+          <button class="touch-btn" data-dir="up">▲</button>
+          <button class="touch-btn" data-dir="down">▼</button>
+          <button class="touch-btn" data-dir="right">▶</button>
+        </div>
+      `);
+      uiContainer.querySelectorAll(".touch-btn").forEach(btn => {
+        const dir = btn.dataset.dir;
+        const set = v => () => touchState[dir] = v;
+        btn.addEventListener("touchstart", set(true));
+        btn.addEventListener("touchend", set(false));
+        btn.addEventListener("mousedown", set(true));
+        btn.addEventListener("mouseup", set(false));
+      });
+
+      function rectsOverlap(a, b) {
+        return a.x < b.x + b.w && a.x + a.w > b.x &&
+               a.y < b.y + b.h && a.y + a.h > b.y;
       }
-      container.appendChild(portal);
+
+      function cleanup() {
+        window.removeEventListener("keydown", onKeyDown);
+        window.removeEventListener("keyup", onKeyUp);
+        cancelAnimationFrame(rafId);
+      }
+
+      function endGame(passed) {
+        if (resultGiven) return;
+        resultGiven = true;
+        cleanup();
+        resolve({
+          passed,
+          score: passed ? 1 : 0,
+          total: 1
+        });
+      }
+
+      let rafId;
+      function loop() {
+        // --- Déplacement joueur ---
+        let dx = 0, dy = 0;
+        if (keys["ArrowUp"] || keys["w"] || touchState.up)    dy -= player.speed;
+        if (keys["ArrowDown"] || keys["s"] || touchState.down) dy += player.speed;
+        if (keys["ArrowLeft"] || keys["a"] || touchState.left) dx -= player.speed;
+        if (keys["ArrowRight"] || keys["d"] || touchState.right) dx += player.speed;
+
+        player.moving = (dx !== 0 || dy !== 0);
+
+        // Détermine la direction du sprite (priorité à l'axe dominant)
+        if (dx !== 0 && Math.abs(dx) >= Math.abs(dy)) {
+          player.direction = dx > 0 ? "right" : "left";
+        } else if (dy !== 0) {
+          player.direction = dy > 0 ? "down" : "up";
+        }
+
+        player.x += dx;
+        player.y += dy;
+
+        // Animation : avance d'une frame toutes les ANIM_SPEED ticks
+        if (player.moving) {
+          player.animTimer++;
+          if (player.animTimer >= ANIM_SPEED) {
+            player.animTimer = 0;
+            player.animFrame = (player.animFrame + 1) % ANIM_FRAMES;
+          }
+        } else {
+          player.animFrame = 0; // frame "debout" = première colonne
+          player.animTimer = 0;
+        }
+
+        player.x = Math.max(0, Math.min(CANVAS_W - player.w, player.x));
+        player.y = Math.max(0, Math.min(CANVAS_H - player.h, player.y));
+
+        // --- Déplacement obstacles (va-et-vient vertical simple) ---
+        obstacles.forEach(o => {
+          o.y += o.vx;
+          if (o.y <= 0 || o.y + o.h >= CANVAS_H) o.vx *= -1;
+        });
+
+        // --- Collisions avec items ---
+        items.forEach(item => {
+          if (item.collected) return;
+          if (rectsOverlap(player, item)) {
+            item.collected = true;
+            if (item.isCorrect) {
+              endGame(true);
+            } else {
+              lives--;
+              document.getElementById("mg-lives").textContent = lives;
+              if (lives <= 0) endGame(false);
+            }
+          }
+        });
+
+        // --- Collisions avec obstacles ---
+        obstacles.forEach(o => {
+          if (rectsOverlap(player, o)) {
+            lives--;
+            document.getElementById("mg-lives").textContent = lives;
+            player.x = 60; player.y = CANVAS_H / 2; // repositionnement
+            if (lives <= 0) endGame(false);
+          }
+        });
+
+        // --- Rendu ---
+        ctx.fillStyle = "#1a1530";
+        ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+
+        // Joueur (découpe de la cellule correspondant à direction + frame)
+        if (sprite.complete && sprite.naturalWidth > 0) {
+          const row = SPRITE_ROWS[player.direction];
+          const sx = player.animFrame * SPRITE_CELL_W;
+          const sy = row * SPRITE_CELL_H;
+          ctx.drawImage(
+            sprite,
+            sx, sy, SPRITE_CELL_W, SPRITE_CELL_H,
+            player.x, player.y, player.w, player.h
+          );
+        } else {
+          ctx.fillStyle = "#e8c468";
+          ctx.fillRect(player.x, player.y, player.w, player.h);
+        }
+
+        // Items
+        items.forEach(item => {
+          if (item.collected) return;
+          ctx.fillStyle = "#2b2347";
+          ctx.fillRect(item.x, item.y, item.w, item.h);
+          ctx.strokeStyle = "#9d8cff";
+          ctx.strokeRect(item.x, item.y, item.w, item.h);
+          ctx.fillStyle = "#f4f1ea";
+          ctx.font = "28px serif";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(item.symbol, item.x + item.w / 2, item.y + item.h / 2);
+        });
+
+        // Obstacles (silhouettes Thénardier — placeholder en attendant le sprite)
+        ctx.fillStyle = "#7a3b3b";
+        obstacles.forEach(o => {
+          ctx.beginPath();
+          ctx.roundRect(o.x, o.y, o.w, o.h, 6);
+          ctx.fill();
+        });
+
+        if (!resultGiven) rafId = requestAnimationFrame(loop);
+      }
+
+      loop();
     });
-
-    GameState.COMPANION_IDS.forEach(id => {
-      const dot = document.createElement("div");
-      dot.className = "key-icon" + (state.keys[id] ? " obtained" : "");
-      dot.title = id;
-      keysContainer.appendChild(dot);
-    });
-
-    // TODO : afficher un portail "Tour Finale" actif si state.towerUnlocked
   }
 
-  /**
-   * Entre dans un monde : charge ses scènes VN et lance la scène de
-   * l'acte en cours (ou un acte spécifique si targetActIndex est fourni,
-   * ce qui permettra plus tard une navigation par notion depuis la carte,
-   * ex. "faire la ponctuation dans tous les mondes successivement").
-   */
-  function enterWorld(worldId, targetActIndex = null) {
-    applyWorldTheme(worldId);
-    GameState.get().currentWorld = worldId;
-    GameState.save();
-
-    const world = GameState.get().worlds[worldId];
-
-    if (targetActIndex !== null) {
-      startAct(worldId, targetActIndex);
-      return;
-    }
-
-    if (world.currentAct === -1) {
-      // Monde déjà entièrement terminé : pour l'instant, retour à la carte.
-      // TODO : proposer un mode "libre" pour rejouer les actes sans impact
-      // sur la progression (révision, plaisir de rejouer).
-      goToMap();
-      return;
-    }
-
-    startAct(worldId, world.currentAct);
-  }
-
-  /* ============================================================
-     MACHINE À ÉTATS D'UN ACTE
-     ============================================================ */
-
-  /**
-   * Démarre un acte donné : charge les données de scènes (VN + exercices)
-   * pour ce monde/acte via VNParser, bascule l'écran sur la vue "visual
-   * novel", puis lance la séquence pédagogique.
-   */
-  async function startAct(worldId, actIndex) {
-    const actId = GameState.ACT_IDS[actIndex];
-    const actData = await VNParser.loadAct(worldId, actId);
-
-    if (!actData) {
-      console.error(`Données introuvables pour ${worldId}/${actId}.`);
-      goToMap();
-      return;
-    }
-
-    showScreen("vn");
-    runActSequence(worldId, actId, actData);
-  }
-
-  /**
-   * Orchestration de la séquence pédagogique d'un acte.
-   * actData attend la forme :
-   * {
-   *   intro: [...scènes VN d'introduction...],
-   *   qcm: {...},                // QCM du méchant (optionnel selon acte)
-   *   formative: {...},          // scène VN avec texte à trous
-   *   transfer: {...},           // scène VN de transfert différé (texte fixe)
-   *   minigame_notion: "ponctuation" // notion ciblée par le mini-jeu sommatif
-   * }
-   */
-  async function runActSequence(worldId, actId, actData) {
-
-    // 1. Scènes d'introduction narrative
-    if (actData.intro && actData.intro.length) {
-      await VNEngine.playScenes(actData.intro);
-    }
-
-    // 2. QCM du "méchant" — pré-évaluation, faible enjeu
-    if (actData.qcm) {
-      const qcmResult = await VNEngine.playQCM(actData.qcm);
-      GameState.setActStep(worldId, actId, "qcm_passed", qcmResult.passed);
-      // Le résultat du QCM n'empêche pas la suite : il informe simplement
-      // le joueur (et pourrait, plus tard, ajuster le niveau de difficulté
-      // du mini-jeu ou ajouter un rappel de règle avant la suite).
-    }
-
-    // 3. Évaluation formative : scène VN "texte à trous"
-    let formativeResult = await VNEngine.playFillBlank(actData.formative);
-    GameState.setActStep(worldId, actId, "vn_check_passed", formativeResult.passed);
-
-    // 4. Si échec -> mini-jeu de remédiation, puis on retente le même
-    //    texte à trous (texte identique, mais l'élève a maintenant
-    //    pratiqué la notion isolément dans le mini-jeu)
-    while (!formativeResult.passed) {
-      await playMinigameForNotion(worldId, actId, actData.minigame_notion, /*isRemediation=*/true);
-      formativeResult = await VNEngine.playFillBlank(actData.formative);
-      GameState.setActStep(worldId, actId, "vn_check_passed", formativeResult.passed);
-    }
-
-    // 5. Mini-jeu sommatif (évaluation principale de la notion)
-    const minigameResult = await playMinigameForNotion(worldId, actId, actData.minigame_notion, /*isRemediation=*/false);
-    GameState.setActStep(worldId, actId, "minigame_passed", minigameResult.passed);
-
-    // Si échec au mini-jeu sommatif, on boucle : remédiation -> reformatif -> sommatif
-    if (!minigameResult.passed) {
-      return runActSequence(worldId, actId, actData); // relance la séquence complète de l'acte
-      // NB: une version plus fine pourrait ne relancer qu'à partir de l'étape 4.
-    }
-
-    // 6. Transfert différé : scène VN avec texte fixe à compléter
-    const transferResult = await VNEngine.playFillBlank(actData.transfer, { fixedText: true });
-    GameState.setActStep(worldId, actId, "vn_transfer_passed", transferResult.passed);
-
-    if (!transferResult.passed) {
-      // Le transfert échoue : retour à une remédiation ciblée sans
-      // repasser par le QCM/intro (évite la redondance narrative).
-      await playMinigameForNotion(worldId, actId, actData.minigame_notion, true);
-      return runActSequence(worldId, actId, actData);
-    }
-
-    // 7. Acte terminé -> passage à l'acte suivant ou fin du monde
-    advanceAct(worldId, actId);
-  }
-
-  /**
-   * Lance un mini-jeu correspondant à une notion, en choisissant une
-   * variante adaptée au monde courant (identité graphique) et non
-   * répétée si remédiation.
-   */
-  async function playMinigameForNotion(worldId, actId, notionId, isRemediation) {
-    const { variantId, module } = pickMinigameVariant(notionId);
-    if (!module) return { passed: true }; // fallback si rien d'enregistré
-
-    GameState.recordExerciseVariant(notionId, variantId);
-
-    showScreen("minigame");
-    document.getElementById("minigame-title").textContent = module.title || notionId;
-    document.getElementById("minigame-objective").textContent =
-      isRemediation ? "Entraînement" : "Évaluation";
-
-    const result = await module.run({
-      worldId,
-      actId,
-      canvas: document.getElementById("minigame-canvas"),
-      uiContainer: document.getElementById("minigame-ui"),
-      isRemediation
-    });
-
-    showScreen("vn");
-    return result; // { passed: boolean, score: number, ... }
-  }
-
-  /**
-   * Passe à l'acte suivant, ou termine le monde si c'était le dernier acte.
-   */
-  function advanceAct(worldId, actId) {
-    const w = GameState.get().worlds[worldId];
-    const idx = GameState.ACT_IDS.indexOf(actId);
-
-    if (idx < GameState.ACT_IDS.length - 1) {
-      w.currentAct = idx + 1;
-      GameState.save();
-      startAct(worldId, w.currentAct);
-    } else {
-      // Dernier acte terminé : scène de libération du compagnon/auteur
-      finishWorld(worldId);
-    }
-  }
-
-  /**
-   * Séquence de fin de monde : libération du compagnon, scène
-   * collective (sans libérer l'auteur seul — rappel : tous les
-   * auteurs seront libérés ensemble à la Tour Finale via les 8 clés).
-   *
-   * companionMap et worldOrder sont définis ici de façon centralisée
-   * pour rester cohérents avec gameState.COMPANION_IDS / WORLD_IDS.
-   */
-  const companionByWorld = {
-    hugo: "gavroche",
-    dumas: "dartagnan",
-    verne: "nemo",
-    shakespeare: "puck",
-    christie: "marple",
-    shelley: "creature",
-    carroll: "alice",
-    galland: "sheherazade"
-  };
-
-  async function finishWorld(worldId) {
-    const companionId = companionByWorld[worldId];
-
-    // Scène VN de fin de monde (à écrire ultérieurement, chargée via VNParser)
-    const endData = await VNParser.loadWorldEnding(worldId);
-    if (endData && endData.scenes) {
-      await VNEngine.playScenes(endData.scenes);
-    }
-
-    GameState.completeWorld(worldId, companionId);
-
-    if (GameState.get().towerUnlocked) {
-      // TODO : déclencher la cinématique des 8 clés tournant simultanément
-      // et débloquer l'accès à la Tour Finale depuis la carte centrale.
-      console.log("Les 8 clés sont réunies : la Tour Finale est accessible !");
-    }
-
-    goToMap();
-  }
-
-  return {
-    showScreen,
-    goToMenu,
-    goToIntro,
-    goToMap,
-    enterWorld,
-    registerMinigame,
-    pickMinigameVariant
-  };
+  // Enregistrement auprès du sceneManager
+  SceneManager.registerMinigame("ponctuation", "barricades_hugo", {
+    title: "Le Tri des Barricades",
+    run
+  });
 
 })();
