@@ -4,9 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Le Manuscrit des Mondes</title>
-<link rel="stylesheet" href="css/main.css">
-<link rel="stylesheet" href="css/vn.css">
-<link rel="stylesheet" href="css/minigames.css">
+<link rel="stylesheet" href="/css/main.css">
 </head>
 <body>
 
@@ -22,8 +20,8 @@
   <!-- ============ ÉCRAN : CINÉMATIQUE D'INTRO ============ -->
   <section id="screen-intro" class="screen">
     <video id="intro-video" controls>
-      <source src="assets/video/intro.mp4" type="video/mp4">
-      <track id="intro-subs" kind="subtitles" src="assets/video/intro-fr.vtt" srclang="fr" label="Français" default>
+      <source src="/assets/video/intro.mp4" type="video/mp4">
+      <track id="intro-subs" kind="subtitles" src="/assets/video/intro-fr.vtt" srclang="fr" label="Français" default>
     </video>
     <button id="btn-skip-intro" class="btn-skip">Passer ▶</button>
   </section>
@@ -33,7 +31,7 @@
     <div class="map-container">
       <h2 class="map-title">La Bibliothèque des Mondes</h2>
       <div id="map-worlds" class="map-worlds">
-        <!-- Les 8 portes-mondes seront générées dynamiquement par js/core/sceneManager.js -->
+        <!-- Les 8 portes-mondes sont générées dynamiquement par js/core/hubManager.js -->
       </div>
       <div id="map-keys" class="map-keys">
         <!-- Indicateurs des 8 clés -->
@@ -41,57 +39,11 @@
     </div>
   </section>
 
-  <!-- ============ ÉCRAN : VISUAL NOVEL ============ -->
-  <section id="screen-vn" class="screen">
-    <div class="vn-background">
-      <img id="vn-bg-image" src="" alt="">
-    </div>
-
-    <div class="vn-portraits">
-      <img id="vn-portrait-left"  class="vn-portrait portrait-left"  src="" alt="">
-      <img id="vn-portrait-right" class="vn-portrait portrait-right" src="" alt="">
-    </div>
-
-    <div id="vn-dialogue-box" class="vn-dialogue-box">
-      <div id="vn-speaker-name" class="vn-speaker-name"></div>
-      <div id="vn-text" class="vn-text"></div>
-      <button id="vn-next-btn" class="vn-next-indicator" aria-label="Continuer">▶</button>
-    </div>
-
-    <!-- Zone de choix / QCM -->
-    <div id="vn-choices" class="vn-choices hidden"></div>
-
-    <!-- Zone "texte à trous" (exercice d'évaluation formative) -->
-    <div id="vn-fill-blank" class="vn-fill-blank hidden">
-      <p id="vn-fill-text"></p>
-      <button id="vn-fill-validate" class="btn-primary">Valider</button>
-    </div>
-  </section>
-
-  <!-- ============ ÉCRAN : MINI-JEU ============ -->
-  <section id="screen-minigame" class="screen">
-    <div class="minigame-header">
-      <span id="minigame-title"></span>
-      <span id="minigame-objective"></span>
-    </div>
-    <canvas id="minigame-canvas"></canvas>
-    <div id="minigame-ui" class="minigame-ui"></div>
-  </section>
-
   <!-- ============ OVERLAY : TRANSITION ============ -->
   <div id="transition-overlay" class="transition-overlay"></div>
 
   <!-- ============ SCRIPTS ============ -->
-  <script src="js/core/gameState.js"></script>
-  <script src="js/core/sceneManager.js"></script>
-  <script src="js/vn/vnEngine.js"></script>
-  <script src="js/vn/vnParser.js"></script>
-  <script src="js/minigames/mg-ponctuation.js"></script>
-  <script src="js/minigames/mg-ordre-mots.js"></script>
-  <script src="js/minigames/mg-subordonnees.js"></script>
-  <script src="js/minigames/mg-coherence-paragraphe.js"></script>
-  <script src="js/minigames/mg-selection-info.js"></script>
-  <script src="js/minigames/mg-construction-recit.js"></script>
-  <script src="js/core/main.js"></script>
+  <script src="/js/core/gameState.js"></script>
+  <script src="/js/core/hubManager.js"></script>
 </body>
 </html>

@@ -81,7 +81,7 @@
       const DRAW_W = 64;
       const DRAW_H = 64;
       const sprite = new Image();
-      sprite.src = "assets/sprites/characters/gavroche-marche.png";
+      sprite.src = "/assets/sprites/characters/gavroche-marche.png";
 
       const player = { x: CANVAS_W / 2 - DRAW_W / 2, y: CANVAS_H - 80, w: DRAW_W, h: DRAW_H, speed: 7 };
 

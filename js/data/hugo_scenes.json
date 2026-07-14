@@ -5,43 +5,43 @@
 
       "intro": [
         {
-          "background": "assets/backgrounds/decors_Hugo_baricades.png",
+          "background": "/assets/backgrounds/decors_Hugo_baricades.png",
           "speakerName": "L'Esprit de la Littérature",
           "speakerSide": "right",
           "portraitLeft": null,
-          "portraitRight": "assets/portraits/esprit-neutre.png",
+          "portraitRight": "/assets/portraits/esprit-neutre.png",
           "text": "L'Esprit se posa doucement sur les pavés froids. Devant lui se dressait une barricade de fortune, faite de meubles renversés et de charrettes brisées."
         },
         {
-          "background": "assets/backgrounds/decors_Hugo_baricades.png",
+          "background": "/assets/backgrounds/decors_Hugo_baricades.png",
           "speakerName": "???",
           "speakerSide": "left",
-          "portraitLeft": "assets/portraits/gavroche-surpris.png",
-          "portraitRight": "assets/portraits/esprit-neutre.png",
+          "portraitLeft": "/assets/portraits/gavroche-surpris.png",
+          "portraitRight": "/assets/portraits/esprit-neutre.png",
           "text": "Un gamin surgit d'entre les pavés, l'œil vif et le sourire en coin. Il s'arrêta net devant l'Esprit et l'observa des pieds à la tête."
         },
         {
-          "background": "assets/backgrounds/decors_Hugo_baricades.png",
+          "background": "/assets/backgrounds/decors_Hugo_baricades.png",
           "speakerName": "Gavroche",
           "speakerSide": "left",
-          "portraitLeft": "assets/portraits/gavroche-malicieux.png",
-          "portraitRight": "assets/portraits/esprit-neutre.png",
+          "portraitLeft": "/assets/portraits/gavroche-malicieux.png",
+          "portraitRight": "/assets/portraits/esprit-neutre.png",
           "text": "Tiens donc ! Une drôle de lumière qui se promène toute seule la nuit... Tu cherches quelque chose, ou tu es juste perdu ?"
         },
         {
-          "background": "assets/backgrounds/decors_Hugo_baricades.png",
+          "background": "/assets/backgrounds/decors_Hugo_baricades.png",
           "speakerName": "Gavroche",
           "speakerSide": "left",
-          "portraitLeft": "assets/portraits/gavroche-reflexion.png",
-          "portraitRight": "assets/portraits/esprit-reflexion.png",
+          "portraitLeft": "/assets/portraits/gavroche-reflexion.png",
+          "portraitRight": "/assets/portraits/esprit-reflexion.png",
           "text": "Hugo, c'est ça ? Ouais, je connais cette histoire. On raconte qu'une clé se cache quelque part dans ce monde... et que celui qui la trouve doit nous aider à le délivrer. Bon. Si on doit faire équipe, autant commencer tout de suite."
         }
       ],
 
       "qcm": {
-        "background": "assets/backgrounds/decors_Hugo_baricades.png",
+        "background": "/assets/backgrounds/decors_Hugo_baricades.png",
         "speakerName": "Thénardier",
-        "portraitLeft": "assets/portraits/Thenardier_neutre.png",
+        "portraitLeft": "/assets/portraits/Thenardier_neutre.png",
         "portraitRight": null,
         "question": "Avant de poursuivre... Sais-tu ce qu'il faut placer à la fin d'une phrase qui pose une question : « As-tu vu mon chat ___ »",
         "options": [
@@ -54,11 +54,11 @@
       },
 
       "formative": {
-        "background": "assets/backgrounds/decors_Hugo_baricades.png",
+        "background": "/assets/backgrounds/decors_Hugo_baricades.png",
         "speakerName": "Gavroche",
         "speakerSide": "left",
-        "portraitLeft": "assets/portraits/gavroche-reflexion.png",
-        "portraitRight": "assets/portraits/esprit-neutre.png",
+        "portraitLeft": "/assets/portraits/gavroche-reflexion.png",
+        "portraitRight": "/assets/portraits/esprit-neutre.png",
         "segments": [
           "Gavroche regarda l'Esprit droit dans les yeux",
           { "type": "blank", "options": [",", ".", "!", "?"], "correct": "." },
@@ -69,11 +69,11 @@
       },
 
       "transfer": {
-        "background": "assets/backgrounds/decors_Hugo_baricades.png",
+        "background": "/assets/backgrounds/decors_Hugo_baricades.png",
         "speakerName": "Gavroche",
         "speakerSide": "left",
-        "portraitLeft": "assets/portraits/gavroche-content.png",
-        "portraitRight": "assets/portraits/esprit-content.png",
+        "portraitLeft": "/assets/portraits/gavroche-content.png",
+        "portraitRight": "/assets/portraits/esprit-content.png",
         "segments": [
           "Alors, c'est décidé",
           { "type": "blank", "options": [",", ".", "!", "?"], "correct": "." },
@@ -90,43 +90,43 @@
 
       "intro": [
         {
-          "background": "assets/backgrounds/decors_Hugo_baricades.png",
+          "background": "/assets/backgrounds/decors_Hugo_baricades.png",
           "speakerName": "Gavroche",
           "speakerSide": "left",
-          "portraitLeft": "assets/portraits/gavroche-enthousiaste.png",
-          "portraitRight": "assets/portraits/esprit-content.png",
+          "portraitLeft": "/assets/portraits/gavroche-enthousiaste.png",
+          "portraitRight": "/assets/portraits/esprit-content.png",
           "text": "Suis-moi ! Je connais un raccourci par les égouts. Personne ne nous trouvera là-dessous."
         },
         {
-          "background": "assets/backgrounds/decors_Hugo_egouts.png",
+          "background": "/assets/backgrounds/decors_Hugo_egouts.png",
           "speakerName": "Gavroche",
           "speakerSide": "left",
-          "portraitLeft": "assets/portraits/gavroche-neutre.png",
-          "portraitRight": "assets/portraits/esprit-surpris.png",
+          "portraitLeft": "/assets/portraits/gavroche-neutre.png",
+          "portraitRight": "/assets/portraits/esprit-surpris.png",
           "text": "Gavroche se faufila entre les pierres humides. Au loin, des voix résonnaient, déformées par l'écho des galeries."
         },
         {
-          "background": "assets/backgrounds/decors_Hugo_egouts.png",
+          "background": "/assets/backgrounds/decors_Hugo_egouts.png",
           "speakerName": "Gavroche",
           "speakerSide": "left",
-          "portraitLeft": "assets/portraits/gavroche-reflexion.png",
-          "portraitRight": "assets/portraits/esprit-neutre.png",
+          "portraitLeft": "/assets/portraits/gavroche-reflexion.png",
+          "portraitRight": "/assets/portraits/esprit-neutre.png",
           "text": "Attends... Ces galeries n'ont pas toujours été comme ça. Les mots, ici, ont une place précise. Si tu marches sur le mauvais, le sol se dérobe sous tes pieds !"
         },
         {
-          "background": "assets/backgrounds/decors_Hugo_egouts.png",
+          "background": "/assets/backgrounds/decors_Hugo_egouts.png",
           "speakerName": "Gavroche",
           "speakerSide": "left",
-          "portraitLeft": "assets/portraits/gavroche-malicieux.png",
-          "portraitRight": "assets/portraits/esprit-neutre.png",
+          "portraitLeft": "/assets/portraits/gavroche-malicieux.png",
+          "portraitRight": "/assets/portraits/esprit-neutre.png",
           "text": "En français, on dit d'abord QUI fait l'action, ensuite l'action elle-même, puis sur QUOI ou COMMENT. Sujet, verbe, complément. Retiens bien ça avant de sauter !"
         }
       ],
 
       "qcm": {
-        "background": "assets/backgrounds/decors_Hugo_egouts.png",
+        "background": "/assets/backgrounds/decors_Hugo_egouts.png",
         "speakerName": "Frollo",
-        "portraitLeft": "assets/portraits/Frolo_neutre.png",
+        "portraitLeft": "/assets/portraits/Frolo_neutre.png",
         "portraitRight": null,
         "question": "Une voix sifflante s'éleva des ténèbres. Quel est l'ordre correct pour : « ___ » ?",
         "options": [
@@ -139,11 +139,11 @@
       },
 
       "formative": {
-        "background": "assets/backgrounds/decors_Hugo_egouts.png",
+        "background": "/assets/backgrounds/decors_Hugo_egouts.png",
         "speakerName": "Gavroche",
         "speakerSide": "left",
-        "portraitLeft": "assets/portraits/gavroche-reflexion.png",
-        "portraitRight": "assets/portraits/esprit-neutre.png",
+        "portraitLeft": "/assets/portraits/gavroche-reflexion.png",
+        "portraitRight": "/assets/portraits/esprit-neutre.png",
         "instructions": "Replace les groupes de mots dans le bon ordre (sujet → verbe → complément).",
         "segments": [
           {
@@ -156,11 +156,11 @@
       },
 
       "transfer": {
-        "background": "assets/backgrounds/decors_Hugo_egouts.png",
+        "background": "/assets/backgrounds/decors_Hugo_egouts.png",
         "speakerName": "Gavroche",
         "speakerSide": "left",
-        "portraitLeft": "assets/portraits/gavroche-content.png",
-        "portraitRight": "assets/portraits/esprit-content.png",
+        "portraitLeft": "/assets/portraits/gavroche-content.png",
+        "portraitRight": "/assets/portraits/esprit-content.png",
         "instructions": "Remets cette phrase dans l'ordre pour continuer le récit.",
         "segments": [
           {
@@ -179,43 +179,43 @@
 
       "intro": [
         {
-          "background": "assets/backgrounds/decors_Hugo_egouts.png",
+          "background": "/assets/backgrounds/decors_Hugo_egouts.png",
           "speakerName": "Gavroche",
           "speakerSide": "left",
-          "portraitLeft": "assets/portraits/gavroche-surpris.png",
-          "portraitRight": "assets/portraits/esprit-neutre.png",
+          "portraitLeft": "/assets/portraits/gavroche-surpris.png",
+          "portraitRight": "/assets/portraits/esprit-neutre.png",
           "text": "Une bouche d'égout s'ouvrait juste au-dessus d'eux. Une lumière pâle filtrait, et avec elle, le son lointain d'une cloche."
         },
         {
-          "background": "assets/backgrounds/decors_Hugo_parvis_Notre_Dame.png",
+          "background": "/assets/backgrounds/decors_Hugo_parvis_Notre_Dame.png",
           "speakerName": "L'Esprit de la Littérature",
           "speakerSide": "right",
           "portraitLeft": null,
-          "portraitRight": "assets/portraits/esprit-surpris.png",
+          "portraitRight": "/assets/portraits/esprit-surpris.png",
           "text": "Ils émergèrent sur le parvis de Notre-Dame. Les tours immenses se dressaient devant eux, silencieuses, comme si elles attendaient quelque chose."
         },
         {
-          "background": "assets/backgrounds/decors_Hugo_parvis_Notre_Dame.png",
+          "background": "/assets/backgrounds/decors_Hugo_parvis_Notre_Dame.png",
           "speakerName": "Esmeralda",
           "speakerSide": "left",
-          "portraitLeft": "assets/portraits/Esmeralda_sourire.png",
-          "portraitRight": "assets/portraits/esprit-surpris.png",
+          "portraitLeft": "/assets/portraits/Esmeralda_sourire.png",
+          "portraitRight": "/assets/portraits/esprit-surpris.png",
           "text": "Une jeune femme dansait au centre du parvis. Quand elle vit Gavroche, elle s'arrêta et sourit."
         },
         {
-          "background": "assets/backgrounds/decors_Hugo_parvis_Notre_Dame.png",
+          "background": "/assets/backgrounds/decors_Hugo_parvis_Notre_Dame.png",
           "speakerName": "Esmeralda",
           "speakerSide": "left",
-          "portraitLeft": "assets/portraits/Esmeralda_sourire.png",
-          "portraitRight": "assets/portraits/esprit-content.png",
+          "portraitLeft": "/assets/portraits/Esmeralda_sourire.png",
+          "portraitRight": "/assets/portraits/esprit-content.png",
           "text": "Vous venez délivrer les auteurs, n'est-ce pas ? Casimodo, là-haut, surveille les cloches. Quand elles sonnent ensemble, c'est qu'une idée principale et son explication se sont enfin retrouvées."
         }
       ],
 
       "qcm": {
-        "background": "assets/backgrounds/decors_Hugo_parvis_Notre_Dame.png",
+        "background": "/assets/backgrounds/decors_Hugo_parvis_Notre_Dame.png",
         "speakerName": "Frollo",
-        "portraitLeft": "assets/portraits/Frolo_colère.png",
+        "portraitLeft": "/assets/portraits/Frolo_colère.png",
         "portraitRight": null,
         "question": "Frollo apparut sur les marches. Laquelle de ces phrases contient une proposition subordonnée ?",
         "options": [
@@ -228,11 +228,11 @@
       },
 
       "formative": {
-        "background": "assets/backgrounds/decors_Hugo_parvis_Notre_Dame.png",
+        "background": "/assets/backgrounds/decors_Hugo_parvis_Notre_Dame.png",
         "speakerName": "Esmeralda",
         "speakerSide": "left",
-        "portraitLeft": "assets/portraits/Esmeralda_sourire.png",
-        "portraitRight": "assets/portraits/esprit-neutre.png",
+        "portraitLeft": "/assets/portraits/Esmeralda_sourire.png",
+        "portraitRight": "/assets/portraits/esprit-neutre.png",
         "instructions": "Associe chaque proposition principale (cloche de gauche) à la subordonnée qui lui correspond (cloche de droite).",
         "segments": [
           {
@@ -247,11 +247,11 @@
       },
 
       "transfer": {
-        "background": "assets/backgrounds/decors_Hugo_parvis_Notre_Dame.png",
+        "background": "/assets/backgrounds/decors_Hugo_parvis_Notre_Dame.png",
         "speakerName": "Esmeralda",
         "speakerSide": "left",
-        "portraitLeft": "assets/portraits/Esmeralda_sourire.png",
-        "portraitRight": "assets/portraits/esprit-content.png",
+        "portraitLeft": "/assets/portraits/Esmeralda_sourire.png",
+        "portraitRight": "/assets/portraits/esprit-content.png",
         "instructions": "Associe les propositions pour continuer le récit.",
         "segments": [
           {
@@ -272,43 +272,43 @@
 
       "intro": [
         {
-          "background": "assets/backgrounds/decors_Hugo_parvis_Notre_Dame.png",
+          "background": "/assets/backgrounds/decors_Hugo_parvis_Notre_Dame.png",
           "speakerName": "Esmeralda",
           "speakerSide": "left",
-          "portraitLeft": "assets/portraits/Esmeralda_sourire.png",
-          "portraitRight": "assets/portraits/esprit-content.png",
+          "portraitLeft": "/assets/portraits/Esmeralda_sourire.png",
+          "portraitRight": "/assets/portraits/esprit-content.png",
           "text": "Venez. Casimodo vous attend en haut. Mais attention : depuis que le Chaos est passé par là, sa bibliothèque de vitraux est complètement mélangée."
         },
         {
-          "background": "assets/backgrounds/decors_Hugo_interieur_Notre_Dame.png",
+          "background": "/assets/backgrounds/decors_Hugo_interieur_Notre_Dame.png",
           "speakerName": "L'Esprit de la Littérature",
           "speakerSide": "right",
           "portraitLeft": null,
-          "portraitRight": "assets/portraits/esprit-surpris.png",
+          "portraitRight": "/assets/portraits/esprit-surpris.png",
           "text": "À l'intérieur, des dizaines de vitraux représentaient des scènes en désordre. Une grande silhouette se tenait au milieu, immobile."
         },
         {
-          "background": "assets/backgrounds/decors_Hugo_interieur_Notre_Dame.png",
+          "background": "/assets/backgrounds/decors_Hugo_interieur_Notre_Dame.png",
           "speakerName": "Casimodo",
           "speakerSide": "left",
-          "portraitLeft": "assets/portraits/Casimodo_surpris.png",
-          "portraitRight": "assets/portraits/esprit-neutre.png",
+          "portraitLeft": "/assets/portraits/Casimodo_surpris.png",
+          "portraitRight": "/assets/portraits/esprit-neutre.png",
           "text": "Casimodo se tourna lentement. Ses yeux s'illuminèrent en reconnaissant Gavroche."
         },
         {
-          "background": "assets/backgrounds/decors_Hugo_interieur_Notre_Dame.png",
+          "background": "/assets/backgrounds/decors_Hugo_interieur_Notre_Dame.png",
           "speakerName": "Casimodo",
           "speakerSide": "left",
-          "portraitLeft": "assets/portraits/Casimodo_neutre.png",
-          "portraitRight": "assets/portraits/esprit-neutre.png",
+          "portraitLeft": "/assets/portraits/Casimodo_neutre.png",
+          "portraitRight": "/assets/portraits/esprit-neutre.png",
           "text": "Chaque vitrail raconte un morceau d'une histoire. Mais ils sont rangés dans le désordre, et un paragraphe désordonné... ne raconte plus rien."
         }
       ],
 
       "qcm": {
-        "background": "assets/backgrounds/decors_Hugo_interieur_Notre_Dame.png",
+        "background": "/assets/backgrounds/decors_Hugo_interieur_Notre_Dame.png",
         "speakerName": "Frollo",
-        "portraitLeft": "assets/portraits/Frolo_vaincu.png",
+        "portraitLeft": "/assets/portraits/Frolo_vaincu.png",
         "portraitRight": null,
         "question": "Frollo, affaibli, murmura encore : Quel mot sert à enchaîner logiquement deux idées dans un paragraphe ?",
         "options": [
@@ -321,11 +321,11 @@
       },
 
       "formative": {
-        "background": "assets/backgrounds/decors_Hugo_interieur_Notre_Dame.png",
+        "background": "/assets/backgrounds/decors_Hugo_interieur_Notre_Dame.png",
         "speakerName": "Casimodo",
         "speakerSide": "left",
-        "portraitLeft": "assets/portraits/Casimodo_neutre.png",
-        "portraitRight": "assets/portraits/esprit-neutre.png",
+        "portraitLeft": "/assets/portraits/Casimodo_neutre.png",
+        "portraitRight": "/assets/portraits/esprit-neutre.png",
         "instructions": "Replace ces trois phrases-vitraux dans l'ordre pour former un paragraphe cohérent.",
         "segments": [
           {
@@ -342,11 +342,11 @@
       },
 
       "transfer": {
-        "background": "assets/backgrounds/decors_Hugo_interieur_Notre_Dame.png",
+        "background": "/assets/backgrounds/decors_Hugo_interieur_Notre_Dame.png",
         "speakerName": "Casimodo",
         "speakerSide": "left",
-        "portraitLeft": "assets/portraits/Casimodo_neutre.png",
-        "portraitRight": "assets/portraits/esprit-content.png",
+        "portraitLeft": "/assets/portraits/Casimodo_neutre.png",
+        "portraitRight": "/assets/portraits/esprit-content.png",
         "instructions": "Remets ce paragraphe dans l'ordre pour continuer le récit.",
         "segments": [
           {
@@ -369,43 +369,43 @@
 
       "intro": [
         {
-          "background": "assets/backgrounds/decors_Hugo_interieur_Notre_Dame.png",
+          "background": "/assets/backgrounds/decors_Hugo_interieur_Notre_Dame.png",
           "speakerName": "Casimodo",
           "speakerSide": "left",
-          "portraitLeft": "assets/portraits/Casimodo_neutre.png",
-          "portraitRight": "assets/portraits/esprit-content.png",
+          "portraitLeft": "/assets/portraits/Casimodo_neutre.png",
+          "portraitRight": "/assets/portraits/esprit-content.png",
           "text": "Le vitrail que Casimodo tendit à l'Esprit se mit à briller. Une image y apparut : un homme marchant seul sur une route, la nuit."
         },
         {
-          "background": "assets/backgrounds/decors_Hugo_Paris_Nuit.png",
+          "background": "/assets/backgrounds/decors_Hugo_Paris_Nuit.png",
           "speakerName": "L'Esprit de la Littérature",
           "speakerSide": "right",
           "portraitLeft": null,
-          "portraitRight": "assets/portraits/esprit-reflexion.png",
+          "portraitRight": "/assets/portraits/esprit-reflexion.png",
           "text": "L'image les transporta sur une route, en dehors de Paris. Un homme marchait, courbé, portant un sac trop lourd pour lui."
         },
         {
-          "background": "assets/backgrounds/decors_Hugo_Paris_Nuit.png",
+          "background": "/assets/backgrounds/decors_Hugo_Paris_Nuit.png",
           "speakerName": "Gavroche",
           "speakerSide": "left",
-          "portraitLeft": "assets/portraits/gavroche-reflexion.png",
-          "portraitRight": "assets/portraits/esprit-reflexion.png",
+          "portraitLeft": "/assets/portraits/gavroche-reflexion.png",
+          "portraitRight": "/assets/portraits/esprit-reflexion.png",
           "text": "Jean Valjean... J'ai entendu parler de lui. On dit qu'il porte plus de choses qu'un simple sac sur ses épaules."
         },
         {
-          "background": "assets/backgrounds/decors_Hugo_Paris_Nuit.png",
+          "background": "/assets/backgrounds/decors_Hugo_Paris_Nuit.png",
           "speakerName": "Jean Valjean",
           "speakerSide": "left",
-          "portraitLeft": "assets/portraits/Jean_Valjean.png",
-          "portraitRight": "assets/portraits/esprit-neutre.png",
+          "portraitLeft": "/assets/portraits/Jean_Valjean.png",
+          "portraitRight": "/assets/portraits/esprit-neutre.png",
           "text": "L'homme s'arrêta et les regarda. Si vous voulez m'aider, dit-il, vous devrez apprendre à voir l'essentiel. Trop de détails inutiles, et on se perd."
         }
       ],
 
       "qcm": {
-        "background": "assets/backgrounds/decors_Hugo_Paris_Nuit.png",
+        "background": "/assets/backgrounds/decors_Hugo_Paris_Nuit.png",
         "speakerName": "Jean Valjean",
-        "portraitLeft": "assets/portraits/Jean_Valjean.png",
+        "portraitLeft": "/assets/portraits/Jean_Valjean.png",
         "portraitRight": null,
         "question": "Si je te raconte ma journée et que je te dis : « Je me suis levé, j'ai mangé une pomme verte, puis j'ai marché 10 km pour trouver du travail », quelle information est la PLUS importante pour comprendre mon histoire ?",
         "options": [
@@ -418,11 +418,11 @@
       },
 
       "formative": {
-        "background": "assets/backgrounds/decors_Hugo_Paris_Nuit.png",
+        "background": "/assets/backgrounds/decors_Hugo_Paris_Nuit.png",
         "speakerName": "Jean Valjean",
         "speakerSide": "left",
-        "portraitLeft": "assets/portraits/Jean_Valjean.png",
-        "portraitRight": "assets/portraits/esprit-reflexion.png",
+        "portraitLeft": "/assets/portraits/Jean_Valjean.png",
+        "portraitRight": "/assets/portraits/esprit-reflexion.png",
         "instructions": "Parmi ces informations, choisis celle qui est essentielle pour résumer la scène (les autres sont des détails secondaires).",
         "segments": [
           {
@@ -439,11 +439,11 @@
       },
 
       "transfer": {
-        "background": "assets/backgrounds/decors_Hugo_Paris_Nuit.png",
+        "background": "/assets/backgrounds/decors_Hugo_Paris_Nuit.png",
         "speakerName": "Jean Valjean",
         "speakerSide": "left",
-        "portraitLeft": "assets/portraits/Jean_Valjean.png",
-        "portraitRight": "assets/portraits/esprit-content.png",
+        "portraitLeft": "/assets/portraits/Jean_Valjean.png",
+        "portraitRight": "/assets/portraits/esprit-content.png",
         "instructions": "Choisis l'information essentielle pour continuer le récit.",
         "segments": [
           {
@@ -466,43 +466,43 @@
 
       "intro": [
         {
-          "background": "assets/backgrounds/decors_Hugo_Paris_Nuit.png",
+          "background": "/assets/backgrounds/decors_Hugo_Paris_Nuit.png",
           "speakerName": "Jean Valjean",
           "speakerSide": "left",
-          "portraitLeft": "assets/portraits/Jean_Valjean.png",
-          "portraitRight": "assets/portraits/esprit-content.png",
+          "portraitLeft": "/assets/portraits/Jean_Valjean.png",
+          "portraitRight": "/assets/portraits/esprit-content.png",
           "text": "Vous avez l'œil. C'est ce qu'il faut, pour raconter une histoire qui tient debout. Mais voir l'essentiel n'est qu'une partie du chemin."
         },
         {
-          "background": "assets/backgrounds/decors_Hugo_baricades.png",
+          "background": "/assets/backgrounds/decors_Hugo_baricades.png",
           "speakerName": "Gavroche",
           "speakerSide": "left",
-          "portraitLeft": "assets/portraits/gavroche-enthousiaste.png",
-          "portraitRight": "assets/portraits/esprit-content.png",
+          "portraitLeft": "/assets/portraits/gavroche-enthousiaste.png",
+          "portraitRight": "/assets/portraits/esprit-content.png",
           "text": "Ils revinrent vers les barricades. La nuit commençait à pâlir. Gavroche grimpa sur un tonneau, l'air solennel."
         },
         {
-          "background": "assets/backgrounds/decors_Hugo_baricades.png",
+          "background": "/assets/backgrounds/decors_Hugo_baricades.png",
           "speakerName": "Gavroche",
           "speakerSide": "left",
-          "portraitLeft": "assets/portraits/gavroche-reflexion.png",
-          "portraitRight": "assets/portraits/esprit-reflexion.png",
+          "portraitLeft": "/assets/portraits/gavroche-reflexion.png",
+          "portraitRight": "/assets/portraits/esprit-reflexion.png",
           "text": "Toute histoire, même la plus simple, a une forme. Un début où tout va bien, un problème qui arrive, des efforts pour le résoudre, et une fin."
         },
         {
-          "background": "assets/backgrounds/decors_Hugo_baricades.png",
+          "background": "/assets/backgrounds/decors_Hugo_baricades.png",
           "speakerName": "Gavroche",
           "speakerSide": "left",
-          "portraitLeft": "assets/portraits/gavroche-malicieux.png",
-          "portraitRight": "assets/portraits/esprit-reflexion.png",
+          "portraitLeft": "/assets/portraits/gavroche-malicieux.png",
+          "portraitRight": "/assets/portraits/esprit-reflexion.png",
           "text": "Notre histoire à nous, par exemple : ça a commencé cette nuit, sur ces pavés. Tu veux voir si tu sais la raconter ?"
         }
       ],
 
       "qcm": {
-        "background": "assets/backgrounds/decors_Hugo_baricades.png",
+        "background": "/assets/backgrounds/decors_Hugo_baricades.png",
         "speakerName": "Thénardier",
-        "portraitLeft": "assets/portraits/Thenardier_vaincu.png",
+        "portraitLeft": "/assets/portraits/Thenardier_vaincu.png",
         "portraitRight": null,
         "question": "Thénardier, tapi dans l'ombre, ricana une dernière fois : Dans une histoire, qu'est-ce qui arrive juste APRÈS la situation de départ ?",
         "options": [
@@ -515,11 +515,11 @@
       },
 
       "formative": {
-        "background": "assets/backgrounds/decors_Hugo_baricades.png",
+        "background": "/assets/backgrounds/decors_Hugo_baricades.png",
         "speakerName": "Gavroche",
         "speakerSide": "left",
-        "portraitLeft": "assets/portraits/gavroche-reflexion.png",
-        "portraitRight": "assets/portraits/esprit-neutre.png",
+        "portraitLeft": "/assets/portraits/gavroche-reflexion.png",
+        "portraitRight": "/assets/portraits/esprit-neutre.png",
         "instructions": "Place ces cartes dans l'ordre du schéma narratif : situation initiale, élément déclencheur, péripéties, résolution, situation finale.",
         "segments": [
           {
@@ -537,11 +537,11 @@
       },
 
       "transfer": {
-        "background": "assets/backgrounds/decors_Hugo_baricades.png",
+        "background": "/assets/backgrounds/decors_Hugo_baricades.png",
         "speakerName": "Gavroche",
         "speakerSide": "left",
-        "portraitLeft": "assets/portraits/gavroche-content.png",
-        "portraitRight": "assets/portraits/esprit-content.png",
+        "portraitLeft": "/assets/portraits/gavroche-content.png",
+        "portraitRight": "/assets/portraits/esprit-content.png",
         "instructions": "Reconstitue le schéma narratif de cette nouvelle histoire pour continuer le récit.",
         "segments": [
           {
@@ -566,19 +566,19 @@
   "ending": {
     "scenes": [
       {
-        "background": "assets/backgrounds/decors_Hugo_parvis_Notre_Dame.png",
+        "background": "/assets/backgrounds/decors_Hugo_parvis_Notre_Dame.png",
         "speakerName": "Gavroche",
         "speakerSide": "left",
-        "portraitLeft": "assets/portraits/gavroche-enthousiaste.png",
-        "portraitRight": "assets/portraits/esprit-content.png",
+        "portraitLeft": "/assets/portraits/gavroche-enthousiaste.png",
+        "portraitRight": "/assets/portraits/esprit-content.png",
         "text": "Gavroche serra la première clé dans son poing et la leva vers le ciel. Une lueur dorée traversa Paris."
       },
       {
-        "background": "assets/backgrounds/decors_Hugo_parvis_Notre_Dame.png",
+        "background": "/assets/backgrounds/decors_Hugo_parvis_Notre_Dame.png",
         "speakerName": "Gavroche",
         "speakerSide": "left",
-        "portraitLeft": "assets/portraits/gavroche-content.png",
-        "portraitRight": "assets/portraits/esprit-content.png",
+        "portraitLeft": "/assets/portraits/gavroche-content.png",
+        "portraitRight": "/assets/portraits/esprit-content.png",
         "text": "Une seule clé, ça ne suffit pas pour ouvrir une serrure faite pour huit. Mais Gavroche la gardera précieusement jusqu'à ce que les sept autres soient réunies. Reviens nous voir quand tu veux, l'Esprit : ce monde restera ouvert pour toi."
       }
     ]

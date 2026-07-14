@@ -113,7 +113,7 @@
 
       // --- Image du sprite (sheet de marche, découpée à l'affichage) ---
       const sprite = new Image();
-      sprite.src = "assets/sprites/characters/gavroche-marche.png";
+      sprite.src = "/assets/sprites/characters/gavroche-marche.png";
 
       // --- HUD ---
       uiContainer.innerHTML = `

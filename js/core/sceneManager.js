@@ -1,296 +1,225 @@
 /* ============================================================
-   LE MANUSCRIT DES MONDES — mg-ponctuation.js
+   LE MANUSCRIT DES MONDES — sceneManager.js
    ============================================================
-   Mini-jeu de ponctuation, variante "Tri des Barricades"
-   (Monde 1 — Hugo).
+   ⚠️ Ce fichier ne vit plus que dans les pages /mondes/*.html
+   (ex. /mondes/hugo.html), plus dans le hub. Il gère :
+   - l'affichage des 2 écrans propres à un monde (VN, mini-jeu)
+   - la machine à états pédagogique d'un acte (inchangée)
+   - le retour vers le hub (/index.html) une fois le monde fini
 
-   Principe pédagogique (ancrage visuel/spatial, Paivio) :
-   le joueur déplace $gavroche.png dans un couloir et doit
-   "attraper" le bon signe de ponctuation pour compléter la
-   phrase affichée en haut de l'écran, en évitant les
-   silhouettes de Thénardier (distracteurs/pénalités).
+   Le nom "SceneManager" est conservé volontairement : tous les
+   mini-jeux (mg-ponctuation.js, mg-ordre-mots.js, etc.) appellent
+   SceneManager.registerMinigame(...) au chargement. Renommer
+   l'objet aurait obligé à modifier ces 6 fichiers pour rien.
 
-   Ce module s'enregistre auprès de SceneManager sous la
-   notion "ponctuation", variante "barricades_hugo". D'autres
-   mondes enregistreront d'autres variantes pour la même
-   notion (ex. "duel_epee_dumas"), garantissant une répétition
-   espacée avec des modalités sensorielles différentes.
-
-   API attendue par sceneManager.playMinigameForNotion :
-     module.run({ worldId, actId, canvas, uiContainer, isRemediation })
-       -> Promise<{ passed: boolean, score: number, total: number }>
+   Démarrage : chaque page de monde appelle, dans son propre
+   petit script en bas de page :
+       SceneManager.startWorld("hugo");
    ============================================================ */
 
-(function registerPonctuationHugo() {
+const SceneManager = (() => {
 
-  const CANVAS_W = 800;
-  const CANVAS_H = 450;
+  const screens = {
+    vn: document.getElementById("screen-vn"),
+    minigame: document.getElementById("screen-minigame")
+  };
+
+  const overlay = document.getElementById("transition-overlay");
+
+  const minigameRegistry = {};
+
+  function registerMinigame(notionId, variantId, moduleRef) {
+    if (!minigameRegistry[notionId]) minigameRegistry[notionId] = {};
+    minigameRegistry[notionId][variantId] = moduleRef;
+  }
+
+  function pickMinigameVariant(notionId) {
+    const variants = minigameRegistry[notionId];
+    if (!variants) {
+      console.error(`Aucun mini-jeu enregistré pour la notion "${notionId}".`);
+      return null;
+    }
+    const played = GameState.getPlayedVariants(notionId);
+    const available = Object.keys(variants).filter(v => !played.includes(v));
+    const pool = available.length > 0 ? available : Object.keys(variants);
+    const chosen = pool[Math.floor(Math.random() * pool.length)];
+    return { variantId: chosen, module: variants[chosen] };
+  }
+
+  function showScreen(name) {
+    overlay.classList.add("active");
+    setTimeout(() => {
+      Object.values(screens).forEach(s => s && s.classList.remove("active"));
+      if (screens[name]) screens[name].classList.add("active");
+      overlay.classList.remove("active");
+    }, 250);
+  }
+
+  function applyWorldTheme(worldId) {
+    const index = GameState.WORLD_IDS.indexOf(worldId) + 1;
+    document.body.className = document.body.className.replace(/world-\d/g, "").trim();
+    if (index > 0) document.body.classList.add(`world-${index}`);
+  }
+
+  function goToHub() {
+    window.location.href = "/index.html";
+  }
+
+  /* ============================================================
+     POINT D'ENTRÉE DE LA PAGE
+     ============================================================ */
 
   /**
-   * Banque d'exercices : chaque entrée propose une phrase à
-   * compléter et la liste de signes "ramassables" (bons + leurres).
-   * Une nouvelle phrase est piochée à chaque lancement pour
-   * éviter la répétition d'occurrence (cf. consigne pédagogique).
+   * Démarre (ou reprend) un monde donné. À appeler une fois, au
+   * chargement de la page /mondes/<worldId>.html.
    */
-  const EXERCISES = [
-    {
-      sentence: "Gavroche courait dans la rue ___",
-      correct: "!",
-      collectibles: ["!", ".", "?", ","]
-    },
-    {
-      sentence: "Il s'arrêta net ___ puis repartit aussitôt",
-      correct: ",",
-      collectibles: [",", ".", "!", ";"]
-    },
-    {
-      sentence: "Connais-tu le chemin des barricades ___",
-      correct: "?",
-      collectibles: ["?", ".", "!", ","]
-    },
-    {
-      sentence: "La nuit tombait sur Paris ___",
-      correct: ".",
-      collectibles: [".", "!", "?", ","]
+  function startWorld(worldId) {
+    GameState.load();
+    applyWorldTheme(worldId);
+    GameState.get().currentWorld = worldId;
+    GameState.save();
+
+    const world = GameState.get().worlds[worldId];
+
+    if (world.currentAct === -1) {
+      // Monde déjà entièrement terminé : pour l'instant, retour au hub.
+      // TODO : proposer un mode "libre" pour rejouer les actes sans impact
+      // sur la progression (révision, plaisir de rejouer).
+      goToHub();
+      return;
     }
-  ];
 
-  function pickExercise() {
-    return EXERCISES[Math.floor(Math.random() * EXERCISES.length)];
+    showScreen("vn");
+    startAct(worldId, world.currentAct);
   }
 
-  function run({ canvas, uiContainer, isRemediation }) {
-    return new Promise(resolve => {
+  /* ============================================================
+     MACHINE À ÉTATS D'UN ACTE (inchangée)
+     ============================================================ */
 
-      canvas.width = CANVAS_W;
-      canvas.height = CANVAS_H;
-      const ctx = canvas.getContext("2d");
+  async function startAct(worldId, actIndex) {
+    const actId = GameState.ACT_IDS[actIndex];
+    const actData = await VNParser.loadAct(worldId, actId);
 
-      const exercise = pickExercise();
+    if (!actData) {
+      console.error(`Données introuvables pour ${worldId}/${actId}. Vérifie /js/data/${worldId}_scenes.json.`);
+      goToHub();
+      return;
+    }
 
-      // --- État du joueur (sprite Gavroche) ---
-      // Sprite sheet RPG Maker MZ : 576x384px, cellules de 96x96px
-      // (grille 6 colonnes x 4 lignes). Le personnage occupe les
-      // colonnes 0-2 de chaque ligne (3 frames de marche par
-      // direction) ; colonnes 3-5 réservées à un éventuel 2e
-      // personnage sur la même feuille.
-      // Lignes : 0=bas, 1=gauche, 2=droite, 3=haut.
-      const SPRITE_CELL_W = 96;
-      const SPRITE_CELL_H = 96;
-      const DRAW_W = 48;  // taille d'affichage à l'écran (réduite du sprite source)
-      const DRAW_H = 64;
+    runActSequence(worldId, actId, actData);
+  }
 
-      const SPRITE_ROWS = { down: 0, left: 1, right: 2, up: 3 };
-      const ANIM_FRAMES = 3;     // colonnes 0..2 utilisées pour le cycle
-      const ANIM_SPEED = 8;      // ticks de jeu entre deux frames
+  async function runActSequence(worldId, actId, actData) {
 
-      const player = {
-        x: 60, y: CANVAS_H / 2,
-        w: DRAW_W, h: DRAW_H,
-        speed: 4,
-        direction: "right",
-        animFrame: 0,
-        animTimer: 0,
-        moving: false
-      };
+    if (actData.intro && actData.intro.length) {
+      await VNEngine.playScenes(actData.intro);
+    }
 
-      // --- Génération des signes à collecter (positions aléatoires) ---
-      const items = exercise.collectibles.map((symbol, i) => ({
-        symbol,
-        x: 200 + i * 140,
-        y: 80 + Math.random() * (CANVAS_H - 200),
-        w: 40, h: 40,
-        collected: false,
-        isCorrect: symbol === exercise.correct
-      }));
+    if (actData.qcm) {
+      const qcmResult = await VNEngine.playQCM(actData.qcm);
+      GameState.setActStep(worldId, actId, "qcm_passed", qcmResult.passed);
+    }
 
-      // --- Obstacles (Thénardier) : pénalité si touché ---
-      const obstacles = [
-        { x: 350, y: CANVAS_H - 100, w: 36, h: 48, vx: 1.5 },
-        { x: 550, y: 60, w: 36, h: 48, vx: -1.2 }
-      ];
+    let formativeResult = await VNEngine.playFillBlank(actData.formative);
+    GameState.setActStep(worldId, actId, "vn_check_passed", formativeResult.passed);
 
-      let lives = 3;
-      let resultGiven = false;
+    while (!formativeResult.passed) {
+      await playMinigameForNotion(worldId, actId, actData.minigame_notion, true);
+      formativeResult = await VNEngine.playFillBlank(actData.formative);
+      GameState.setActStep(worldId, actId, "vn_check_passed", formativeResult.passed);
+    }
 
-      // --- Image du sprite (sheet de marche, découpée à l'affichage) ---
-      const sprite = new Image();
-      sprite.src = "assets/sprites/characters/gavroche-marche.png";
+    const minigameResult = await playMinigameForNotion(worldId, actId, actData.minigame_notion, false);
+    GameState.setActStep(worldId, actId, "minigame_passed", minigameResult.passed);
 
-      // --- HUD ---
-      uiContainer.innerHTML = `
-        <div class="hud-item">Vies : <span id="mg-lives">${lives}</span></div>
-        <div class="hud-item" id="mg-sentence"></div>
-      `;
-      document.getElementById("mg-sentence").textContent = exercise.sentence;
+    if (!minigameResult.passed) {
+      return runActSequence(worldId, actId, actData);
+    }
 
-      // --- Contrôles clavier ---
-      const keys = {};
-      function onKeyDown(e) { keys[e.key] = true; }
-      function onKeyUp(e) { keys[e.key] = false; }
-      window.addEventListener("keydown", onKeyDown);
-      window.addEventListener("keyup", onKeyUp);
+    const transferResult = await VNEngine.playFillBlank(actData.transfer, { fixedText: true });
+    GameState.setActStep(worldId, actId, "vn_transfer_passed", transferResult.passed);
 
-      // --- Contrôles tactiles simples (mobile) ---
-      const touchState = { up: false, down: false, left: false, right: false };
-      uiContainer.insertAdjacentHTML("beforeend", `
-        <div class="touch-controls">
-          <button class="touch-btn" data-dir="left">◀</button>
-          <button class="touch-btn" data-dir="up">▲</button>
-          <button class="touch-btn" data-dir="down">▼</button>
-          <button class="touch-btn" data-dir="right">▶</button>
-        </div>
-      `);
-      uiContainer.querySelectorAll(".touch-btn").forEach(btn => {
-        const dir = btn.dataset.dir;
-        const set = v => () => touchState[dir] = v;
-        btn.addEventListener("touchstart", set(true));
-        btn.addEventListener("touchend", set(false));
-        btn.addEventListener("mousedown", set(true));
-        btn.addEventListener("mouseup", set(false));
-      });
+    if (!transferResult.passed) {
+      await playMinigameForNotion(worldId, actId, actData.minigame_notion, true);
+      return runActSequence(worldId, actId, actData);
+    }
 
-      function rectsOverlap(a, b) {
-        return a.x < b.x + b.w && a.x + a.w > b.x &&
-               a.y < b.y + b.h && a.y + a.h > b.y;
-      }
+    advanceAct(worldId, actId);
+  }
 
-      function cleanup() {
-        window.removeEventListener("keydown", onKeyDown);
-        window.removeEventListener("keyup", onKeyUp);
-        cancelAnimationFrame(rafId);
-      }
+  async function playMinigameForNotion(worldId, actId, notionId, isRemediation) {
+    const picked = pickMinigameVariant(notionId);
+    if (!picked || !picked.module) return { passed: true };
+    const { variantId, module } = picked;
 
-      function endGame(passed) {
-        if (resultGiven) return;
-        resultGiven = true;
-        cleanup();
-        resolve({
-          passed,
-          score: passed ? 1 : 0,
-          total: 1
-        });
-      }
+    GameState.recordExerciseVariant(notionId, variantId);
 
-      let rafId;
-      function loop() {
-        // --- Déplacement joueur ---
-        let dx = 0, dy = 0;
-        if (keys["ArrowUp"] || keys["w"] || touchState.up)    dy -= player.speed;
-        if (keys["ArrowDown"] || keys["s"] || touchState.down) dy += player.speed;
-        if (keys["ArrowLeft"] || keys["a"] || touchState.left) dx -= player.speed;
-        if (keys["ArrowRight"] || keys["d"] || touchState.right) dx += player.speed;
+    showScreen("minigame");
+    document.getElementById("minigame-title").textContent = module.title || notionId;
+    document.getElementById("minigame-objective").textContent =
+      isRemediation ? "Entraînement" : "Évaluation";
 
-        player.moving = (dx !== 0 || dy !== 0);
-
-        // Détermine la direction du sprite (priorité à l'axe dominant)
-        if (dx !== 0 && Math.abs(dx) >= Math.abs(dy)) {
-          player.direction = dx > 0 ? "right" : "left";
-        } else if (dy !== 0) {
-          player.direction = dy > 0 ? "down" : "up";
-        }
-
-        player.x += dx;
-        player.y += dy;
-
-        // Animation : avance d'une frame toutes les ANIM_SPEED ticks
-        if (player.moving) {
-          player.animTimer++;
-          if (player.animTimer >= ANIM_SPEED) {
-            player.animTimer = 0;
-            player.animFrame = (player.animFrame + 1) % ANIM_FRAMES;
-          }
-        } else {
-          player.animFrame = 0; // frame "debout" = première colonne
-          player.animTimer = 0;
-        }
-
-        player.x = Math.max(0, Math.min(CANVAS_W - player.w, player.x));
-        player.y = Math.max(0, Math.min(CANVAS_H - player.h, player.y));
-
-        // --- Déplacement obstacles (va-et-vient vertical simple) ---
-        obstacles.forEach(o => {
-          o.y += o.vx;
-          if (o.y <= 0 || o.y + o.h >= CANVAS_H) o.vx *= -1;
-        });
-
-        // --- Collisions avec items ---
-        items.forEach(item => {
-          if (item.collected) return;
-          if (rectsOverlap(player, item)) {
-            item.collected = true;
-            if (item.isCorrect) {
-              endGame(true);
-            } else {
-              lives--;
-              document.getElementById("mg-lives").textContent = lives;
-              if (lives <= 0) endGame(false);
-            }
-          }
-        });
-
-        // --- Collisions avec obstacles ---
-        obstacles.forEach(o => {
-          if (rectsOverlap(player, o)) {
-            lives--;
-            document.getElementById("mg-lives").textContent = lives;
-            player.x = 60; player.y = CANVAS_H / 2; // repositionnement
-            if (lives <= 0) endGame(false);
-          }
-        });
-
-        // --- Rendu ---
-        ctx.fillStyle = "#1a1530";
-        ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
-
-        // Joueur (découpe de la cellule correspondant à direction + frame)
-        if (sprite.complete && sprite.naturalWidth > 0) {
-          const row = SPRITE_ROWS[player.direction];
-          const sx = player.animFrame * SPRITE_CELL_W;
-          const sy = row * SPRITE_CELL_H;
-          ctx.drawImage(
-            sprite,
-            sx, sy, SPRITE_CELL_W, SPRITE_CELL_H,
-            player.x, player.y, player.w, player.h
-          );
-        } else {
-          ctx.fillStyle = "#e8c468";
-          ctx.fillRect(player.x, player.y, player.w, player.h);
-        }
-
-        // Items
-        items.forEach(item => {
-          if (item.collected) return;
-          ctx.fillStyle = "#2b2347";
-          ctx.fillRect(item.x, item.y, item.w, item.h);
-          ctx.strokeStyle = "#9d8cff";
-          ctx.strokeRect(item.x, item.y, item.w, item.h);
-          ctx.fillStyle = "#f4f1ea";
-          ctx.font = "28px serif";
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.fillText(item.symbol, item.x + item.w / 2, item.y + item.h / 2);
-        });
-
-        // Obstacles (silhouettes Thénardier — placeholder en attendant le sprite)
-        ctx.fillStyle = "#7a3b3b";
-        obstacles.forEach(o => {
-          ctx.beginPath();
-          ctx.roundRect(o.x, o.y, o.w, o.h, 6);
-          ctx.fill();
-        });
-
-        if (!resultGiven) rafId = requestAnimationFrame(loop);
-      }
-
-      loop();
+    const result = await module.run({
+      worldId,
+      actId,
+      canvas: document.getElementById("minigame-canvas"),
+      uiContainer: document.getElementById("minigame-ui"),
+      isRemediation
     });
+
+    showScreen("vn");
+    return result;
   }
 
-  // Enregistrement auprès du sceneManager
-  SceneManager.registerMinigame("ponctuation", "barricades_hugo", {
-    title: "Le Tri des Barricades",
-    run
-  });
+  function advanceAct(worldId, actId) {
+    const w = GameState.get().worlds[worldId];
+    const idx = GameState.ACT_IDS.indexOf(actId);
+
+    if (idx < GameState.ACT_IDS.length - 1) {
+      w.currentAct = idx + 1;
+      GameState.save();
+      startAct(worldId, w.currentAct);
+    } else {
+      finishWorld(worldId);
+    }
+  }
+
+  const companionByWorld = {
+    hugo: "gavroche",
+    dumas: "dartagnan",
+    verne: "nemo",
+    shakespeare: "puck",
+    christie: "marple",
+    shelley: "creature",
+    carroll: "alice",
+    galland: "sheherazade"
+  };
+
+  async function finishWorld(worldId) {
+    const companionId = companionByWorld[worldId];
+
+    const endData = await VNParser.loadWorldEnding(worldId);
+    if (endData && endData.scenes) {
+      await VNEngine.playScenes(endData.scenes);
+    }
+
+    GameState.completeWorld(worldId, companionId);
+
+    if (GameState.get().towerUnlocked) {
+      // TODO : déclencher la cinématique des 8 clés tournant simultanément
+      console.log("Les 8 clés sont réunies : la Tour Finale est accessible !");
+    }
+
+    goToHub();
+  }
+
+  return {
+    showScreen,
+    startWorld,
+    registerMinigame,
+    pickMinigameVariant,
+    goToHub
+  };
 
 })();
