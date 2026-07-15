@@ -85,13 +85,18 @@
         landed: false
       }));
 
-      // --- Sprite Gavroche (sheet marche, réutilisé pour idle/saut) ---
+      // --- Sprite de l'Esprit (feuille "marche", réutilisée pour idle/saut) ---
       const SPRITE_CELL_W = 72;
       const SPRITE_CELL_H = 96;
+      // Feuille 8 colonnes x 4 lignes. Convention supposée (à vérifier
+      // visuellement en jeu) : ligne 0 = face, 1 = gauche, 2 = droite,
+      // 3 = dos. On court vers la droite → ligne 2. Si l'animation a
+      // l'air de travers, change juste WALK_ROW ci-dessous.
+      const WALK_ROW = 2;
       const DRAW_W = 48;
       const DRAW_H = 64;
       const sprite = new Image();
-      sprite.src = "/assets/sprites/characters/esprit-combat.png";
+      sprite.src = "/assets/sprites/characters/esprit-marche.png";
 
       const player = {
         x: 60, y: GROUND_Y - DRAW_H,
@@ -259,11 +264,10 @@
 
         // Joueur (toujours affiché à x fixe = 60)
         if (sprite.complete && sprite.naturalWidth > 0) {
-          const row = player.onGround ? 0 : 3; // ligne "bas" en marche, "haut" en saut (approx)
-          const frame = player.onGround ? animFrame : 0;
+          const frame = player.onGround ? animFrame : 1; // pose figée sur la 2e frame pendant le saut
           ctx.drawImage(
             sprite,
-            frame * SPRITE_CELL_W, row * SPRITE_CELL_H, SPRITE_CELL_W, SPRITE_CELL_H,
+            frame * SPRITE_CELL_W, WALK_ROW * SPRITE_CELL_H, SPRITE_CELL_W, SPRITE_CELL_H,
             60, player.y, player.w, player.h
           );
         } else {

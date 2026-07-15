@@ -7,7 +7,7 @@
    Principe pédagogique (discrimination sous contrainte de temps) :
    des bulles d'information tombent du haut de l'écran. Un court
    "contexte" est affiché en haut. Le joueur doit déplacer
-   Jean Valjean (sprite Gavroche en placeholder le temps d'avoir
+   Jean Valjean (sprite de l'Esprit en placeholder le temps d'avoir
    un sprite dédié) pour attraper UNIQUEMENT les bulles pertinentes
    et laisser tomber (ignorer) les bulles de détails accessoires.
 
@@ -81,13 +81,14 @@
 
       const totalRelevant = allItems.filter(it => it.relevant).length;
 
-      // --- Sprite joueur (Gavroche en placeholder) ---
+      // --- Sprite joueur (Esprit, en attendant un sprite dédié à Jean Valjean) ---
       const SPRITE_CELL_W = 72;
       const SPRITE_CELL_H = 96;
+      const WALK_ROW = 2; // supposé "droite" — voir mg-ordre-mots.js, ajuste si besoin
       const DRAW_W = 64;
       const DRAW_H = 64;
       const sprite = new Image();
-      sprite.src = "/assets/sprites/characters/esprit-combat.png";
+      sprite.src = "/assets/sprites/characters/esprit-marche.png";
 
       const player = { x: CANVAS_W / 2 - DRAW_W / 2, y: CANVAS_H - 80, w: DRAW_W, h: DRAW_H, speed: 7 };
 
@@ -272,7 +273,7 @@
         if (sprite.complete && sprite.naturalWidth > 0) {
           ctx.drawImage(
             sprite,
-            animFrame * SPRITE_CELL_W, 0, SPRITE_CELL_W, SPRITE_CELL_H,
+            animFrame * SPRITE_CELL_W, WALK_ROW * SPRITE_CELL_H, SPRITE_CELL_W, SPRITE_CELL_H,
             player.x, player.y, player.w, player.h
           );
         } else {
