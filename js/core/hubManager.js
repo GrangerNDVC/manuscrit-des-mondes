@@ -116,7 +116,15 @@ const HubManager = (() => {
       });
     }
 
-    goToMenu();
+    // Retour depuis un monde (bouton "◀ Bibliothèque" ou fin de monde,
+    // voir sceneManager.js/goToHub) : on atterrit directement sur la
+    // carte, pas sur l'écran menu de départ.
+    if (window.location.hash === "#map") {
+      history.replaceState(null, "", window.location.pathname);
+      goToMap();
+    } else {
+      goToMenu();
+    }
   }
 
   return { init, goToMenu, goToIntro, goToMap };

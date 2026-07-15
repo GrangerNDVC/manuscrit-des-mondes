@@ -62,7 +62,9 @@ const SceneManager = (() => {
   }
 
   function goToHub() {
-    window.location.href = "/index.html";
+    // #map indique à hubManager.js d'atterrir directement sur la carte
+    // plutôt que sur l'écran menu de départ (voir hubManager.js/init()).
+    window.location.href = "/index.html#map";
   }
 
   /* ============================================================
