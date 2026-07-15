@@ -26,10 +26,11 @@ chemins absolus ne résolvent plus correctement. Utilisez toujours
 
 ## ⚠️ Point de vigilance n°2 — assets manquants
 
-Le Monde 1 est câblé et fonctionnera de bout en bout niveau logique,
-mais les images suivantes sont attendues par `js/data/hugo_scenes.json`
-et ne sont pas encore présentes (elles s'afficheront comme des images
-cassées, sans bloquer le jeu) :
+Le Monde 1 est câblé et fonctionnera de bout en bout niveau logique.
+Les portraits pointent vers **`assets/characters/`** (pas `assets/portraits/`
+— corrigé pour correspondre à la structure réelle du dépôt). Seul
+`Thenardier_neutre.png` est fourni et détouré (fond transparent) dans ce
+paquet ; il manque encore :
 
 ```
 /assets/backgrounds/decors_Hugo_Paris_Nuit.png
@@ -37,21 +38,31 @@ cassées, sans bloquer le jeu) :
 /assets/backgrounds/decors_Hugo_egouts.png
 /assets/backgrounds/decors_Hugo_interieur_Notre_Dame.png
 /assets/backgrounds/decors_Hugo_parvis_Notre_Dame.png
-/assets/portraits/Casimodo_neutre.png
-/assets/portraits/Casimodo_surpris.png
-/assets/portraits/Esmeralda_sourire.png
-/assets/portraits/Frolo_colère.png
-/assets/portraits/Frolo_neutre.png
-/assets/portraits/Frolo_vaincu.png
-/assets/portraits/Jean_Valjean.png
-/assets/portraits/Thenardier_neutre.png
-/assets/portraits/Thenardier_vaincu.png
-/assets/portraits/esprit-*.png (4 postures)
-/assets/portraits/gavroche-*.png (6 postures)
+
+/assets/characters/Casimodo_neutre.png
+/assets/characters/Casimodo_surpris.png
+/assets/characters/Esmeralda_sourire.png
+/assets/characters/Frolo_colère.png
+/assets/characters/Frolo_neutre.png
+/assets/characters/Frolo_vaincu.png
+/assets/characters/Jean_Valjean.png
+/assets/characters/Thenardier_vaincu.png
+/assets/characters/esprit-content.png
+/assets/characters/esprit-neutre.png
+/assets/characters/esprit-reflexion.png
+/assets/characters/esprit-surpris.png
+/assets/characters/gavroche-content.png
+/assets/characters/gavroche-enthousiaste.png
+/assets/characters/gavroche-malicieux.png
+/assets/characters/gavroche-neutre.png
+/assets/characters/gavroche-reflexion.png
+/assets/characters/gavroche-surpris.png
 ```
 
-Déposez-les simplement dans `assets/backgrounds/` et `assets/portraits/`
-avec ces noms exacts.
+Déposez-les dans `assets/backgrounds/` et `assets/characters/` avec ces
+noms exacts. Si une image a un fond plein (comme l'ancien Thénardier),
+elle doit être détourée (fond transparent) avant d'être ajoutée — sinon
+elle s'affichera avec son fond d'origine par-dessus le décor du jeu.
 
 ## ⚠️ Point de vigilance n°3 — sprites Gavroche
 

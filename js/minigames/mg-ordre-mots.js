@@ -51,7 +51,13 @@
     return a;
   }
 
-  function run({ canvas, uiContainer, isRemediation }) {
+  async function run({ canvas, uiContainer, isRemediation }) {
+
+    await MinigameUI.showInstructions({
+      title: "La Course dans les Égouts",
+      objective: "Tu avances automatiquement. Saute (barre Espace, flèche haut, ou le bouton ⤴) sur les mots-plateformes dans le bon ordre : sujet, puis verbe, puis complément. Un mauvais saut te fait tomber, mais tu peux repartir du début."
+    });
+
     return new Promise(resolve => {
 
       canvas.width = CANVAS_W;
@@ -85,7 +91,7 @@
       const DRAW_W = 48;
       const DRAW_H = 64;
       const sprite = new Image();
-      sprite.src = "/assets/sprites/characters/gavroche-marche.png";
+      sprite.src = "/assets/sprites/characters/esprit-combat.png";
 
       const player = {
         x: 60, y: GROUND_Y - DRAW_H,
@@ -136,10 +142,16 @@
         cancelAnimationFrame(rafId);
       }
 
-      function endGame(passed) {
+      async function endGame(passed) {
         if (resultGiven) return;
         resultGiven = true;
         cleanup();
+        await MinigameUI.showResult({
+          passed,
+          message: passed
+            ? "Tu as retrouvé l'ordre sujet → verbe → complément !"
+            : `Ce n'était pas le bon ordre. La phrase correcte était : « ${sentence.chunks.join(" ")} ».`
+        });
         resolve({ passed, score: passed ? 1 : 0, total: 1 });
       }
 

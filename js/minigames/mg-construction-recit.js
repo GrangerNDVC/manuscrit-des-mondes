@@ -72,7 +72,13 @@
     return a;
   }
 
-  function run({ canvas, uiContainer, isRemediation }) {
+  async function run({ canvas, uiContainer, isRemediation }) {
+
+    await MinigameUI.showInstructions({
+      title: "Le Récit de Gavroche",
+      objective: "Clique sur une carte en bas, puis sur l'étape du schéma narratif où elle doit aller (situation initiale, élément déclencheur, péripéties, résolution, situation finale). Une fois les 5 cartes placées, clique sur Valider."
+    });
+
     return new Promise(resolve => {
 
       canvas.width = CANVAS_W;
@@ -119,10 +125,16 @@
         <div class="hud-item"><button id="mg-validate" class="touch-btn" style="width:auto;height:auto;border-radius:8px;padding:8px 16px;">Valider</button></div>
       `;
 
-      function endGame(passed) {
+      async function endGame(passed) {
         if (resultGiven) return;
         resultGiven = true;
         canvas.removeEventListener("click", onClick);
+        await MinigameUI.showResult({
+          passed,
+          message: passed
+            ? "Le schéma narratif est complet et dans le bon ordre !"
+            : "Certaines cartes n'étaient pas à la bonne étape. Repense à l'enchaînement : situation initiale → élément déclencheur → péripéties → résolution → situation finale."
+        });
         resolve({ passed, score: passed ? 1 : 0, total: 1 });
       }
 

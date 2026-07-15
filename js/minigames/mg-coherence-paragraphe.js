@@ -53,7 +53,13 @@
     return a;
   }
 
-  function run({ canvas, uiContainer, isRemediation }) {
+  async function run({ canvas, uiContainer, isRemediation }) {
+
+    await MinigameUI.showInstructions({
+      title: "Le Rangement de Quasimodo",
+      objective: "Fais glisser les 3 phrases-vitraux (à gauche) vers les 3 emplacements de la verrière (à droite), dans l'ordre logique du récit — repère les mots comme « d'abord », « ensuite », « enfin ». Clique sur Valider une fois les 3 placées."
+    });
+
     return new Promise(resolve => {
 
       canvas.width = CANVAS_W;
@@ -101,7 +107,7 @@
         <div class="hud-item"><button id="mg-validate" class="touch-btn" style="width:auto;height:auto;border-radius:8px;padding:8px 16px;">Valider</button></div>
       `;
 
-      function endGame(passed) {
+      async function endGame(passed) {
         if (resultGiven) return;
         resultGiven = true;
         canvas.removeEventListener("mousedown", onDown);
@@ -110,6 +116,12 @@
         canvas.removeEventListener("touchstart", onTouchStart);
         canvas.removeEventListener("touchmove", onTouchMove);
         canvas.removeEventListener("touchend", onUp);
+        await MinigameUI.showResult({
+          passed,
+          message: passed
+            ? "Le paragraphe est maintenant dans le bon ordre !"
+            : `Ce n'était pas le bon ordre. L'ordre logique était : « ${sentences.join(" ")} »`
+        });
         resolve({ passed, score: passed ? 1 : 0, total: 1 });
       }
 

@@ -46,7 +46,13 @@
     return shuffle(PAIR_BANK).slice(0, n);
   }
 
-  function run({ canvas, uiContainer, isRemediation }) {
+  async function run({ canvas, uiContainer, isRemediation }) {
+
+    await MinigameUI.showInstructions({
+      title: "Les Cloches de Notre-Dame",
+      objective: "C'est un jeu de memory. Clique sur deux cloches pour les retourner : trouve les paires proposition principale ↔ proposition subordonnée qui vont logiquement ensemble. Tu as droit à 3 erreurs maximum."
+    });
+
     return new Promise(resolve => {
 
       canvas.width = CANVAS_W;
@@ -95,10 +101,16 @@
         <div class="hud-item">Erreurs : <span id="mg-mistakes">0</span> / ${MAX_MISTAKES}</div>
       `;
 
-      function endGame(passed) {
+      async function endGame(passed) {
         if (resultGiven) return;
         resultGiven = true;
         canvas.removeEventListener("click", onClick);
+        await MinigameUI.showResult({
+          passed,
+          message: passed
+            ? "Toutes les paires principale / subordonnée sont retrouvées !"
+            : "Trop d'erreurs cette fois. Relis bien chaque paire de cloches avant de valider une association."
+        });
         resolve({ passed, score: passed ? 1 : 0, total: 1 });
       }
 

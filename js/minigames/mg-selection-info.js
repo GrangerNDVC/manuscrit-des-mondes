@@ -63,7 +63,13 @@
     return a;
   }
 
-  function run({ canvas, uiContainer, isRemediation }) {
+  async function run({ canvas, uiContainer, isRemediation }) {
+
+    await MinigameUI.showInstructions({
+      title: "Le Tri de Valjean",
+      objective: "Un contexte est affiché en haut de l'écran. Des informations tombent : déplace-toi avec les flèches gauche/droite (ou les boutons) pour attraper UNIQUEMENT celles qui sont essentielles à l'histoire, et laisse tomber les détails accessoires. 2 erreurs maximum."
+    });
+
     return new Promise(resolve => {
 
       canvas.width = CANVAS_W;
@@ -81,7 +87,7 @@
       const DRAW_W = 64;
       const DRAW_H = 64;
       const sprite = new Image();
-      sprite.src = "/assets/sprites/characters/gavroche-marche.png";
+      sprite.src = "/assets/sprites/characters/esprit-combat.png";
 
       const player = { x: CANVAS_W / 2 - DRAW_W / 2, y: CANVAS_H - 80, w: DRAW_W, h: DRAW_H, speed: 7 };
 
@@ -132,10 +138,16 @@
         cancelAnimationFrame(rafId);
       }
 
-      function endGame(passed) {
+      async function endGame(passed) {
         if (resultGiven) return;
         resultGiven = true;
         cleanup();
+        await MinigameUI.showResult({
+          passed,
+          message: passed
+            ? `Bien vu : tu as attrapé ${goodCaught} / ${totalRelevant} informations essentielles.`
+            : `Tu as attrapé ${goodCaught} / ${totalRelevant} informations essentielles, avec ${badCaught} détail(s) accessoire(s) en trop. Recentre-toi sur ce qui fait vraiment avancer l'histoire.`
+        });
         resolve({ passed, score: goodCaught, total: totalRelevant });
       }
 
