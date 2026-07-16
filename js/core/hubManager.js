@@ -33,6 +33,22 @@ const HubManager = (() => {
     // ...
   };
 
+  /**
+   * Position (en % de #map-worlds, verrouillé sur le ratio réel de
+   * map-centrale.png) de chaque livre dans l'illustration. Mesuré
+   * directement sur l'image ; à ajuster ici si l'image change.
+   */
+  const WORLD_HOTSPOTS = {
+    hugo:        { left: 2,  top: 14, width: 22, height: 35 },
+    dumas:       { left: 27, top: 14, width: 22, height: 35 },
+    verne:       { left: 52, top: 14, width: 22, height: 35 },
+    shakespeare: { left: 77, top: 14, width: 22, height: 35 },
+    christie:    { left: 2,  top: 53, width: 22, height: 35 },
+    shelley:     { left: 27, top: 53, width: 22, height: 35 },
+    carroll:     { left: 52, top: 53, width: 22, height: 35 },
+    galland:     { left: 77, top: 53, width: 22, height: 35 }
+  };
+
   function showScreen(name) {
     overlay.classList.add("active");
     setTimeout(() => {
@@ -57,20 +73,37 @@ const HubManager = (() => {
     container.innerHTML = "";
     keysContainer.innerHTML = "";
 
-    GameState.WORLD_IDS.forEach((worldId, i) => {
+    GameState.WORLD_IDS.forEach((worldId) => {
       const w = state.worlds[worldId];
       const hasPage = !!WORLD_PAGES[worldId];
+      const isPlayable = w.unlocked && hasPage;
+
       const portal = document.createElement("div");
-      portal.className = "world-portal" + (w.unlocked && hasPage ? "" : " locked");
-      const statusLabel = !hasPage
-        ? " (à venir)"
-        : (w.currentAct === -1 ? " ✓" : ` (acte ${w.currentAct + 1}/${GameState.ACT_IDS.length})`);
-      portal.innerHTML = `<span>Monde ${i + 1}</span><strong>${worldId}</strong><small>${statusLabel}</small>`;
-      if (w.unlocked && hasPage) {
+      portal.className = "world-portal" + (isPlayable ? "" : " locked");
+
+      const spot = WORLD_HOTSPOTS[worldId];
+      if (spot) {
+        portal.style.left = spot.left + "%";
+        portal.style.top = spot.top + "%";
+        portal.style.width = spot.width + "%";
+        portal.style.height = spot.height + "%";
+      }
+
+      if (isPlayable) {
+        // Seul un monde jouable affiche un petit badge (progression) —
+        // l'illustration porte déjà le titre, pas besoin de le répéter.
+        const statusLabel = w.currentAct === -1
+          ? "✓ terminé"
+          : `Acte ${w.currentAct + 1}/${GameState.ACT_IDS.length}`;
+        portal.innerHTML = `<span class="portal-badge">${statusLabel}</span>`;
         portal.addEventListener("click", () => {
           window.location.href = WORLD_PAGES[worldId];
         });
       }
+      // Mondes verrouillés/à venir : zone positionnée mais sans aucun
+      // contenu visible — prête à s'activer le jour où ces mondes
+      // seront développés, sans rien changer ici.
+
       container.appendChild(portal);
     });
 
