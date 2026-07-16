@@ -6,15 +6,57 @@
 <title>Le Manuscrit des Mondes</title>
 <link rel="stylesheet" href="/css/main.css">
 <style>
-  /* Fond de "La Bibliothèque des Mondes". Mis ici en attendant de
-     l'intégrer à main.css (pas fourni dans cette session — si
-     .map-container a elle-même un fond opaque défini là-bas, déplace
-     cette règle sur .map-container au lieu de #screen-map). */
-  #screen-map {
+  /* Fond de "La Bibliothèque des Mondes" + positionnement précis des
+     8 zones cliquables. Mis ici en attendant de l'intégrer à main.css
+     (pas fourni dans cette session). Si quelque chose ne s'applique
+     pas (ex. .map-container a un style conflictuel dans main.css),
+     envoie-moi main.css pour que j'ajuste la spécificité.
+
+     aspect-ratio verrouillé sur les dimensions réelles de
+     map-centrale.png (1376x768) + background-size:contain (jamais
+     cover) : c'est ce qui garantit que les % de position ci-dessous
+     tombent exactement sur les livres, quelle que soit la largeur de
+     l'écran. Si l'image change de dimensions, recalculer ce ratio. */
+  #screen-map .map-title {
+    display: none !important; /* le titre est déjà dans l'image */
+  }
+  #map-worlds {
+    position: relative;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    aspect-ratio: 1376 / 768;
     background-image: url("/assets/backgrounds/map-centrale.png");
-    background-size: cover;
+    background-size: contain;
     background-position: center;
     background-repeat: no-repeat;
+  }
+  #map-worlds .world-portal {
+    position: absolute;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    border-radius: 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 0;
+  }
+  #map-worlds .world-portal.locked {
+    cursor: default;
+  }
+  #map-worlds .world-portal:not(.locked) {
+    cursor: pointer;
+  }
+  #map-worlds .world-portal .portal-badge {
+    background: rgba(26, 21, 48, 0.75);
+    color: #f4f1ea;
+    border: 1px solid #e8c468;
+    border-radius: 6px;
+    padding: 2px 10px;
+    font-size: 0.8rem;
+    margin-bottom: 4%;
+    pointer-events: none;
   }
 </style>
 </head>
