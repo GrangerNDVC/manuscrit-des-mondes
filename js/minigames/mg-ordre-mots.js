@@ -86,9 +86,12 @@
       }));
 
       // --- Sprite de l'Esprit (feuille "marche", réutilisée pour idle/saut) ---
-      const SPRITE_CELL_W = 72;
-      const SPRITE_CELL_H = 96;
-      // Feuille 8 colonnes x 4 lignes. Convention supposée (à vérifier
+      const SPRITE_CELL_W = 48;
+      const SPRITE_CELL_H = 48;
+      // Format RPG Maker MZ : le vrai personnage est dans le bloc [0][0]
+      // (origine du fichier), grille 3 colonnes x 4 lignes de 48x48 —
+      // vérifié par analyse des pixels (voir mg-ponctuation.js v5 pour
+      // le détail). Convention supposée pour les lignes (à vérifier
       // visuellement en jeu) : ligne 0 = face, 1 = gauche, 2 = droite,
       // 3 = dos. On court vers la droite → ligne 2. Si l'animation a
       // l'air de travers, change juste WALK_ROW ci-dessous.

@@ -1,137 +1,158 @@
 /* ============================================================
-   LE MANUSCRIT DES MONDES — mg-ponctuation.js (v4)
+   LE MANUSCRIT DES MONDES — mg-ponctuation.js (v5)
    ============================================================
    Mini-jeu "L'Assaut des Barricades" (Monde 1 — Hugo).
    Notion : ponctuation.
 
-   ---- v4 : mécanique clarifiée par Julie (visuels à l'appui) ----
-   Ce n'est plus 3 courtes phrases indépendantes (v2 : clic ; v3 :
-   4 blocs statiques pour 1 trou). C'est maintenant UNE seule longue
-   phrase contenant PLUSIEURS trous de ponctuation, chacun matérialisé
-   par UN dé flottant au-dessus du texte, à l'endroit exact du trou.
-   Chaque dé tourne LENTEMENT parmi plusieurs signes possibles. Le
-   joueur avance automatiquement sur un chemin et doit SAUTER, par en
-   dessous, au bon moment pour toucher le dé pendant qu'il affiche le
-   bon signe.
+   ---- v5 : corrections suite à test réel par Julie ----
+   1. Ce n'est plus le MONDE qui défile sous un personnage fixe à
+      l'écran (caméra scrollée, v3/v4) : c'est maintenant le
+      PERSONNAGE qui se déplace réellement sur un canevas fixe.
+      Le texte de la phrase est fixe en haut de l'écran, jamais en
+      mouvement.
+   2. Les dés tournent beaucoup plus lentement (voir CYCLE_INTERVAL) :
+      l'objectif est de LIRE et RECONNAÎTRE le bon signe, pas de
+      réagir au hasard.
+   3. Correction d'un vrai bug de sprite : les feuilles fournies
+      (esprit-marche.png / esprit-ko.png) suivent le format standard
+      RPG Maker MZ — un canevas de 576x384 prévu pour 8 personnages
+      (grille 4x2 de blocs 144x192), mais SEUL le bloc [0][0] (haut
+      gauche) contient réellement un personnage, le reste est
+      transparent. À l'intérieur de ce bloc, la vraie grille est
+      3 colonnes x 4 lignes de 48x48 (et non 72x96 comme supposé en
+      v3/v4 — d'où le sprite invisible : on lisait dans le vide).
+      Vérifié par analyse directe des pixels, pas une supposition.
+   4. Contenu : plus 2-3 phrases fixes, mais une BANQUE de 5 mini-pitchs
+      tirés d'œuvres connues d'Hugo (Les Misérables, Notre-Dame de
+      Paris), nombre de trous variable (3 à 5).
+   5. Flux : une mauvaise réponse (mauvais signe touché, ou trou
+      dépassé sans saut) déclenche une remédiation explicite PUIS un
+      NOUVEAU mini-pitch (différent) — on ne rejoue plus la même
+      phrase en boucle. Une réussite complète met fin au mini-jeu
+      (retour au visual novel, géré par sceneManager.js comme pour
+      tous les autres mini-jeux).
+   6. Majuscule : les mots qui suivent un trou non résolu s'affichent
+      en minuscule (pour ne pas trahir qu'un point/! /? arrive) ; dès
+      que le trou est validé, la vraie casse s'affiche automatiquement.
 
-   - Bonne réponse (dé touché pendant qu'il affiche le bon signe) →
-     le dé se fige sur ce signe, le joueur continue vers le trou
-     suivant DANS LA MÊME phrase.
-   - Mauvaise réponse (dé touché sur le mauvais signe, OU trou dépassé
-     sans avoir sauté) → toute la phrase recommence depuis le début
-     (tous les dés, y compris ceux déjà réussis, repartent de zéro).
-
-   Le jeu ne se termine (résolution de la Promise, toujours en
-   succès) qu'une fois la phrase entièrement réussie d'un seul tenant
-   — les échecs sont des tentatives internes, pas un échec du
-   mini-jeu au sens de sceneManager.js.
-
-   Sprite : feuille "marche" (esprit-marche.png, voir mg-shared.js /
-   livraison précédente), mêmes cellules 72x96 que la feuille combat.
+   Sprite : bloc [0][0] de la feuille RPG Maker MZ, cellules 48x48.
+   Ligne supposée pour "regarde vers la droite" : ligne 2 (convention
+   standard bas/gauche/droite/haut). À ajuster via WALK_ROW si besoin.
 
    Enregistré sous la notion "ponctuation", variante "barricades_hugo"
    (inchangée : aucune autre partie du code n'a besoin de changer).
    ============================================================ */
 
-(function registerPonctuationHugoV4() {
+(function registerPonctuationHugoV5() {
 
   const CANVAS_W = 800;
   const CANVAS_H = 450;
-  const GROUND_Y = CANVAS_H - 60; // 390
+  const GROUND_Y = 390;
   const GRAVITY = 0.6;
   const JUMP_VELOCITY = -10;
-  const SCROLL_SPEED = 2.4;
+  const WALK_SPEED = 1.3; // vitesse de déplacement RÉEL du personnage à l'écran
 
-  const DRAW_W = 48;
-  const DRAW_H = 64;
+  const DRAW_W = 56, DRAW_H = 56; // le sprite source est carré (48x48) : on garde un rendu carré
 
-  // --- Sprite "marche" (grille 8 colonnes x 4 lignes, cellules 72x96) ---
-  const SPRITE_CELL_W = 72;
-  const SPRITE_CELL_H = 96;
-  // Convention supposée : 0=face, 1=gauche, 2=droite, 3=dos. On court
-  // vers la droite → ligne 2. Ajuste cette constante si besoin une
-  // fois testé en jeu (même réglage que mg-ordre-mots.js).
+  // --- Sprite "marche", format RPG Maker MZ (voir note en tête de fichier) ---
+  const SPRITE_CELL_W = 48;
+  const SPRITE_CELL_H = 48;
+  // Bloc [0][0] = origine (0,0) du fichier, donc pas de décalage à ajouter.
+  // Convention standard : 0=bas(face), 1=gauche, 2=droite, 3=haut(dos).
   const WALK_ROW = 2;
 
-  // --- Sprite "KO" (même grille), petit "aïe" visuel sur une mauvaise
-  //     réponse. Change KO_COL/KO_ROW si une autre case est plus lisible. ---
-  const KO_COL = 0;
-  const KO_ROW = 0;
+  const KO_COL = 0, KO_ROW = 0;
 
-  // --- Décor (à créer par Julie — voir message de livraison) ---
+  // --- Décor : simple image fixe (plus besoin d'un long décor à faire
+  //     défiler, tout tient sur un seul écran maintenant) ---
   const BG_SRC = "/assets/backgrounds/decors_Hugo_barricades_minijeu.png";
 
-  // --- Dés (trous de ponctuation) ---
+  // --- Mise en page du chemin (zone de jeu, sous le panneau de texte) ---
+  const PATH_START_X = 110, PATH_END_X = 690;
   const DIE_W = 54, DIE_H = 54, DIE_BEVEL = 8;
-  // Même logique de portée de saut que la v3 : le bas du dé est 45px
-  // au-dessus de la tête du joueur à l'arrêt (~83px de portée max).
-  const DIE_BOTTOM_Y = GROUND_Y - DRAW_H - 45; // 281
-  const DIE_TOP_Y = DIE_BOTTOM_Y - DIE_H;      // 227
-  const TEXT_Y = DIE_TOP_Y + DIE_BEVEL + (DIE_H - DIE_BEVEL) / 2; // aligné sur le centre du dé
-  const CYCLE_INTERVAL = 50; // frames entre deux signes affichés (~0.8s) : lent, lisible
+  const DIE_BOTTOM_Y = GROUND_Y - DRAW_H - 45; // 289 : portée de saut confortable
+  const DIE_TOP_Y = DIE_BOTTOM_Y - DIE_H;      // 235
+  const MISS_TRIGGER_OFFSET = 140;
+  const CYCLE_INTERVAL = 110; // frames entre deux signes (~1.8s à 60fps) : lent, lisible
 
-  // Largeur allouée par "segment de phrase + son dé" ; le texte est
-  // dessiné en partant de la gauche du segment, le dé se place vers
-  // la fin du segment (marge avant le suivant).
-  const SEGMENT_SLOT_WIDTH = 600;
-  const LEVEL_START_X = 140;
-  const DIE_MARGIN_BEFORE_NEXT = 80;
-  const MISS_TRIGGER_OFFSET = 260;
+  // --- Mise en page du panneau de texte fixe ---
+  const TEXT_PANEL_X = 60, TEXT_PANEL_Y = 16, TEXT_PANEL_W = 680;
+  const TEXT_LINE_HEIGHT = 30, TEXT_FONT = "19px sans-serif";
+  const TEXT_PADDING = 16;
 
-  // Deux phrases possibles (tirée au sort) : contenu pédagogique.
-  // segments[i] est suivi du trou blanks[i] (même longueur).
-  const LONG_SENTENCE_SETS = [
+  /**
+   * Banque de mini-pitchs (œuvres connues de Victor Hugo). segments[i]
+   * est TOUJOURS suivi de blanks[i] (même longueur), sans texte après
+   * le dernier trou. Les mots doivent être écrits avec leur VRAIE
+   * casse : la minuscule forcée après un trou non résolu est gérée
+   * automatiquement à l'affichage.
+   */
+  const PITCH_BANK = [
     {
-      segments: ["Dans les Misérables de Victor Hugo", "Fantine confia Cosette", "sa fille", "aux Thénardier"],
+      title: "Les Misérables",
+      segments: [
+        "Dans les Misérables de Victor Hugo",
+        "Fantine confia Cosette",
+        "sa fille",
+        "aux Thénardier",
+        "Jean Valjean promit de la retrouver un jour"
+      ],
       blanks: [
-        {
-          correct: ",",
-          options: [",", ".", "!", "?"],
-          why: "Cette virgule sépare le complément placé en tête de phrase (« Dans les Misérables... ») du reste de la phrase : virgule d'introduction."
-        },
-        {
-          correct: ",",
-          options: [",", ".", "!", ";"],
-          why: "« sa fille » est une apposition qui précise qui est Cosette : elle s'ouvre par une virgule."
-        },
-        {
-          correct: ",",
-          options: [",", ".", "!", ";"],
-          why: "L'apposition « sa fille » se referme par une seconde virgule avant de continuer la phrase."
-        },
-        {
-          correct: ".",
-          options: [".", ",", "!", "?"],
-          why: "C'est la fin de la phrase : un point la clôt normalement."
-        }
+        { correct: ",", options: [",", ".", "!", "?"], why: "Cette virgule sépare le complément placé en tête de phrase (« Dans les Misérables... ») du reste de la phrase : virgule d'introduction." },
+        { correct: ",", options: [",", ".", "!", ";"], why: "« sa fille » est une apposition qui précise qui est Cosette : elle s'ouvre par une virgule." },
+        { correct: ",", options: [",", ".", "!", ";"], why: "L'apposition « sa fille » se referme par une seconde virgule avant de continuer la phrase." },
+        { correct: ".", options: [".", ",", "!", "?"], why: "C'est la fin de la première phrase : un point la clôt, et le mot suivant (« Jean Valjean ») prend une majuscule." },
+        { correct: ".", options: [".", ",", "!", "?"], why: "C'est la fin de la phrase : un point la clôt normalement." }
       ]
     },
     {
+      title: "Les Misérables",
       segments: ["Quand la nuit tomba sur Paris", "Gavroche", "prudent", "se glissa vers la barricade"],
       blanks: [
-        {
-          correct: ",",
-          options: [",", ".", "!", "?"],
-          why: "« Quand la nuit tomba sur Paris » est une proposition placée en tête de phrase : une virgule la sépare de la suite."
-        },
-        {
-          correct: ",",
-          options: [",", ".", "!", ";"],
-          why: "« prudent » est une apposition qui décrit Gavroche : elle s'ouvre par une virgule."
-        },
-        {
-          correct: ",",
-          options: [",", ".", "!", ";"],
-          why: "L'apposition « prudent » se referme par une seconde virgule."
-        },
-        {
-          correct: ".",
-          options: [".", ",", "!", "?"],
-          why: "C'est la fin de la phrase : un point la clôt normalement."
-        }
+        { correct: ",", options: [",", ".", "!", "?"], why: "« Quand la nuit tomba sur Paris » est une proposition placée en tête de phrase : une virgule la sépare de la suite." },
+        { correct: ",", options: [",", ".", "!", ";"], why: "« prudent » est une apposition qui décrit Gavroche : elle s'ouvre par une virgule." },
+        { correct: ",", options: [",", ".", "!", ";"], why: "L'apposition « prudent » se referme par une seconde virgule." },
+        { correct: ".", options: [".", ",", "!", "?"], why: "C'est la fin de la phrase : un point la clôt normalement." }
+      ]
+    },
+    {
+      title: "Notre-Dame de Paris",
+      segments: ["Dans Notre-Dame de Paris", "Quasimodo", "le sonneur de cloches", "aimait Esmeralda"],
+      blanks: [
+        { correct: ",", options: [",", ".", "!", "?"], why: "« Dans Notre-Dame de Paris » est un complément placé en tête de phrase : virgule d'introduction." },
+        { correct: ",", options: [",", ".", "!", ";"], why: "« le sonneur de cloches » est une apposition qui précise qui est Quasimodo : elle s'ouvre par une virgule." },
+        { correct: ",", options: [",", ".", "!", ";"], why: "L'apposition se referme par une seconde virgule avant de continuer la phrase." },
+        { correct: ".", options: [".", ",", "!", "?"], why: "C'est la fin de la phrase : un point la clôt normalement." }
+      ]
+    },
+    {
+      title: "Notre-Dame de Paris",
+      segments: ["Du haut de la tour", "Quasimodo", "affolé", "hurla que le danger approchait"],
+      blanks: [
+        { correct: ",", options: [",", ".", "!", "?"], why: "« Du haut de la tour » est un complément de lieu placé en tête de phrase : virgule d'introduction." },
+        { correct: ",", options: [",", ".", "!", ";"], why: "« affolé » est une apposition qui décrit l'état de Quasimodo : elle s'ouvre par une virgule." },
+        { correct: ",", options: [",", ".", "!", ";"], why: "L'apposition « affolé » se referme par une seconde virgule." },
+        { correct: "!", options: ["!", ".", "?", ","], why: "Quasimodo hurle un danger : l'intensité de l'action appelle un point d'exclamation." }
+      ]
+    },
+    {
+      title: "Notre-Dame de Paris",
+      segments: ["Quasimodo", "du haut de la tour", "cria-t-il vraiment son amour à Esmeralda"],
+      blanks: [
+        { correct: ",", options: [",", ".", "!", ";"], why: "« du haut de la tour » est une apposition insérée après Quasimodo : elle s'ouvre par une virgule." },
+        { correct: ",", options: [",", ".", "!", ";"], why: "L'apposition « du haut de la tour » se referme par une seconde virgule." },
+        { correct: "?", options: ["?", ".", "!", ","], why: "Le verbe inversé (« cria-t-il ») signale une question directe : elle se termine par un point d'interrogation." }
       ]
     }
   ];
+
+  function pickPitch(excludeIndex) {
+    let idx;
+    do {
+      idx = Math.floor(Math.random() * PITCH_BANK.length);
+    } while (PITCH_BANK.length > 1 && idx === excludeIndex);
+    return idx;
+  }
 
   function drawDie(ctx, x, y, symbol, style) {
     let face = "#e8c468", top = "#f3dc9a", side = "#b9903f";
@@ -171,6 +192,19 @@
     ctx.fillText(symbol, x + DIE_W / 2, y + DIE_BEVEL + (DIE_H - DIE_BEVEL) / 2 + 1);
   }
 
+  // Panneau "épais" derrière le texte, même esprit que les dés (tranche
+  // visible en dessous/à droite pour donner une impression de relief).
+  function drawPlaque(ctx, x, y, w, h) {
+    const bevel = 6;
+    ctx.fillStyle = "#4a3a1a";
+    ctx.fillRect(x + bevel, y + bevel, w, h);
+    ctx.fillStyle = "#2b2347";
+    ctx.fillRect(x, y, w, h);
+    ctx.strokeStyle = "#e8c468";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x, y, w, h);
+  }
+
   async function run({ canvas, uiContainer, isRemediation }) {
 
     const sprite = new Image();
@@ -182,7 +216,7 @@
 
     await MinigameUI.showInstructions({
       title: "L'Assaut des Barricades",
-      objective: "Tu avances automatiquement le long de la phrase affichée au-dessus de toi. À chaque trou, un dé tourne lentement parmi plusieurs signes de ponctuation : saute — Espace, flèche du haut, ou ⤴ — pour le toucher par en dessous PENDANT qu'il affiche le bon signe. Une bonne réponse te fait continuer vers le trou suivant. Une mauvaise réponse (ou un trou dépassé sans saut) te fait recommencer TOUTE la phrase depuis le début."
+      objective: "La phrase à compléter est affichée en haut de l'écran, fixe. Ton personnage avance automatiquement en dessous. À chaque trou, un dé tourne LENTEMENT parmi plusieurs signes : saute — Espace, flèche du haut, ou ⤴ — pour le toucher par en dessous PENDANT qu'il affiche le bon signe. Une erreur (mauvais signe, ou trou dépassé sans saut) t'explique pourquoi puis relance une nouvelle phrase. Une phrase réussie du début à la fin termine le mini-jeu."
     });
 
     return new Promise(resolve => {
@@ -191,17 +225,24 @@
       canvas.height = CANVAS_H;
       const ctx = canvas.getContext("2d");
 
-      const set = LONG_SENTENCE_SETS[Math.floor(Math.random() * LONG_SENTENCE_SETS.length)];
+      let pitchIndex = pickPitch(-1);
+      let pitch, checkpoints, resolvedFlags;
 
-      const checkpoints = set.blanks.map((blank, i) => ({
-        x: LEVEL_START_X + (i + 1) * SEGMENT_SLOT_WIDTH - DIE_MARGIN_BEFORE_NEXT,
-        segmentText: set.segments[i],
-        segmentX: LEVEL_START_X + i * SEGMENT_SLOT_WIDTH + 16,
-        blank,
-        optionIndex: 0,
-        cycleTimer: 0,
-        state: "cycling" // cycling | correct
-      }));
+      function loadPitch(idx) {
+        pitchIndex = idx;
+        pitch = PITCH_BANK[idx];
+        resolvedFlags = pitch.blanks.map(() => false);
+        const n = pitch.blanks.length;
+        checkpoints = pitch.blanks.map((blank, i) => ({
+          x: n === 1 ? (PATH_START_X + PATH_END_X) / 2 : PATH_START_X + i * (PATH_END_X - PATH_START_X) / (n - 1),
+          blank,
+          blankIndex: i,
+          optionIndex: 0,
+          cycleTimer: 0,
+          state: "cycling" // cycling | correct | wrong
+        }));
+      }
+      loadPitch(pitchIndex);
 
       const player = { x: 60, y: GROUND_Y - DRAW_H, w: DRAW_W, h: DRAW_H, vy: 0, onGround: true };
 
@@ -210,13 +251,13 @@
       let resultGiven = false;
       let paused = false;
       let pauseTimer = 0;
-      let pendingRestart = false;
+      let pendingAction = null; // "next" | "newPitch"
       let koUntil = 0;
       const particles = [];
 
       uiContainer.innerHTML = `
         <div class="hud-item">${isRemediation ? "Entraînement" : "Évaluation"}</div>
-        <div class="hud-item">Trou <span id="mg-progress">1</span> / ${checkpoints.length}</div>
+        <div class="hud-item">Trou <span id="mg-progress">1</span> / <span id="mg-total">${checkpoints.length}</span></div>
         <div class="hud-item">Tentative n° <span id="mg-attempt">1</span></div>
       `;
       uiContainer.insertAdjacentHTML("beforeend", `
@@ -227,6 +268,7 @@
 
       function updateHud() {
         document.getElementById("mg-progress").textContent = Math.min(currentCheckpointIndex + 1, checkpoints.length);
+        document.getElementById("mg-total").textContent = checkpoints.length;
         document.getElementById("mg-attempt").textContent = attempt;
       }
 
@@ -261,8 +303,8 @@
 
       function showFeedback(isCorrect, why) {
         uiContainer.insertAdjacentHTML("beforeend", `
-          <div class="hud-item" id="mg-feedback" style="color:${isCorrect ? '#6fcf97' : '#d9534f'}; font-weight:bold; max-width:640px;">
-            ${isCorrect ? "✓ Exact !" : "✗ Pas ça —"} ${why}${isCorrect ? "" : " On recommence la phrase depuis le début !"}
+          <div class="hud-item" id="mg-feedback" style="color:${isCorrect ? '#6fcf97' : '#d9534f'}; font-weight:bold; max-width:680px;">
+            ${isCorrect ? "✓ Exact !" : "✗ Pas ça —"} ${why}${isCorrect ? "" : " Nouvelle phrase !"}
           </div>
         `);
       }
@@ -272,17 +314,19 @@
         const shownSymbol = cp.blank.options[cp.optionIndex];
         const isCorrect = shownSymbol === cp.blank.correct;
         paused = true;
-        pauseTimer = 105;
+        pauseTimer = 115;
 
         if (isCorrect) {
           cp.state = "correct";
+          resolvedFlags[cp.blankIndex] = true;
           spawnBurst(cp.x + DIE_W / 2, DIE_TOP_Y + DIE_H / 2, "#6fcf97");
           showFeedback(true, cp.blank.why);
+          pendingAction = "next";
         } else {
           cp.state = "wrong";
           koUntil = performance.now() + 500;
-          pendingRestart = true;
           showFeedback(false, cp.blank.why);
+          pendingAction = "newPitch";
         }
       }
 
@@ -290,24 +334,20 @@
         if (cp.state !== "cycling") return;
         cp.state = "wrong";
         paused = true;
-        pauseTimer = 105;
-        pendingRestart = true;
+        pauseTimer = 115;
         koUntil = performance.now() + 500;
         showFeedback(false, "Tu es passé sous le dé sans sauter au bon moment. " + cp.blank.why);
+        pendingAction = "newPitch";
       }
 
-      function restartLevel() {
+      function startNewPitch() {
+        loadPitch(pickPitch(pitchIndex));
         player.x = 60;
         player.y = GROUND_Y - DRAW_H;
         player.vy = 0;
         player.onGround = true;
         currentCheckpointIndex = 0;
         attempt++;
-        checkpoints.forEach(cp => {
-          cp.state = "cycling";
-          cp.optionIndex = 0;
-          cp.cycleTimer = 0;
-        });
         updateHud();
       }
 
@@ -317,7 +357,7 @@
         cleanup();
         await MinigameUI.showResult({
           passed: true,
-          message: `Phrase complète, bien joué ! (en ${attempt} tentative${attempt > 1 ? "s" : ""})`
+          message: `« ${pitch.title} » reconstitué sans faute, bien joué ! (en ${attempt} tentative${attempt > 1 ? "s" : ""})`
         });
         resolve({ passed: true, score: checkpoints.length, total: checkpoints.length });
       }
@@ -333,10 +373,11 @@
             const feedbackEl = document.getElementById("mg-feedback");
             if (feedbackEl) feedbackEl.remove();
 
-            if (pendingRestart) {
-              pendingRestart = false;
-              restartLevel();
-            } else {
+            if (pendingAction === "newPitch") {
+              pendingAction = null;
+              startNewPitch();
+            } else if (pendingAction === "next") {
+              pendingAction = null;
               currentCheckpointIndex++;
               updateHud();
               if (currentCheckpointIndex >= checkpoints.length) {
@@ -346,7 +387,7 @@
             }
           }
         } else {
-          player.x += SCROLL_SPEED;
+          if (player.x < PATH_END_X + 40) player.x += WALK_SPEED;
           player.vy += GRAVITY;
           player.y += player.vy;
 
@@ -375,7 +416,6 @@
             }
           }
 
-          // cycle de tous les dés non résolus (visible même à distance)
           checkpoints.forEach(c => {
             if (c.state !== "cycling") return;
             c.cycleTimer++;
@@ -386,7 +426,7 @@
           });
 
           animTimer++;
-          if (animTimer >= 7) { animTimer = 0; animFrame = (animFrame + 1) % 3; }
+          if (animTimer >= 9) { animTimer = 0; animFrame = (animFrame + 1) % 3; }
         }
 
         for (let i = particles.length - 1; i >= 0; i--) {
@@ -399,62 +439,110 @@
         if (!resultGiven) rafId = requestAnimationFrame(loop);
       }
 
-      function render() {
-        const screenOffset = player.x - 60;
+      // --- Mise en page du texte (recalculée chaque frame : peu coûteux
+      //     à cette échelle, dépend de resolvedFlags qui change peu) ---
+      function layoutText() {
+        ctx.font = TEXT_FONT;
+        const maxW = TEXT_PANEL_W - TEXT_PADDING * 2;
+        const tokens = [];
+        pitch.segments.forEach((segText, i) => {
+          let text = segText;
+          if (i > 0 && !resolvedFlags[i - 1]) {
+            text = text.charAt(0).toLowerCase() + text.slice(1);
+          }
+          text.split(" ").forEach(w => tokens.push({ type: "word", text: w }));
+          tokens.push({ type: "blank", index: i });
+        });
 
+        const spaceW = ctx.measureText(" ").width;
+        const blankW = 30;
+        const lines = [];
+        let line = [], lineW = 0;
+        tokens.forEach(tok => {
+          const w = tok.type === "word" ? ctx.measureText(tok.text).width : blankW;
+          if (lineW + w > maxW && line.length > 0) {
+            lines.push({ tokens: line, width: lineW - spaceW });
+            line = []; lineW = 0;
+          }
+          line.push({ ...tok, w });
+          lineW += w + spaceW;
+        });
+        if (line.length) lines.push({ tokens: line, width: lineW - spaceW });
+        return lines;
+      }
+
+      function render() {
         if (bgImage.complete && bgImage.naturalWidth > 0) {
-          ctx.drawImage(bgImage, -screenOffset, 0, bgImage.naturalWidth, CANVAS_H);
+          ctx.drawImage(bgImage, 0, 0, CANVAS_W, CANVAS_H);
         } else {
           ctx.fillStyle = "#1a1530";
           ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
         }
 
-        // Texte de la phrase (segments), aligné sur la ligne des dés
-        ctx.font = "20px sans-serif";
+        // Panneau de texte fixe
+        const lines = layoutText();
+        const panelH = lines.length * TEXT_LINE_HEIGHT + TEXT_PADDING * 2 - 6;
+        drawPlaque(ctx, TEXT_PANEL_X, TEXT_PANEL_Y, TEXT_PANEL_W, panelH);
+
+        ctx.font = TEXT_FONT;
         ctx.fillStyle = "#f4f1ea";
-        ctx.textAlign = "left";
         ctx.textBaseline = "middle";
-        checkpoints.forEach(cp => {
-          const screenX = cp.segmentX - screenOffset;
-          if (screenX > -600 && screenX < CANVAS_W + 100) {
-            ctx.fillText(cp.segmentText, screenX, TEXT_Y);
-          }
+        lines.forEach((ln, li) => {
+          let x = TEXT_PANEL_X + (TEXT_PANEL_W - ln.width) / 2;
+          const y = TEXT_PANEL_Y + TEXT_PADDING + li * TEXT_LINE_HEIGHT + TEXT_LINE_HEIGHT / 2 - 4;
+          ln.tokens.forEach(tok => {
+            if (tok.type === "word") {
+              ctx.textAlign = "left";
+              ctx.fillStyle = "#f4f1ea";
+              ctx.fillText(tok.text, x, y);
+            } else {
+              const resolved = resolvedFlags[tok.index];
+              ctx.textAlign = "center";
+              ctx.fillStyle = resolved ? "#e8c468" : "rgba(244,241,234,0.35)";
+              ctx.font = resolved ? "bold 19px serif" : TEXT_FONT;
+              ctx.fillText(resolved ? pitch.blanks[tok.index].correct : "_", x + tok.w / 2, y + (resolved ? 0 : 2));
+              ctx.font = TEXT_FONT;
+            }
+            x += tok.w + ctx.measureText(" ").width;
+          });
         });
 
-        // Dés
+        // Dés (zone de jeu)
         checkpoints.forEach(cp => {
-          const screenX = cp.x - screenOffset;
-          if (screenX < -DIE_W - DIE_BEVEL || screenX > CANVAS_W) return;
           let symbol, style;
-          if (cp.state === "correct") {
-            symbol = cp.blank.correct; style = "correct";
-          } else if (cp.state === "wrong") {
-            symbol = cp.blank.options[cp.optionIndex]; style = "wrong";
-          } else {
-            symbol = cp.blank.options[cp.optionIndex]; style = "cycling";
-          }
-          drawDie(ctx, screenX, DIE_TOP_Y, symbol, style);
+          if (cp.state === "correct") { symbol = cp.blank.correct; style = "correct"; }
+          else if (cp.state === "wrong") { symbol = cp.blank.options[cp.optionIndex]; style = "wrong"; }
+          else { symbol = cp.blank.options[cp.optionIndex]; style = "cycling"; }
+          drawDie(ctx, cp.x, DIE_TOP_Y, symbol, style);
         });
 
         particles.forEach(p => {
           ctx.globalAlpha = Math.max(0, p.life / p.maxLife);
           ctx.fillStyle = p.color;
           ctx.beginPath();
-          ctx.arc(p.x - screenOffset, p.y, 4, 0, Math.PI * 2);
+          ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
           ctx.fill();
           ctx.globalAlpha = 1;
         });
 
         const useKo = performance.now() < koUntil && koSprite.complete && koSprite.naturalWidth > 0;
         if (useKo) {
-          ctx.drawImage(koSprite, KO_COL * SPRITE_CELL_W, KO_ROW * SPRITE_CELL_H, SPRITE_CELL_W, SPRITE_CELL_H, 60, player.y, player.w, player.h);
+          ctx.drawImage(koSprite, KO_COL * SPRITE_CELL_W, KO_ROW * SPRITE_CELL_H, SPRITE_CELL_W, SPRITE_CELL_H, player.x, player.y, player.w, player.h);
         } else if (sprite.complete && sprite.naturalWidth > 0) {
           const frame = player.onGround ? animFrame : 1;
-          ctx.drawImage(sprite, frame * SPRITE_CELL_W, WALK_ROW * SPRITE_CELL_H, SPRITE_CELL_W, SPRITE_CELL_H, 60, player.y, player.w, player.h);
+          ctx.drawImage(sprite, frame * SPRITE_CELL_W, WALK_ROW * SPRITE_CELL_H, SPRITE_CELL_W, SPRITE_CELL_H, player.x, player.y, player.w, player.h);
         } else {
           ctx.fillStyle = "#e8c468";
-          ctx.fillRect(60, player.y, player.w, player.h);
+          ctx.fillRect(player.x, player.y, player.w, player.h);
         }
+
+        // Sol
+        ctx.strokeStyle = "rgba(232,196,104,0.4)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, GROUND_Y + DRAW_H + 2);
+        ctx.lineTo(CANVAS_W, GROUND_Y + DRAW_H + 2);
+        ctx.stroke();
       }
 
       loop();

@@ -82,8 +82,8 @@
       const totalRelevant = allItems.filter(it => it.relevant).length;
 
       // --- Sprite joueur (Esprit, en attendant un sprite dédié à Jean Valjean) ---
-      const SPRITE_CELL_W = 72;
-      const SPRITE_CELL_H = 96;
+      const SPRITE_CELL_W = 48;
+      const SPRITE_CELL_H = 48;
       const WALK_ROW = 2; // supposé "droite" — voir mg-ordre-mots.js, ajuste si besoin
       const DRAW_W = 64;
       const DRAW_H = 64;
