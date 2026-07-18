@@ -1,32 +1,40 @@
 /* ============================================================
-   LE MANUSCRIT DES MONDES — mg-ponctuation.js (v6)
+   LE MANUSCRIT DES MONDES — mg-ponctuation.js (v8)
    ============================================================
    Mini-jeu "L'Assaut des Barricades" (Monde 1 — Hugo).
    Notion : ponctuation.
 
-   ---- v6 : corrections suite au 2e retour de Julie ----
-   1. DÉPLACEMENT JOUEUR : le personnage n'avance plus tout seul.
-      Flèches gauche/droite (ou Q/D, ou boutons tactiles ◀ ▶) pour se
-      déplacer, saut inchangé (Espace / flèche haut / bouton ⤴).
-      Le sprite change de ligne selon la direction (WALK_ROW_LEFT /
-      WALK_ROW_RIGHT) au lieu d'une ligne fixe.
-   2. POSITION DES DÉS : n'est plus une hauteur fixe et lointaine.
-      Recalculée chaque frame à partir de la hauteur RÉELLE du panneau
-      de texte (variable selon le nombre de trous/lignes du mini-pitch)
-      + un petit écart fixe (DIE_GAP_BELOW_TEXT). Corrige le grand vide
-      signalé par Julie entre le texte et les dés. Le sol suit à son
-      tour les dés, avec une marge calculée pour que le saut reste
-      toujours jouable (portée de saut ~83px avec les constantes
-      GRAVITY/JUMP_VELOCITY actuelles).
-   3. Suppression du "miss" par simple passage devant un dé sans sauter
-      (n'avait plus de sens avec un déplacement libre bidirectionnel) :
-      seul le fait de sauter sur le MAUVAIS signe compte comme erreur.
-   4. ⚠️ Le rectangle jaune de secours et un éventuel rognage du canevas
-      par le CSS ne sont PAS traités ici — cause probable : fichier
-      esprit-marche.png non chargé (404) et/ou minigames.css absent du
-      dossier fourni. Voir TRANSMISSION.md : ces deux fichiers restent
-      nécessaires pour confirmer/corriger ces deux points.
+   ---- v8 : corrections suite au 3e retour de Julie (capture d'écran) ----
+   1. CHANGEMENT DE MÉCANIQUE — les dés ne sont plus une zone de jeu à
+      part en dessous du texte. Chaque trou affiche maintenant un petit
+      jeton coloré DIRECTEMENT DANS LA PHRASE, à la place du signe de
+      ponctuation (comme dans la maquette de Julie). Le "_" placeholder
+      a disparu : c'est le jeton lui-même qui occupe cette place.
+      Conséquence mécanique : comme un trou peut désormais se trouver
+      tout en haut de l'écran (dans le texte), une collision de saut
+      verticale classique n'a plus de sens. La validation se fait donc
+      sur l'ALIGNEMENT HORIZONTAL du joueur avec le trou actif au moment
+      où il appuie sur saut (voir tryJump / HIT_TOLERANCE_X). Le saut
+      reste un vrai geste (physique, animation) mais sert de "bouton de
+      validation contextualisé" plutôt que de collision au pixel près.
+   2. SPRITE TROP GROS + PAS ANIMÉ : deux bugs distincts.
+      - Trop gros : le facteur d'agrandissement (x1.9) ne correspondait
+        plus à la nouvelle échelle du jeu (dés et texte bien plus
+        compacts). Réduit à x1.15.
+      - Pas animé : un Image() jamais inséré dans la page n'anime pas
+        forcément son GIF/WEBP tout seul selon les navigateurs (contrairement
+        à un <img> affiché dans le DOM). On ne dépend donc plus de
+        l'animation native du fichier : les 6 frames de marche sont
+        fournies comme 6 PNG séparés, et c'est le code qui les fait
+        défiler lui-même pendant le déplacement (fiable, indépendant du
+        navigateur). Figé sur la pose immobile à l'arrêt/au saut, comme
+        demandé.
+   3. Les gros dés 3D flottants (souvent perçus comme "coupés" en bas)
+      sont remplacés par un petit jeton arrondi compact, dimensionné
+      pour tenir dans la hauteur d'une ligne de texte.
 
+   ---- v7 : 2e retour de Julie (voir historique dans le dépôt) ----
+   ---- v6 : 2e retour de Julie ----
    ---- v5 : corrections suite à test réel par Julie ----
    1. Ce n'est plus le MONDE qui défile sous un personnage fixe à
       l'écran (caméra scrollée, v3/v4) : c'est maintenant le
@@ -76,38 +84,24 @@
 
   const DRAW_W = 56, DRAW_H = 56; // le sprite source est carré (48x48) : on garde un rendu carré
 
-  // v7 : le sprite n'est plus une feuille RPG Maker à découper (source
-  // d'ambiguïté et de bugs depuis 3 versions). Julie a fourni un GIF
-  // d'animation de marche complet ; on l'utilise tel quel comme IMAGE
-  // ANIMÉE (le navigateur gère l'avancée des frames du GIF tout seul,
-  // il suffit de le redessiner chaque frame). Une image statique séparée
-  // (première frame, détourée) sert de pose immobile pour l'arrêt et le
-  // saut, comme demandé.
+  // v8 : changement de mécanique suite au 3e retour de Julie — les dés ne
+  // sont plus une "zone de jeu" séparée sous le texte. Ils sont affichés
+  // EN PLACE des signes de ponctuation, directement dans la phrase (comme
+  // dans sa maquette). Le saut reste un geste ludique, mais la validation
+  // se fait sur l'alignement horizontal du joueur avec le trou actif au
+  // moment du saut (et plus sur une collision verticale précise avec un
+  // dé qui peut désormais se trouver tout en haut de l'écran, hors de
+  // portée physique d'un saut de plateforme classique).
+  const INLINE_DIE_SIZE = 28;
 
   // --- Décor : simple image fixe (plus besoin d'un long décor à faire
   //     défiler, tout tient sur un seul écran maintenant) ---
   const BG_SRC = "/assets/backgrounds/decors_Hugo_barricades_minijeu.png";
 
-  // --- Mise en page du chemin (zone de jeu, sous le panneau de texte) ---
-  // Alignée sur la largeur réelle du panneau de texte (TEXT_PANEL_X=60,
-  // TEXT_PANEL_W=680 -> le panneau va de 60 à 740), pour que la zone de
-  // jeu se lise comme "juste sous le texte" plutôt que comme une zone
-  // séparée plus étroite.
+  // --- Déplacement (zone de marche, sous le panneau de texte) ---
   const PATH_START_X = 90, PATH_END_X = 710;
-  const DIE_W = 54, DIE_H = 54, DIE_BEVEL = 8;
-  // v6 : la position verticale des dés n'est plus une constante figée
-  // loin du texte. Elle est recalculée CHAQUE FRAME à partir de la
-  // hauteur réelle du panneau de texte (variable selon le nombre de
-  // trous/lignes du mini-pitch), avec un petit écart fixe DIE_GAP_BELOW_TEXT
-  // en dessous. C'est ce calcul qui corrige le "grand vide" signalé par
-  // Julie : avant, les dés étaient à une hauteur fixe indépendante du
-  // texte, ce qui créait un vide énorme si le panneau était court.
-  const DIE_GAP_BELOW_TEXT = 32;
-  // v7 : corrige un vrai bug de v6 — cette marge était PLUS GRANDE que la
-  // portée de saut réelle (v²/2g ≈ 83px avec les constantes ci-dessus),
-  // ce qui rendait les dés impossibles à toucher. Remise à une valeur
-  // sûrement inférieure à la portée de saut, avec une marge de confort.
-  const GROUND_GAP_BELOW_DICE = 50;
+  const GROUND_Y = 300; // fixe : la marge sous le texte redevient une zone de marche normale, pas un vide
+  const HIT_TOLERANCE_X = 40; // marge horizontale tolérée pour valider un saut sous le bon trou
   const CYCLE_INTERVAL = 110; // frames entre deux signes (~1.8s à 60fps) : lent, lisible
 
   // --- Mise en page du panneau de texte fixe ---
@@ -189,42 +183,33 @@
     return idx;
   }
 
-  function drawDie(ctx, x, y, symbol, style) {
-    let face = "#e8c468", top = "#f3dc9a", side = "#b9903f";
-    if (style === "correct") { face = "#6fcf97"; top = "#9fe6bd"; side = "#3f9c68"; }
-    if (style === "wrong")   { face = "#d9534f"; top = "#e88d8a"; side = "#a83a37"; }
+  // v8 : petit "jeton" inline (remplace le gros cube 3D flottant). Assez
+  // compact pour tenir DANS une ligne de texte, à la place du signe.
+  function drawInlineDie(ctx, cx, cy, symbol, style, size) {
+    let face = "#e8c468", border = "#1a1530", text = "#1a1530";
+    if (style === "correct") { face = "#6fcf97"; }
+    if (style === "wrong") { face = "#d9534f"; text = "#fff"; }
 
+    const half = size / 2;
     ctx.fillStyle = face;
-    ctx.fillRect(x, y + DIE_BEVEL, DIE_W, DIE_H - DIE_BEVEL);
-    ctx.strokeStyle = "#1a1530";
+    ctx.strokeStyle = border;
     ctx.lineWidth = 2;
-    ctx.strokeRect(x, y + DIE_BEVEL, DIE_W, DIE_H - DIE_BEVEL);
-
-    ctx.fillStyle = top;
+    const r = 5;
     ctx.beginPath();
-    ctx.moveTo(x, y + DIE_BEVEL);
-    ctx.lineTo(x + DIE_BEVEL, y);
-    ctx.lineTo(x + DIE_W + DIE_BEVEL, y);
-    ctx.lineTo(x + DIE_W, y + DIE_BEVEL);
+    ctx.moveTo(cx - half + r, cy - half);
+    ctx.arcTo(cx + half, cy - half, cx + half, cy + half, r);
+    ctx.arcTo(cx + half, cy + half, cx - half, cy + half, r);
+    ctx.arcTo(cx - half, cy + half, cx - half, cy - half, r);
+    ctx.arcTo(cx - half, cy - half, cx + half, cy - half, r);
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
 
-    ctx.fillStyle = side;
-    ctx.beginPath();
-    ctx.moveTo(x + DIE_W, y + DIE_BEVEL);
-    ctx.lineTo(x + DIE_W + DIE_BEVEL, y);
-    ctx.lineTo(x + DIE_W + DIE_BEVEL, y + DIE_H);
-    ctx.lineTo(x + DIE_W, y + DIE_H);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-
-    ctx.fillStyle = "#1a1530";
-    ctx.font = "bold 24px serif";
+    ctx.fillStyle = text;
+    ctx.font = "bold 17px serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText(symbol, x + DIE_W / 2, y + DIE_BEVEL + (DIE_H - DIE_BEVEL) / 2 + 1);
+    ctx.fillText(symbol, cx, cy + 1);
   }
 
   // Panneau "épais" derrière le texte, même esprit que les dés (tranche
@@ -242,13 +227,18 @@
 
   async function run({ canvas, uiContainer, isRemediation }) {
 
-    // v7 : GIF de marche fourni par Julie -> converti en WEBP animé (fond
-    // détouré) côté outil. Le navigateur avance les frames du WEBP animé
-    // tout seul quand on le redessine à chaque frame de la boucle de jeu :
-    // aucun découpage manuel de grille à faire, contrairement à l'ancien
-    // système RPG Maker qui n'a jamais marché correctement.
-    const walkSprite = new Image();
-    walkSprite.src = "/assets/sprites/characters/esprit-marche.webp";
+    // v8 : l'animation du WEBP ne se jouait pas — un Image() jamais
+    // inséré dans la page n'est pas garanti d'avancer ses frames tout
+    // seul selon les navigateurs (comportement différent d'un <img> dans
+    // le DOM). On reprend donc le contrôle nous-mêmes : 6 images fixes
+    // (une par frame de marche, déjà détourées) qu'on fait défiler à la
+    // main pendant le déplacement, exactement comme demandé (animé en
+    // marchant, figé à l'arrêt/au saut).
+    const walkFrames = [0, 1, 2, 3, 4, 5].map(i => {
+      const img = new Image();
+      img.src = `/assets/sprites/characters/esprit-marche-${i}.png`;
+      return img;
+    });
     const idleSprite = new Image();
     idleSprite.src = "/assets/sprites/characters/esprit-idle.png";
     const bgImage = new Image();
@@ -256,7 +246,7 @@
 
     await MinigameUI.showInstructions({
       title: "L'Assaut des Barricades",
-      objective: "La phrase à compléter est affichée en haut de l'écran, fixe. Déplace ton personnage avec les flèches gauche/droite (ou ◀ ▶ tactile) et saute — Espace, flèche du haut, ou ⤴ — pour toucher le dé par en dessous PENDANT qu'il affiche le bon signe. À chaque trou, un dé tourne LENTEMENT parmi plusieurs signes. Une erreur (mauvais signe touché) t'explique pourquoi puis relance une nouvelle phrase. Une phrase réussie du début à la fin termine le mini-jeu."
+      objective: "La phrase à compléter est affichée en haut de l'écran, fixe : chaque trou est un petit jeton de couleur, À LA PLACE du signe de ponctuation. Déplace-toi avec les flèches gauche/droite (ou ◀ ▶ tactile) jusqu'à te trouver sous le trou à compléter, puis saute — Espace, flèche du haut, ou ⤴ — PENDANT que le jeton affiche le bon signe (il change LENTEMENT parmi plusieurs signes). Une erreur (mauvais signe) t'explique pourquoi puis relance une nouvelle phrase. Une phrase réussie du début à la fin termine le mini-jeu."
     });
 
     return new Promise(resolve => {
@@ -272,40 +262,27 @@
         pitchIndex = idx;
         pitch = PITCH_BANK[idx];
         resolvedFlags = pitch.blanks.map(() => false);
-        const n = pitch.blanks.length;
         checkpoints = pitch.blanks.map((blank, i) => ({
-          x: n === 1 ? (PATH_START_X + PATH_END_X) / 2 : PATH_START_X + i * (PATH_END_X - PATH_START_X) / (n - 1),
           blank,
           blankIndex: i,
           optionIndex: 0,
           cycleTimer: 0,
+          lastX: CANVAS_W / 2, lastY: TEXT_PANEL_Y, // dernière position connue (pour les particules), mise à jour chaque frame
           state: "cycling" // cycling | correct | wrong
         }));
       }
       loadPitch(pitchIndex);
 
-      // v6 : GROUND_Y et la hauteur des dés dépendent de la hauteur réelle
-      // du panneau de texte (variable selon le mini-pitch). Recalculés à
-      // chaque frame par updateVerticalLayout(), avant la physique et le
-      // rendu, pour que collision et affichage utilisent toujours la même
-      // valeur. Valeurs de secours ici, écrasées dès la première frame.
-      let dieTopY = 200;
-      let groundY = 420;
-
-      function updateVerticalLayout(panelH) {
-        const panelBottom = TEXT_PANEL_Y + panelH;
-        dieTopY = panelBottom + DIE_GAP_BELOW_TEXT;
-        groundY = dieTopY + DIE_H + DRAW_H + GROUND_GAP_BELOW_DICE;
-      }
-
       function panelHeightFor(lines) {
         return lines.length * TEXT_LINE_HEIGHT + TEXT_PADDING * 2 - 6;
       }
 
-      const player = { x: 60, y: 0, w: DRAW_W, h: DRAW_H, vy: 0, onGround: true, facing: "right", moving: false };
-      // Layout initial (avant la première frame) pour placer le joueur au sol dès le départ.
-      updateVerticalLayout(panelHeightFor(layoutText()));
-      player.y = groundY - DRAW_H;
+      const player = { x: 60, y: GROUND_Y - DRAW_H, w: DRAW_W, h: DRAW_H, vy: 0, onGround: true, facing: "right", moving: false };
+      let animFrame = 0, animTimer = 0;
+      // v8 : dernière position calculée de chaque trou, utilisée à la fois
+      // par le rendu (dessiner le jeton au bon endroit dans le texte) et
+      // par le saut (vérifier l'alignement horizontal au moment du saut).
+      let currentBlankPositions = {};
 
       let currentCheckpointIndex = 0;
       let attempt = 1;
@@ -336,9 +313,23 @@
       }
 
       function tryJump() {
-        if (player.onGround && !paused) {
-          player.vy = JUMP_VELOCITY;
-          player.onGround = false;
+        if (!player.onGround || paused) return;
+        player.vy = JUMP_VELOCITY;
+        player.onGround = false;
+
+        // v8 : la validation ne dépend plus d'une collision verticale avec
+        // le dé (impossible désormais qu'il soit tout en haut, dans le
+        // texte) mais de l'alignement horizontal du joueur avec le trou
+        // actif au moment du saut.
+        const cp = checkpoints[currentCheckpointIndex];
+        if (cp && cp.state === "cycling") {
+          const target = currentBlankPositions[cp.blankIndex];
+          if (target) {
+            const playerCenter = player.x + player.w / 2;
+            if (Math.abs(playerCenter - target.x) <= HIT_TOLERANCE_X) {
+              resolveHit(cp);
+            }
+          }
         }
       }
 
@@ -410,7 +401,7 @@
         if (isCorrect) {
           cp.state = "correct";
           resolvedFlags[cp.blankIndex] = true;
-          spawnBurst(cp.x + DIE_W / 2, dieTopY + DIE_H / 2, "#6fcf97");
+          spawnBurst(cp.lastX, cp.lastY, "#6fcf97");
           showFeedback(true, cp.blank.why);
           pendingAction = "next";
         } else {
@@ -424,7 +415,7 @@
       function startNewPitch() {
         loadPitch(pickPitch(pitchIndex));
         player.x = 60;
-        player.y = groundY - DRAW_H;
+        player.y = GROUND_Y - DRAW_H;
         player.vy = 0;
         player.onGround = true;
         currentCheckpointIndex = 0;
@@ -467,23 +458,18 @@
             }
           }
         } else {
-          // v6/v7 : recalcule la position verticale des dés/sol à partir de
-          // la hauteur réelle du panneau de texte, ET la position horizontale
-          // de chaque dé à partir de la position réelle de SON trou dans le
-          // texte (avant la physique, pour que collision et rendu utilisent
-          // toujours les mêmes valeurs cette frame-ci).
+          // v8 : calcule où se trouve réellement chaque trou dans le texte
+          // affiché cette frame-ci (utilisé pour dessiner les jetons ET pour
+          // valider un saut, voir tryJump). Plus de repositionnement du sol
+          // ou d'une zone de dés séparée : le sol est fixe désormais.
           const lines = layoutText();
-          updateVerticalLayout(panelHeightFor(lines));
-          const blankCenters = computeBlankCenters(lines);
+          currentBlankPositions = computeBlankCenters(lines);
           checkpoints.forEach(cp => {
-            const bx = blankCenters[cp.blankIndex];
-            if (bx !== undefined) {
-              cp.x = Math.max(PATH_START_X, Math.min(PATH_END_X - DIE_W, bx - DIE_W / 2));
-            }
+            const pos = currentBlankPositions[cp.blankIndex];
+            if (pos) { cp.lastX = pos.x; cp.lastY = pos.y; }
           });
 
-          // Déplacement horizontal piloté par le joueur (remplace l'avancée
-          // automatique). Bornes = zone de jeu sous le panneau de texte.
+          // Déplacement horizontal piloté par le joueur.
           player.moving = false;
           if (keysPressed.left && !keysPressed.right) {
             player.x -= WALK_SPEED;
@@ -496,29 +482,22 @@
           }
           player.x = Math.max(PATH_START_X - 20, Math.min(PATH_END_X + 20 - player.w, player.x));
 
+          if (player.onGround && player.moving) {
+            animTimer++;
+            if (animTimer >= 8) { animTimer = 0; animFrame = (animFrame + 1) % walkFrames.length; }
+          } else {
+            animTimer = 0;
+          }
+
           player.vy += GRAVITY;
           player.y += player.vy;
 
-          if (player.y + player.h >= groundY) {
-            player.y = groundY - player.h;
+          if (player.y + player.h >= GROUND_Y) {
+            player.y = GROUND_Y - player.h;
             player.vy = 0;
             player.onGround = true;
           } else {
             player.onGround = false;
-          }
-
-          const cp = checkpoints[currentCheckpointIndex];
-          if (cp && cp.state === "cycling") {
-            if (player.vy < 0) {
-              const headY = player.y;
-              const withinX = player.x + player.w > cp.x - 6 && player.x < cp.x + DIE_W + DIE_BEVEL + 6;
-              const hitsUnderside = headY <= dieTopY + DIE_H && headY >= dieTopY - 10;
-              if (withinX && hitsUnderside) {
-                player.y = dieTopY + DIE_H;
-                player.vy = 1.5;
-                resolveHit(cp);
-              }
-            }
           }
 
           checkpoints.forEach(c => {
@@ -558,7 +537,7 @@
         });
 
         const spaceW = ctx.measureText(" ").width;
-        const blankW = 30;
+        const blankW = INLINE_DIE_SIZE + 6;
         const lines = [];
         let line = [], lineW = 0;
         tokens.forEach(tok => {
@@ -574,16 +553,16 @@
         return lines;
       }
 
-      // v7 : les dés sont maintenant alignés horizontalement sous LEUR
-      // trou réel dans le texte (calculé à partir du même layout que
-      // l'affichage), au lieu d'être répartis uniformément sur un chemin
-      // générique sans rapport avec la position des mots.
+      // v8 : renvoie x ET y de chaque trou (plus seulement x), puisque le
+      // jeton est maintenant dessiné directement dans le fil du texte —
+      // sa hauteur dépend de la ligne sur laquelle il tombe.
       function computeBlankCenters(lines) {
         const centers = {};
-        lines.forEach(ln => {
+        lines.forEach((ln, li) => {
           let x = TEXT_PANEL_X + (TEXT_PANEL_W - ln.width) / 2;
+          const y = TEXT_PANEL_Y + TEXT_PADDING + li * TEXT_LINE_HEIGHT + TEXT_LINE_HEIGHT / 2 - 4;
           ln.tokens.forEach(tok => {
-            if (tok.type === "blank") centers[tok.index] = x + tok.w / 2;
+            if (tok.type === "blank") centers[tok.index] = { x: x + tok.w / 2, y };
             x += tok.w + ctx.measureText(" ").width;
           });
         });
@@ -616,23 +595,25 @@
               ctx.fillText(tok.text, x, y);
             } else {
               const resolved = resolvedFlags[tok.index];
-              ctx.textAlign = "center";
-              ctx.fillStyle = resolved ? "#e8c468" : "rgba(244,241,234,0.35)";
-              ctx.font = resolved ? "bold 19px serif" : TEXT_FONT;
-              ctx.fillText(resolved ? pitch.blanks[tok.index].correct : "_", x + tok.w / 2, y + (resolved ? 0 : 2));
-              ctx.font = TEXT_FONT;
+              if (resolved) {
+                ctx.textAlign = "center";
+                ctx.fillStyle = "#e8c468";
+                ctx.font = "bold 19px serif";
+                ctx.fillText(pitch.blanks[tok.index].correct, x + tok.w / 2, y);
+                ctx.font = TEXT_FONT;
+              } else {
+                // v8 : le jeton (jaune/vert/rouge selon l'état) s'affiche
+                // ICI, à la place du signe, directement dans la phrase —
+                // ce n'est plus un gros dé séparé sous le texte.
+                const cp = checkpoints[tok.index];
+                let symbol, style;
+                if (cp.state === "wrong") { symbol = cp.blank.options[cp.optionIndex]; style = "wrong"; }
+                else { symbol = cp.blank.options[cp.optionIndex]; style = "cycling"; }
+                drawInlineDie(ctx, x + tok.w / 2, y, symbol, style, INLINE_DIE_SIZE);
+              }
             }
             x += tok.w + ctx.measureText(" ").width;
           });
-        });
-
-        // Dés (zone de jeu)
-        checkpoints.forEach(cp => {
-          let symbol, style;
-          if (cp.state === "correct") { symbol = cp.blank.correct; style = "correct"; }
-          else if (cp.state === "wrong") { symbol = cp.blank.options[cp.optionIndex]; style = "wrong"; }
-          else { symbol = cp.blank.options[cp.optionIndex]; style = "cycling"; }
-          drawDie(ctx, cp.x, dieTopY, symbol, style);
         });
 
         particles.forEach(p => {
@@ -646,14 +627,14 @@
 
         const isKo = performance.now() < koUntil;
         const useWalkAnim = player.onGround && player.moving && !isKo;
-        const activeSprite = useWalkAnim ? walkSprite : idleSprite;
+        const activeSprite = useWalkAnim ? walkFrames[animFrame] : idleSprite;
 
         if (activeSprite.complete && activeSprite.naturalWidth > 0) {
           // Le sprite fourni est un portrait (pas une case carrée) : on
           // garde son ratio, on cale la hauteur sur celle du personnage
           // (un peu agrandie pour rester lisible) et on aligne les pieds
           // sur le bas de la zone de collision, qui elle ne change pas.
-          const renderH = player.h * 1.9;
+          const renderH = player.h * 1.15;
           const renderW = renderH * (activeSprite.naturalWidth / activeSprite.naturalHeight);
           const drawX = player.x + player.w / 2 - renderW / 2;
           const drawY = player.y + player.h - renderH;
@@ -683,8 +664,8 @@
         ctx.strokeStyle = "rgba(232,196,104,0.4)";
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.moveTo(0, groundY + 2);
-        ctx.lineTo(CANVAS_W, groundY + 2);
+        ctx.moveTo(0, GROUND_Y + 2);
+        ctx.lineTo(CANVAS_W, GROUND_Y + 2);
         ctx.stroke();
       }
 
