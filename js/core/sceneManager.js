@@ -119,8 +119,7 @@ const SceneManager = (() => {
     }
 
     if (actData.qcm) {
-      const qcmResult = await VNEngine.playQCM(actData.qcm);
-      GameState.setActStep(worldId, actId, "qcm_passed", qcmResult.passed);
+      await runQcmLoop(worldId, actId, actData);
     }
 
     let formativeResult = await VNEngine.playFillBlank(actData.formative);
@@ -132,13 +131,6 @@ const SceneManager = (() => {
       GameState.setActStep(worldId, actId, "vn_check_passed", formativeResult.passed);
     }
 
-    const minigameResult = await playMinigameForNotion(worldId, actId, actData.minigame_notion, false);
-    GameState.setActStep(worldId, actId, "minigame_passed", minigameResult.passed);
-
-    if (!minigameResult.passed) {
-      return runActSequence(worldId, actId, actData);
-    }
-
     const transferResult = await VNEngine.playFillBlank(actData.transfer, { fixedText: true });
     GameState.setActStep(worldId, actId, "vn_transfer_passed", transferResult.passed);
 
@@ -148,6 +140,51 @@ const SceneManager = (() => {
     }
 
     advanceAct(worldId, actId);
+  }
+
+  /**
+   * Boucle des "questions de cours" (QCM posé par le méchant de l'acte).
+   *
+   * Accepte actData.qcm sous deux formes :
+   *   - un TABLEAU de questions (nouveau format — voir acte "ponctuation")
+   *   - un objet UNIQUE (ancien format, encore utilisé par les 5 autres
+   *     actes qui n'ont pas été mis à jour) — traité comme un tableau
+   *     à une question, rétrocompatible sans rien changer côté données.
+   *
+   * Logique : les questions sont posées dans l'ordre. Une bonne réponse
+   * passe à la suivante. Une mauvaise réponse déclenche IMMÉDIATEMENT
+   * le mini-jeu en remédiation, puis relance TOUT le questionnaire
+   * depuis la première question (y compris celles déjà réussies) — on
+   * ne s'arrête que sur un passage complet et sans faute.
+   *
+   * ⚠️ CHANGEMENT DE COMPORTEMENT (cette session) : avant, le mini-jeu
+   * se déclenchait une fois de toute façon après le texte à trous
+   * formatif, indépendamment du résultat au QCM (qcm_passed était
+   * enregistré mais ne changeait rien au déroulement — signalé comme
+   * incohérent par Julie). Maintenant, le mini-jeu n'apparaît QUE si
+   * une question de cours est ratée : réussite directe = pas de
+   * mini-jeu imposé, échec = mini-jeu comme aide avant de retenter.
+   * "minigame_passed" est marqué true une fois cette boucle terminée
+   * (que le mini-jeu ait été nécessaire ou non).
+   */
+  async function runQcmLoop(worldId, actId, actData) {
+    const qcmList = Array.isArray(actData.qcm) ? actData.qcm : [actData.qcm];
+
+    let allPassed = false;
+    while (!allPassed) {
+      allPassed = true;
+      for (let i = 0; i < qcmList.length; i++) {
+        const qcmResult = await VNEngine.playQCM(qcmList[i]);
+        if (!qcmResult.passed) {
+          allPassed = false;
+          GameState.setActStep(worldId, actId, "qcm_passed", false);
+          await playMinigameForNotion(worldId, actId, actData.minigame_notion, true);
+          break; // on ne continue pas les questions suivantes : on relance tout depuis le début
+        }
+      }
+    }
+    GameState.setActStep(worldId, actId, "qcm_passed", true);
+    GameState.setActStep(worldId, actId, "minigame_passed", true);
   }
 
   async function playMinigameForNotion(worldId, actId, notionId, isRemediation) {
