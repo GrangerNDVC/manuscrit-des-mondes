@@ -1,38 +1,29 @@
 /* ============================================================
-   LE MANUSCRIT DES MONDES — mg-ponctuation.js (v8)
+   LE MANUSCRIT DES MONDES — mg-ponctuation.js (v9)
    ============================================================
    Mini-jeu "L'Assaut des Barricades" (Monde 1 — Hugo).
    Notion : ponctuation.
 
-   ---- v8 : corrections suite au 3e retour de Julie (capture d'écran) ----
-   1. CHANGEMENT DE MÉCANIQUE — les dés ne sont plus une zone de jeu à
-      part en dessous du texte. Chaque trou affiche maintenant un petit
-      jeton coloré DIRECTEMENT DANS LA PHRASE, à la place du signe de
-      ponctuation (comme dans la maquette de Julie). Le "_" placeholder
-      a disparu : c'est le jeton lui-même qui occupe cette place.
-      Conséquence mécanique : comme un trou peut désormais se trouver
-      tout en haut de l'écran (dans le texte), une collision de saut
-      verticale classique n'a plus de sens. La validation se fait donc
-      sur l'ALIGNEMENT HORIZONTAL du joueur avec le trou actif au moment
-      où il appuie sur saut (voir tryJump / HIT_TOLERANCE_X). Le saut
-      reste un vrai geste (physique, animation) mais sert de "bouton de
-      validation contextualisé" plutôt que de collision au pixel près.
-   2. SPRITE TROP GROS + PAS ANIMÉ : deux bugs distincts.
-      - Trop gros : le facteur d'agrandissement (x1.9) ne correspondait
-        plus à la nouvelle échelle du jeu (dés et texte bien plus
-        compacts). Réduit à x1.15.
-      - Pas animé : un Image() jamais inséré dans la page n'anime pas
-        forcément son GIF/WEBP tout seul selon les navigateurs (contrairement
-        à un <img> affiché dans le DOM). On ne dépend donc plus de
-        l'animation native du fichier : les 6 frames de marche sont
-        fournies comme 6 PNG séparés, et c'est le code qui les fait
-        défiler lui-même pendant le déplacement (fiable, indépendant du
-        navigateur). Figé sur la pose immobile à l'arrêt/au saut, comme
-        demandé.
-   3. Les gros dés 3D flottants (souvent perçus comme "coupés" en bas)
-      sont remplacés par un petit jeton arrondi compact, dimensionné
-      pour tenir dans la hauteur d'une ligne de texte.
+   ---- v9 : corrections suite au 4e retour de Julie ----
+   1. TEXTE SUR UNE SEULE LIGNE (jamais deux) : l'ancien système repliait
+      le texte dans une boîte de largeur fixe (source du retour à la
+      ligne refusé). Remplacé par une ligne UNIQUE en coordonnées MONDE,
+      potentiellement plus large que l'écran, avec une CAMÉRA qui suit le
+      joueur horizontalement (défilement façon plateforme classique) :
+      avancer vers le bord de l'écran fait apparaître la suite du texte.
+   2. SAUT "PAS ASSEZ HAUT" : la validation (alignement horizontal au
+      moment du saut) était déjà correcte depuis la v8, mais visuellement
+      le saut n'atteignait pas la ligne de texte, ce qui le faisait
+      paraître cassé. GROUND_Y rapproché du texte (200 au lieu de 300)
+      pour que l'arc du saut culmine réellement au niveau du texte.
+   3. POLICE UNIQUE : "Press Start 2P" (Google Fonts, police "pixel")
+      utilisée partout — mots, ponctuation résolue, jeton — au lieu de
+      trois polices différentes (sans-serif / serif / serif) mélangées.
+   4. Ligne de sol supprimée : Julie ajoute son propre décor
+      (decors_ponctuation_hugo.jpg). Le sol reste géré en interne pour la
+      physique mais n'est plus dessiné.
 
+   ---- v8 : 3e retour de Julie (voir historique dans le dépôt) ----
    ---- v7 : 2e retour de Julie (voir historique dans le dépôt) ----
    ---- v6 : 2e retour de Julie ----
    ---- v5 : corrections suite à test réel par Julie ----
@@ -84,30 +75,37 @@
 
   const DRAW_W = 56, DRAW_H = 56; // le sprite source est carré (48x48) : on garde un rendu carré
 
-  // v8 : changement de mécanique suite au 3e retour de Julie — les dés ne
-  // sont plus une "zone de jeu" séparée sous le texte. Ils sont affichés
-  // EN PLACE des signes de ponctuation, directement dans la phrase (comme
-  // dans sa maquette). Le saut reste un geste ludique, mais la validation
-  // se fait sur l'alignement horizontal du joueur avec le trou actif au
-  // moment du saut (et plus sur une collision verticale précise avec un
-  // dé qui peut désormais se trouver tout en haut de l'écran, hors de
-  // portée physique d'un saut de plateforme classique).
-  const INLINE_DIE_SIZE = 28;
+  // v9 : changement suite au 4e retour de Julie.
+  // 1. TEXTE SUR UNE SEULE LIGNE, JAMAIS SUR DEUX : le texte n'est plus
+  //    contraint dans une boîte de largeur fixe qui force un retour à la
+  //    ligne. Il est posé sur UNE ligne, potentiellement plus large que
+  //    l'écran, et une caméra suit le joueur horizontalement (comme un
+  //    jeu de plateforme classique) : avancer fait défiler la suite du
+  //    texte. currentBlankPositions/computeLineLayout travaillent donc en
+  //    coordonnées "monde" (indépendantes de l'écran) ; seul le rendu
+  //    convertit en coordonnées écran via cameraX.
+  // 2. Plus de ligne de sol dessinée : Julie ajoute son propre décor
+  //    (voir BG_SRC). GROUND_Y reste utilisé en interne pour la physique
+  //    (invisible), rapproché du texte pour que le saut l'atteigne
+  //    visuellement (c'était le vrai problème du "saut pas assez haut" :
+  //    la validation était déjà correcte au clavier, mais le saut
+  //    n'allait pas visuellement jusqu'à la ligne de texte).
+  // 3. Une seule police partout (mots, ponctuation résolue, jeton) :
+  //    "Press Start 2P" (Google Fonts), police "pixel" à dessein.
+  const INLINE_DIE_SIZE = 26;
 
-  // --- Décor : simple image fixe (plus besoin d'un long décor à faire
-  //     défiler, tout tient sur un seul écran maintenant) ---
-  const BG_SRC = "/assets/backgrounds/decors_Hugo_barricades_minijeu.png";
+  // --- Décor : image fixe fournie par Julie ---
+  const BG_SRC = "/assets/backgrounds/decors_ponctuation_hugo.jpg";
 
-  // --- Déplacement (zone de marche, sous le panneau de texte) ---
-  const PATH_START_X = 90, PATH_END_X = 710;
-  const GROUND_Y = 300; // fixe : la marge sous le texte redevient une zone de marche normale, pas un vide
-  const HIT_TOLERANCE_X = 40; // marge horizontale tolérée pour valider un saut sous le bon trou
-  const CYCLE_INTERVAL = 110; // frames entre deux signes (~1.8s à 60fps) : lent, lisible
+  const WORLD_MARGIN = 40;         // marge avant le premier mot / après le dernier
+  const TEXT_Y = 60;                // hauteur fixe de l'unique ligne de texte (monde = écran en Y, seul X défile)
+  const GROUND_Y = 200;             // sol (invisible), assez proche du texte pour que le saut l'atteigne visuellement
+  const HIT_TOLERANCE_X = 40;       // marge horizontale tolérée pour valider un saut sous le bon trou
+  const CYCLE_INTERVAL = 110;       // frames entre deux signes (~1.8s à 60fps) : lent, lisible
+  const CAMERA_LEAD = 0.35;         // le joueur reste à ~35% depuis la gauche de l'écran pendant le défilement
 
-  // --- Mise en page du panneau de texte fixe ---
-  const TEXT_PANEL_X = 60, TEXT_PANEL_Y = 16, TEXT_PANEL_W = 680;
-  const TEXT_LINE_HEIGHT = 30, TEXT_FONT = "19px sans-serif";
-  const TEXT_PADDING = 16;
+  const TEXT_FONT_SIZE = 15;
+  const TEXT_FONT = `${TEXT_FONT_SIZE}px "Press Start 2P", monospace`;
 
   /**
    * Banque de mini-pitchs (œuvres connues de Victor Hugo). segments[i]
@@ -206,7 +204,7 @@
     ctx.stroke();
 
     ctx.fillStyle = text;
-    ctx.font = "bold 17px serif";
+    ctx.font = `bold ${Math.round(size * 0.55)}px "Press Start 2P", monospace`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(symbol, cx, cy + 1);
@@ -227,6 +225,20 @@
 
   async function run({ canvas, uiContainer, isRemediation }) {
 
+    // v9 : police unique "pixel" (clin d'œil demandé), chargée depuis
+    // Google Fonts et attendue AVANT le premier rendu pour éviter un
+    // flash avec la police de secours.
+    if (!document.getElementById("mg-pixel-font-link")) {
+      const link = document.createElement("link");
+      link.id = "mg-pixel-font-link";
+      link.rel = "stylesheet";
+      link.href = "https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap";
+      document.head.appendChild(link);
+    }
+    try {
+      await document.fonts.load(`${TEXT_FONT_SIZE}px "Press Start 2P"`);
+    } catch (e) { /* pas grave : la police de secours (monospace) prendra le relais */ }
+
     // v8 : l'animation du WEBP ne se jouait pas — un Image() jamais
     // inséré dans la page n'est pas garanti d'avancer ses frames tout
     // seul selon les navigateurs (comportement différent d'un <img> dans
@@ -246,7 +258,7 @@
 
     await MinigameUI.showInstructions({
       title: "L'Assaut des Barricades",
-      objective: "La phrase à compléter est affichée en haut de l'écran, fixe : chaque trou est un petit jeton de couleur, À LA PLACE du signe de ponctuation. Déplace-toi avec les flèches gauche/droite (ou ◀ ▶ tactile) jusqu'à te trouver sous le trou à compléter, puis saute — Espace, flèche du haut, ou ⤴ — PENDANT que le jeton affiche le bon signe (il change LENTEMENT parmi plusieurs signes). Une erreur (mauvais signe) t'explique pourquoi puis relance une nouvelle phrase. Une phrase réussie du début à la fin termine le mini-jeu."
+      objective: "La phrase à compléter défile sur UNE seule ligne : chaque trou est un petit jeton de couleur, À LA PLACE du signe de ponctuation. Déplace-toi avec les flèches gauche/droite (ou ◀ ▶ tactile) — avancer fait défiler la suite du texte — jusqu'à te trouver sous le trou à compléter, puis saute — Espace, flèche du haut, ou ⤴ — PENDANT que le jeton affiche le bon signe (il change LENTEMENT parmi plusieurs signes). Une erreur (mauvais signe) t'explique pourquoi puis relance une nouvelle phrase. Une phrase réussie du début à la fin termine le mini-jeu."
     });
 
     return new Promise(resolve => {
@@ -267,22 +279,20 @@
           blankIndex: i,
           optionIndex: 0,
           cycleTimer: 0,
-          lastX: CANVAS_W / 2, lastY: TEXT_PANEL_Y, // dernière position connue (pour les particules), mise à jour chaque frame
+          lastX: WORLD_MARGIN, lastY: TEXT_Y, // dernière position connue (monde), pour les particules ; mise à jour chaque frame
           state: "cycling" // cycling | correct | wrong
         }));
       }
       loadPitch(pitchIndex);
 
-      function panelHeightFor(lines) {
-        return lines.length * TEXT_LINE_HEIGHT + TEXT_PADDING * 2 - 6;
-      }
-
-      const player = { x: 60, y: GROUND_Y - DRAW_H, w: DRAW_W, h: DRAW_H, vy: 0, onGround: true, facing: "right", moving: false };
+      const player = { x: WORLD_MARGIN, y: GROUND_Y - DRAW_H, w: DRAW_W, h: DRAW_H, vy: 0, onGround: true, facing: "right", moving: false };
       let animFrame = 0, animTimer = 0;
       // v8 : dernière position calculée de chaque trou, utilisée à la fois
       // par le rendu (dessiner le jeton au bon endroit dans le texte) et
       // par le saut (vérifier l'alignement horizontal au moment du saut).
+      // v9 : toutes ces positions sont en coordonnées MONDE désormais.
       let currentBlankPositions = {};
+      let cameraX = 0; // décalage caméra (monde -> écran), suit le joueur horizontalement
 
       let currentCheckpointIndex = 0;
       let attempt = 1;
@@ -414,7 +424,7 @@
 
       function startNewPitch() {
         loadPitch(pickPitch(pitchIndex));
-        player.x = 60;
+        player.x = WORLD_MARGIN;
         player.y = GROUND_Y - DRAW_H;
         player.vy = 0;
         player.onGround = true;
@@ -458,18 +468,18 @@
             }
           }
         } else {
-          // v8 : calcule où se trouve réellement chaque trou dans le texte
-          // affiché cette frame-ci (utilisé pour dessiner les jetons ET pour
-          // valider un saut, voir tryJump). Plus de repositionnement du sol
-          // ou d'une zone de dés séparée : le sol est fixe désormais.
-          const lines = layoutText();
-          currentBlankPositions = computeBlankCenters(lines);
+          // v9 : calcule la position (MONDE) de chaque trou sur l'unique
+          // ligne de texte, et fait suivre la caméra au joueur (défilement
+          // horizontal classique). Plus de repositionnement du sol : il
+          // est fixe désormais (voir GROUND_Y).
+          const layout = computeLineLayout();
+          currentBlankPositions = layout.blankPositions;
           checkpoints.forEach(cp => {
             const pos = currentBlankPositions[cp.blankIndex];
             if (pos) { cp.lastX = pos.x; cp.lastY = pos.y; }
           });
 
-          // Déplacement horizontal piloté par le joueur.
+          // Déplacement horizontal piloté par le joueur (coordonnées monde).
           player.moving = false;
           if (keysPressed.left && !keysPressed.right) {
             player.x -= WALK_SPEED;
@@ -480,7 +490,13 @@
             player.facing = "right";
             player.moving = true;
           }
-          player.x = Math.max(PATH_START_X - 20, Math.min(PATH_END_X + 20 - player.w, player.x));
+          player.x = Math.max(WORLD_MARGIN - 20, Math.min(layout.totalWidth + 20 - player.w, player.x));
+
+          // La caméra garde le joueur à ~35% depuis la gauche de l'écran,
+          // sans jamais montrer avant le début du texte ni après sa fin
+          // (donc pas de défilement inutile sur une phrase courte).
+          const maxCamera = Math.max(0, layout.totalWidth + WORLD_MARGIN - CANVAS_W);
+          cameraX = Math.max(0, Math.min(maxCamera, player.x - CANVAS_W * CAMERA_LEAD));
 
           if (player.onGround && player.moving) {
             animTimer++;
@@ -521,11 +537,12 @@
         if (!resultGiven) rafId = requestAnimationFrame(loop);
       }
 
-      // --- Mise en page du texte (recalculée chaque frame : peu coûteux
-      //     à cette échelle, dépend de resolvedFlags qui change peu) ---
-      function layoutText() {
+      // v9 : disposition du texte sur UNE SEULE ligne, en coordonnées
+      // MONDE (peut être plus large que l'écran — la caméra défile pour
+      // suivre le joueur). Remplace l'ancien layoutText() qui repliait le
+      // texte sur plusieurs lignes dans une boîte de largeur fixe.
+      function computeLineLayout() {
         ctx.font = TEXT_FONT;
-        const maxW = TEXT_PANEL_W - TEXT_PADDING * 2;
         const tokens = [];
         pitch.segments.forEach((segText, i) => {
           let text = segText;
@@ -537,36 +554,16 @@
         });
 
         const spaceW = ctx.measureText(" ").width;
-        const blankW = INLINE_DIE_SIZE + 6;
-        const lines = [];
-        let line = [], lineW = 0;
-        tokens.forEach(tok => {
-          const w = tok.type === "word" ? ctx.measureText(tok.text).width : blankW;
-          if (lineW + w > maxW && line.length > 0) {
-            lines.push({ tokens: line, width: lineW - spaceW });
-            line = []; lineW = 0;
-          }
-          line.push({ ...tok, w });
-          lineW += w + spaceW;
+        let x = WORLD_MARGIN;
+        const blankPositions = {};
+        const laidOut = tokens.map(tok => {
+          const w = tok.type === "word" ? ctx.measureText(tok.text).width : INLINE_DIE_SIZE + 6;
+          const item = { ...tok, w, x };
+          if (tok.type === "blank") blankPositions[tok.index] = { x: x + w / 2, y: TEXT_Y };
+          x += w + spaceW;
+          return item;
         });
-        if (line.length) lines.push({ tokens: line, width: lineW - spaceW });
-        return lines;
-      }
-
-      // v8 : renvoie x ET y de chaque trou (plus seulement x), puisque le
-      // jeton est maintenant dessiné directement dans le fil du texte —
-      // sa hauteur dépend de la ligne sur laquelle il tombe.
-      function computeBlankCenters(lines) {
-        const centers = {};
-        lines.forEach((ln, li) => {
-          let x = TEXT_PANEL_X + (TEXT_PANEL_W - ln.width) / 2;
-          const y = TEXT_PANEL_Y + TEXT_PADDING + li * TEXT_LINE_HEIGHT + TEXT_LINE_HEIGHT / 2 - 4;
-          ln.tokens.forEach(tok => {
-            if (tok.type === "blank") centers[tok.index] = { x: x + tok.w / 2, y };
-            x += tok.w + ctx.measureText(" ").width;
-          });
-        });
-        return centers;
+        return { tokens: laidOut, totalWidth: x - spaceW + WORLD_MARGIN, blankPositions };
       }
 
       function render() {
@@ -577,50 +574,45 @@
           ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
         }
 
-        // Panneau de texte fixe
-        const lines = layoutText();
-        const panelH = lines.length * TEXT_LINE_HEIGHT + TEXT_PADDING * 2 - 6;
-        drawPlaque(ctx, TEXT_PANEL_X, TEXT_PANEL_Y, TEXT_PANEL_W, panelH);
+        // Bande de lisibilité fixe derrière le texte (largeur écran fixe,
+        // ne dépend plus de la largeur du texte puisque celui-ci défile).
+        drawPlaque(ctx, 0, TEXT_Y - 34, CANVAS_W, 56);
 
+        const layout = computeLineLayout();
         ctx.font = TEXT_FONT;
         ctx.fillStyle = "#f4f1ea";
         ctx.textBaseline = "middle";
-        lines.forEach((ln, li) => {
-          let x = TEXT_PANEL_X + (TEXT_PANEL_W - ln.width) / 2;
-          const y = TEXT_PANEL_Y + TEXT_PADDING + li * TEXT_LINE_HEIGHT + TEXT_LINE_HEIGHT / 2 - 4;
-          ln.tokens.forEach(tok => {
-            if (tok.type === "word") {
-              ctx.textAlign = "left";
-              ctx.fillStyle = "#f4f1ea";
-              ctx.fillText(tok.text, x, y);
+        layout.tokens.forEach(tok => {
+          const screenX = tok.x - cameraX;
+          if (screenX + tok.w < -20 || screenX > CANVAS_W + 20) return; // hors écran : rien à dessiner
+          if (tok.type === "word") {
+            ctx.textAlign = "left";
+            ctx.fillStyle = "#f4f1ea";
+            ctx.font = TEXT_FONT;
+            ctx.fillText(tok.text, screenX, TEXT_Y);
+          } else {
+            const resolved = resolvedFlags[tok.index];
+            if (resolved) {
+              ctx.textAlign = "center";
+              ctx.fillStyle = "#e8c468";
+              ctx.font = TEXT_FONT;
+              ctx.fillText(pitch.blanks[tok.index].correct, screenX + tok.w / 2, TEXT_Y);
             } else {
-              const resolved = resolvedFlags[tok.index];
-              if (resolved) {
-                ctx.textAlign = "center";
-                ctx.fillStyle = "#e8c468";
-                ctx.font = "bold 19px serif";
-                ctx.fillText(pitch.blanks[tok.index].correct, x + tok.w / 2, y);
-                ctx.font = TEXT_FONT;
-              } else {
-                // v8 : le jeton (jaune/vert/rouge selon l'état) s'affiche
-                // ICI, à la place du signe, directement dans la phrase —
-                // ce n'est plus un gros dé séparé sous le texte.
-                const cp = checkpoints[tok.index];
-                let symbol, style;
-                if (cp.state === "wrong") { symbol = cp.blank.options[cp.optionIndex]; style = "wrong"; }
-                else { symbol = cp.blank.options[cp.optionIndex]; style = "cycling"; }
-                drawInlineDie(ctx, x + tok.w / 2, y, symbol, style, INLINE_DIE_SIZE);
-              }
+              // v8 : le jeton (jaune/rouge selon l'état) s'affiche ICI, à
+              // la place du signe, directement dans la phrase.
+              const cp = checkpoints[tok.index];
+              const symbol = cp.blank.options[cp.optionIndex];
+              const style = cp.state === "wrong" ? "wrong" : "cycling";
+              drawInlineDie(ctx, screenX + tok.w / 2, TEXT_Y, symbol, style, INLINE_DIE_SIZE);
             }
-            x += tok.w + ctx.measureText(" ").width;
-          });
+          }
         });
 
         particles.forEach(p => {
           ctx.globalAlpha = Math.max(0, p.life / p.maxLife);
           ctx.fillStyle = p.color;
           ctx.beginPath();
-          ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+          ctx.arc(p.x - cameraX, p.y, 4, 0, Math.PI * 2);
           ctx.fill();
           ctx.globalAlpha = 1;
         });
@@ -628,6 +620,7 @@
         const isKo = performance.now() < koUntil;
         const useWalkAnim = player.onGround && player.moving && !isKo;
         const activeSprite = useWalkAnim ? walkFrames[animFrame] : idleSprite;
+        const screenPlayerX = player.x - cameraX;
 
         if (activeSprite.complete && activeSprite.naturalWidth > 0) {
           // Le sprite fourni est un portrait (pas une case carrée) : on
@@ -636,7 +629,7 @@
           // sur le bas de la zone de collision, qui elle ne change pas.
           const renderH = player.h * 1.15;
           const renderW = renderH * (activeSprite.naturalWidth / activeSprite.naturalHeight);
-          const drawX = player.x + player.w / 2 - renderW / 2;
+          const drawX = screenPlayerX + player.w / 2 - renderW / 2;
           const drawY = player.y + player.h - renderH;
 
           ctx.save();
@@ -657,16 +650,8 @@
           ctx.restore();
         } else {
           ctx.fillStyle = "#e8c468";
-          ctx.fillRect(player.x, player.y, player.w, player.h);
+          ctx.fillRect(screenPlayerX, player.y, player.w, player.h);
         }
-
-        // Sol
-        ctx.strokeStyle = "rgba(232,196,104,0.4)";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(0, GROUND_Y + 2);
-        ctx.lineTo(CANVAS_W, GROUND_Y + 2);
-        ctx.stroke();
       }
 
       loop();
