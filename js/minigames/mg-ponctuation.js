@@ -76,15 +76,13 @@
 
   const DRAW_W = 56, DRAW_H = 56; // le sprite source est carré (48x48) : on garde un rendu carré
 
-  // --- Sprite "marche", format RPG Maker MZ (voir note en tête de fichier) ---
-  const SPRITE_CELL_W = 48;
-  const SPRITE_CELL_H = 48;
-  // Bloc [0][0] = origine (0,0) du fichier, donc pas de décalage à ajouter.
-  // Convention standard : 0=bas(face), 1=gauche, 2=droite, 3=haut(dos).
-  const WALK_ROW_RIGHT = 2;
-  const WALK_ROW_LEFT = 1;
-
-  const KO_COL = 0, KO_ROW = 0;
+  // v7 : le sprite n'est plus une feuille RPG Maker à découper (source
+  // d'ambiguïté et de bugs depuis 3 versions). Julie a fourni un GIF
+  // d'animation de marche complet ; on l'utilise tel quel comme IMAGE
+  // ANIMÉE (le navigateur gère l'avancée des frames du GIF tout seul,
+  // il suffit de le redessiner chaque frame). Une image statique séparée
+  // (première frame, détourée) sert de pose immobile pour l'arrêt et le
+  // saut, comme demandé.
 
   // --- Décor : simple image fixe (plus besoin d'un long décor à faire
   //     défiler, tout tient sur un seul écran maintenant) ---
@@ -105,7 +103,11 @@
   // Julie : avant, les dés étaient à une hauteur fixe indépendante du
   // texte, ce qui créait un vide énorme si le panneau était court.
   const DIE_GAP_BELOW_TEXT = 32;
-  const GROUND_GAP_BELOW_DICE = 95; // marge sous les dés pour que le saut reste jouable
+  // v7 : corrige un vrai bug de v6 — cette marge était PLUS GRANDE que la
+  // portée de saut réelle (v²/2g ≈ 83px avec les constantes ci-dessus),
+  // ce qui rendait les dés impossibles à toucher. Remise à une valeur
+  // sûrement inférieure à la portée de saut, avec une marge de confort.
+  const GROUND_GAP_BELOW_DICE = 50;
   const CYCLE_INTERVAL = 110; // frames entre deux signes (~1.8s à 60fps) : lent, lisible
 
   // --- Mise en page du panneau de texte fixe ---
@@ -240,10 +242,15 @@
 
   async function run({ canvas, uiContainer, isRemediation }) {
 
-    const sprite = new Image();
-    sprite.src = "/assets/sprites/characters/esprit-marche.png";
-    const koSprite = new Image();
-    koSprite.src = "/assets/sprites/characters/esprit-ko.png";
+    // v7 : GIF de marche fourni par Julie -> converti en WEBP animé (fond
+    // détouré) côté outil. Le navigateur avance les frames du WEBP animé
+    // tout seul quand on le redessine à chaque frame de la boucle de jeu :
+    // aucun découpage manuel de grille à faire, contrairement à l'ancien
+    // système RPG Maker qui n'a jamais marché correctement.
+    const walkSprite = new Image();
+    walkSprite.src = "/assets/sprites/characters/esprit-marche.webp";
+    const idleSprite = new Image();
+    idleSprite.src = "/assets/sprites/characters/esprit-idle.png";
     const bgImage = new Image();
     bgImage.src = BG_SRC;
 
@@ -437,7 +444,6 @@
       }
 
       let rafId;
-      let animFrame = 0, animTimer = 0;
 
       function loop() {
         if (paused) {
@@ -461,10 +467,20 @@
             }
           }
         } else {
-          // v6 : recalcule la position verticale des dés/sol à partir de la
-          // hauteur réelle du panneau de texte (avant la physique, pour que
-          // collision et rendu utilisent la même valeur cette frame-ci).
-          updateVerticalLayout(panelHeightFor(layoutText()));
+          // v6/v7 : recalcule la position verticale des dés/sol à partir de
+          // la hauteur réelle du panneau de texte, ET la position horizontale
+          // de chaque dé à partir de la position réelle de SON trou dans le
+          // texte (avant la physique, pour que collision et rendu utilisent
+          // toujours les mêmes valeurs cette frame-ci).
+          const lines = layoutText();
+          updateVerticalLayout(panelHeightFor(lines));
+          const blankCenters = computeBlankCenters(lines);
+          checkpoints.forEach(cp => {
+            const bx = blankCenters[cp.blankIndex];
+            if (bx !== undefined) {
+              cp.x = Math.max(PATH_START_X, Math.min(PATH_END_X - DIE_W, bx - DIE_W / 2));
+            }
+          });
 
           // Déplacement horizontal piloté par le joueur (remplace l'avancée
           // automatique). Bornes = zone de jeu sous le panneau de texte.
@@ -514,8 +530,6 @@
             }
           });
 
-          animTimer++;
-          if (animTimer >= 9) { animTimer = 0; animFrame = (animFrame + 1) % 3; }
         }
 
         for (let i = particles.length - 1; i >= 0; i--) {
@@ -558,6 +572,22 @@
         });
         if (line.length) lines.push({ tokens: line, width: lineW - spaceW });
         return lines;
+      }
+
+      // v7 : les dés sont maintenant alignés horizontalement sous LEUR
+      // trou réel dans le texte (calculé à partir du même layout que
+      // l'affichage), au lieu d'être répartis uniformément sur un chemin
+      // générique sans rapport avec la position des mots.
+      function computeBlankCenters(lines) {
+        const centers = {};
+        lines.forEach(ln => {
+          let x = TEXT_PANEL_X + (TEXT_PANEL_W - ln.width) / 2;
+          ln.tokens.forEach(tok => {
+            if (tok.type === "blank") centers[tok.index] = x + tok.w / 2;
+            x += tok.w + ctx.measureText(" ").width;
+          });
+        });
+        return centers;
       }
 
       function render() {
@@ -614,13 +644,36 @@
           ctx.globalAlpha = 1;
         });
 
-        const useKo = performance.now() < koUntil && koSprite.complete && koSprite.naturalWidth > 0;
-        if (useKo) {
-          ctx.drawImage(koSprite, KO_COL * SPRITE_CELL_W, KO_ROW * SPRITE_CELL_H, SPRITE_CELL_W, SPRITE_CELL_H, player.x, player.y, player.w, player.h);
-        } else if (sprite.complete && sprite.naturalWidth > 0) {
-          const frame = (player.onGround && player.moving) ? animFrame : 1;
-          const walkRow = player.facing === "left" ? WALK_ROW_LEFT : WALK_ROW_RIGHT;
-          ctx.drawImage(sprite, frame * SPRITE_CELL_W, walkRow * SPRITE_CELL_H, SPRITE_CELL_W, SPRITE_CELL_H, player.x, player.y, player.w, player.h);
+        const isKo = performance.now() < koUntil;
+        const useWalkAnim = player.onGround && player.moving && !isKo;
+        const activeSprite = useWalkAnim ? walkSprite : idleSprite;
+
+        if (activeSprite.complete && activeSprite.naturalWidth > 0) {
+          // Le sprite fourni est un portrait (pas une case carrée) : on
+          // garde son ratio, on cale la hauteur sur celle du personnage
+          // (un peu agrandie pour rester lisible) et on aligne les pieds
+          // sur le bas de la zone de collision, qui elle ne change pas.
+          const renderH = player.h * 1.9;
+          const renderW = renderH * (activeSprite.naturalWidth / activeSprite.naturalHeight);
+          const drawX = player.x + player.w / 2 - renderW / 2;
+          const drawY = player.y + player.h - renderH;
+
+          ctx.save();
+          if (player.facing === "left") {
+            ctx.translate(drawX + renderW, drawY);
+            ctx.scale(-1, 1);
+            ctx.drawImage(activeSprite, 0, 0, renderW, renderH);
+          } else {
+            ctx.drawImage(activeSprite, drawX, drawY, renderW, renderH);
+          }
+          if (isKo) {
+            // Flash rouge sur les pixels visibles du sprite (pas de sprite KO séparé nécessaire).
+            ctx.globalCompositeOperation = "source-atop";
+            ctx.fillStyle = "rgba(217,83,79,0.55)";
+            ctx.fillRect(player.facing === "left" ? 0 : drawX, player.facing === "left" ? 0 : drawY, renderW, renderH);
+            ctx.globalCompositeOperation = "source-over";
+          }
+          ctx.restore();
         } else {
           ctx.fillStyle = "#e8c468";
           ctx.fillRect(player.x, player.y, player.w, player.h);
