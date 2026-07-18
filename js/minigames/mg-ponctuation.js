@@ -1,8 +1,31 @@
 /* ============================================================
-   LE MANUSCRIT DES MONDES — mg-ponctuation.js (v5)
+   LE MANUSCRIT DES MONDES — mg-ponctuation.js (v6)
    ============================================================
    Mini-jeu "L'Assaut des Barricades" (Monde 1 — Hugo).
    Notion : ponctuation.
+
+   ---- v6 : corrections suite au 2e retour de Julie ----
+   1. DÉPLACEMENT JOUEUR : le personnage n'avance plus tout seul.
+      Flèches gauche/droite (ou Q/D, ou boutons tactiles ◀ ▶) pour se
+      déplacer, saut inchangé (Espace / flèche haut / bouton ⤴).
+      Le sprite change de ligne selon la direction (WALK_ROW_LEFT /
+      WALK_ROW_RIGHT) au lieu d'une ligne fixe.
+   2. POSITION DES DÉS : n'est plus une hauteur fixe et lointaine.
+      Recalculée chaque frame à partir de la hauteur RÉELLE du panneau
+      de texte (variable selon le nombre de trous/lignes du mini-pitch)
+      + un petit écart fixe (DIE_GAP_BELOW_TEXT). Corrige le grand vide
+      signalé par Julie entre le texte et les dés. Le sol suit à son
+      tour les dés, avec une marge calculée pour que le saut reste
+      toujours jouable (portée de saut ~83px avec les constantes
+      GRAVITY/JUMP_VELOCITY actuelles).
+   3. Suppression du "miss" par simple passage devant un dé sans sauter
+      (n'avait plus de sens avec un déplacement libre bidirectionnel) :
+      seul le fait de sauter sur le MAUVAIS signe compte comme erreur.
+   4. ⚠️ Le rectangle jaune de secours et un éventuel rognage du canevas
+      par le CSS ne sont PAS traités ici — cause probable : fichier
+      esprit-marche.png non chargé (404) et/ou minigames.css absent du
+      dossier fourni. Voir TRANSMISSION.md : ces deux fichiers restent
+      nécessaires pour confirmer/corriger ces deux points.
 
    ---- v5 : corrections suite à test réel par Julie ----
    1. Ce n'est plus le MONDE qui défile sous un personnage fixe à
@@ -47,10 +70,9 @@
 
   const CANVAS_W = 800;
   const CANVAS_H = 450;
-  const GROUND_Y = 390;
   const GRAVITY = 0.6;
   const JUMP_VELOCITY = -10;
-  const WALK_SPEED = 1.3; // vitesse de déplacement RÉEL du personnage à l'écran
+  const WALK_SPEED = 3.2; // vitesse de déplacement au clavier (joueur), remplace l'avancée automatique
 
   const DRAW_W = 56, DRAW_H = 56; // le sprite source est carré (48x48) : on garde un rendu carré
 
@@ -59,7 +81,8 @@
   const SPRITE_CELL_H = 48;
   // Bloc [0][0] = origine (0,0) du fichier, donc pas de décalage à ajouter.
   // Convention standard : 0=bas(face), 1=gauche, 2=droite, 3=haut(dos).
-  const WALK_ROW = 2;
+  const WALK_ROW_RIGHT = 2;
+  const WALK_ROW_LEFT = 1;
 
   const KO_COL = 0, KO_ROW = 0;
 
@@ -68,11 +91,21 @@
   const BG_SRC = "/assets/backgrounds/decors_Hugo_barricades_minijeu.png";
 
   // --- Mise en page du chemin (zone de jeu, sous le panneau de texte) ---
-  const PATH_START_X = 110, PATH_END_X = 690;
+  // Alignée sur la largeur réelle du panneau de texte (TEXT_PANEL_X=60,
+  // TEXT_PANEL_W=680 -> le panneau va de 60 à 740), pour que la zone de
+  // jeu se lise comme "juste sous le texte" plutôt que comme une zone
+  // séparée plus étroite.
+  const PATH_START_X = 90, PATH_END_X = 710;
   const DIE_W = 54, DIE_H = 54, DIE_BEVEL = 8;
-  const DIE_BOTTOM_Y = GROUND_Y - DRAW_H - 45; // 289 : portée de saut confortable
-  const DIE_TOP_Y = DIE_BOTTOM_Y - DIE_H;      // 235
-  const MISS_TRIGGER_OFFSET = 140;
+  // v6 : la position verticale des dés n'est plus une constante figée
+  // loin du texte. Elle est recalculée CHAQUE FRAME à partir de la
+  // hauteur réelle du panneau de texte (variable selon le nombre de
+  // trous/lignes du mini-pitch), avec un petit écart fixe DIE_GAP_BELOW_TEXT
+  // en dessous. C'est ce calcul qui corrige le "grand vide" signalé par
+  // Julie : avant, les dés étaient à une hauteur fixe indépendante du
+  // texte, ce qui créait un vide énorme si le panneau était court.
+  const DIE_GAP_BELOW_TEXT = 32;
+  const GROUND_GAP_BELOW_DICE = 95; // marge sous les dés pour que le saut reste jouable
   const CYCLE_INTERVAL = 110; // frames entre deux signes (~1.8s à 60fps) : lent, lisible
 
   // --- Mise en page du panneau de texte fixe ---
@@ -216,7 +249,7 @@
 
     await MinigameUI.showInstructions({
       title: "L'Assaut des Barricades",
-      objective: "La phrase à compléter est affichée en haut de l'écran, fixe. Ton personnage avance automatiquement en dessous. À chaque trou, un dé tourne LENTEMENT parmi plusieurs signes : saute — Espace, flèche du haut, ou ⤴ — pour le toucher par en dessous PENDANT qu'il affiche le bon signe. Une erreur (mauvais signe, ou trou dépassé sans saut) t'explique pourquoi puis relance une nouvelle phrase. Une phrase réussie du début à la fin termine le mini-jeu."
+      objective: "La phrase à compléter est affichée en haut de l'écran, fixe. Déplace ton personnage avec les flèches gauche/droite (ou ◀ ▶ tactile) et saute — Espace, flèche du haut, ou ⤴ — pour toucher le dé par en dessous PENDANT qu'il affiche le bon signe. À chaque trou, un dé tourne LENTEMENT parmi plusieurs signes. Une erreur (mauvais signe touché) t'explique pourquoi puis relance une nouvelle phrase. Une phrase réussie du début à la fin termine le mini-jeu."
     });
 
     return new Promise(resolve => {
@@ -244,7 +277,28 @@
       }
       loadPitch(pitchIndex);
 
-      const player = { x: 60, y: GROUND_Y - DRAW_H, w: DRAW_W, h: DRAW_H, vy: 0, onGround: true };
+      // v6 : GROUND_Y et la hauteur des dés dépendent de la hauteur réelle
+      // du panneau de texte (variable selon le mini-pitch). Recalculés à
+      // chaque frame par updateVerticalLayout(), avant la physique et le
+      // rendu, pour que collision et affichage utilisent toujours la même
+      // valeur. Valeurs de secours ici, écrasées dès la première frame.
+      let dieTopY = 200;
+      let groundY = 420;
+
+      function updateVerticalLayout(panelH) {
+        const panelBottom = TEXT_PANEL_Y + panelH;
+        dieTopY = panelBottom + DIE_GAP_BELOW_TEXT;
+        groundY = dieTopY + DIE_H + DRAW_H + GROUND_GAP_BELOW_DICE;
+      }
+
+      function panelHeightFor(lines) {
+        return lines.length * TEXT_LINE_HEIGHT + TEXT_PADDING * 2 - 6;
+      }
+
+      const player = { x: 60, y: 0, w: DRAW_W, h: DRAW_H, vy: 0, onGround: true, facing: "right", moving: false };
+      // Layout initial (avant la première frame) pour placer le joueur au sol dès le départ.
+      updateVerticalLayout(panelHeightFor(layoutText()));
+      player.y = groundY - DRAW_H;
 
       let currentCheckpointIndex = 0;
       let attempt = 1;
@@ -262,6 +316,8 @@
       `;
       uiContainer.insertAdjacentHTML("beforeend", `
         <div class="touch-controls">
+          <button class="touch-btn" id="left-btn">◀</button>
+          <button class="touch-btn" id="right-btn">▶</button>
           <button class="touch-btn" id="jump-btn">⤴</button>
         </div>
       `);
@@ -278,14 +334,42 @@
           player.onGround = false;
         }
       }
+
+      // v6 : déplacement horizontal au clavier, remplace l'avancée
+      // automatique. Le joueur avance/recule avec les flèches gauche/droite
+      // (ou Q/D, layout AZERTY), et saute avec Espace / flèche haut / Z.
+      const keysPressed = { left: false, right: false };
+      function onKeyUp(e) {
+        if (e.key === "ArrowLeft" || e.key === "q" || e.key === "Q" || e.key === "a" || e.key === "A") keysPressed.left = false;
+        if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") keysPressed.right = false;
+      }
       function onKeyDown(e) {
+        if (e.key === "ArrowLeft" || e.key === "q" || e.key === "Q" || e.key === "a" || e.key === "A") keysPressed.left = true;
+        if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") keysPressed.right = true;
         if (e.key === " " || e.key === "ArrowUp" || e.key === "w") tryJump();
       }
       window.addEventListener("keydown", onKeyDown);
+      window.addEventListener("keyup", onKeyUp);
       document.getElementById("jump-btn").addEventListener("click", tryJump);
+
+      const leftBtn = document.getElementById("left-btn");
+      const rightBtn = document.getElementById("right-btn");
+      const pressLeft = () => keysPressed.left = true;
+      const releaseLeft = () => keysPressed.left = false;
+      const pressRight = () => keysPressed.right = true;
+      const releaseRight = () => keysPressed.right = false;
+      ["mousedown", "touchstart"].forEach(evt => {
+        leftBtn.addEventListener(evt, pressLeft);
+        rightBtn.addEventListener(evt, pressRight);
+      });
+      ["mouseup", "mouseleave", "touchend", "touchcancel"].forEach(evt => {
+        leftBtn.addEventListener(evt, releaseLeft);
+        rightBtn.addEventListener(evt, releaseRight);
+      });
 
       function cleanup() {
         window.removeEventListener("keydown", onKeyDown);
+        window.removeEventListener("keyup", onKeyUp);
         cancelAnimationFrame(rafId);
       }
 
@@ -319,7 +403,7 @@
         if (isCorrect) {
           cp.state = "correct";
           resolvedFlags[cp.blankIndex] = true;
-          spawnBurst(cp.x + DIE_W / 2, DIE_TOP_Y + DIE_H / 2, "#6fcf97");
+          spawnBurst(cp.x + DIE_W / 2, dieTopY + DIE_H / 2, "#6fcf97");
           showFeedback(true, cp.blank.why);
           pendingAction = "next";
         } else {
@@ -330,20 +414,10 @@
         }
       }
 
-      function resolveMiss(cp) {
-        if (cp.state !== "cycling") return;
-        cp.state = "wrong";
-        paused = true;
-        pauseTimer = 115;
-        koUntil = performance.now() + 500;
-        showFeedback(false, "Tu es passé sous le dé sans sauter au bon moment. " + cp.blank.why);
-        pendingAction = "newPitch";
-      }
-
       function startNewPitch() {
         loadPitch(pickPitch(pitchIndex));
         player.x = 60;
-        player.y = GROUND_Y - DRAW_H;
+        player.y = groundY - DRAW_H;
         player.vy = 0;
         player.onGround = true;
         currentCheckpointIndex = 0;
@@ -387,12 +461,30 @@
             }
           }
         } else {
-          if (player.x < PATH_END_X + 40) player.x += WALK_SPEED;
+          // v6 : recalcule la position verticale des dés/sol à partir de la
+          // hauteur réelle du panneau de texte (avant la physique, pour que
+          // collision et rendu utilisent la même valeur cette frame-ci).
+          updateVerticalLayout(panelHeightFor(layoutText()));
+
+          // Déplacement horizontal piloté par le joueur (remplace l'avancée
+          // automatique). Bornes = zone de jeu sous le panneau de texte.
+          player.moving = false;
+          if (keysPressed.left && !keysPressed.right) {
+            player.x -= WALK_SPEED;
+            player.facing = "left";
+            player.moving = true;
+          } else if (keysPressed.right && !keysPressed.left) {
+            player.x += WALK_SPEED;
+            player.facing = "right";
+            player.moving = true;
+          }
+          player.x = Math.max(PATH_START_X - 20, Math.min(PATH_END_X + 20 - player.w, player.x));
+
           player.vy += GRAVITY;
           player.y += player.vy;
 
-          if (player.y + player.h >= GROUND_Y) {
-            player.y = GROUND_Y - player.h;
+          if (player.y + player.h >= groundY) {
+            player.y = groundY - player.h;
             player.vy = 0;
             player.onGround = true;
           } else {
@@ -404,15 +496,12 @@
             if (player.vy < 0) {
               const headY = player.y;
               const withinX = player.x + player.w > cp.x - 6 && player.x < cp.x + DIE_W + DIE_BEVEL + 6;
-              const hitsUnderside = headY <= DIE_TOP_Y + DIE_H && headY >= DIE_TOP_Y - 10;
+              const hitsUnderside = headY <= dieTopY + DIE_H && headY >= dieTopY - 10;
               if (withinX && hitsUnderside) {
-                player.y = DIE_TOP_Y + DIE_H;
+                player.y = dieTopY + DIE_H;
                 player.vy = 1.5;
                 resolveHit(cp);
               }
-            }
-            if (cp.state === "cycling" && player.x > cp.x + MISS_TRIGGER_OFFSET) {
-              resolveMiss(cp);
             }
           }
 
@@ -513,7 +602,7 @@
           if (cp.state === "correct") { symbol = cp.blank.correct; style = "correct"; }
           else if (cp.state === "wrong") { symbol = cp.blank.options[cp.optionIndex]; style = "wrong"; }
           else { symbol = cp.blank.options[cp.optionIndex]; style = "cycling"; }
-          drawDie(ctx, cp.x, DIE_TOP_Y, symbol, style);
+          drawDie(ctx, cp.x, dieTopY, symbol, style);
         });
 
         particles.forEach(p => {
@@ -529,8 +618,9 @@
         if (useKo) {
           ctx.drawImage(koSprite, KO_COL * SPRITE_CELL_W, KO_ROW * SPRITE_CELL_H, SPRITE_CELL_W, SPRITE_CELL_H, player.x, player.y, player.w, player.h);
         } else if (sprite.complete && sprite.naturalWidth > 0) {
-          const frame = player.onGround ? animFrame : 1;
-          ctx.drawImage(sprite, frame * SPRITE_CELL_W, WALK_ROW * SPRITE_CELL_H, SPRITE_CELL_W, SPRITE_CELL_H, player.x, player.y, player.w, player.h);
+          const frame = (player.onGround && player.moving) ? animFrame : 1;
+          const walkRow = player.facing === "left" ? WALK_ROW_LEFT : WALK_ROW_RIGHT;
+          ctx.drawImage(sprite, frame * SPRITE_CELL_W, walkRow * SPRITE_CELL_H, SPRITE_CELL_W, SPRITE_CELL_H, player.x, player.y, player.w, player.h);
         } else {
           ctx.fillStyle = "#e8c468";
           ctx.fillRect(player.x, player.y, player.w, player.h);
@@ -540,8 +630,8 @@
         ctx.strokeStyle = "rgba(232,196,104,0.4)";
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.moveTo(0, GROUND_Y + DRAW_H + 2);
-        ctx.lineTo(CANVAS_W, GROUND_Y + DRAW_H + 2);
+        ctx.moveTo(0, groundY + 2);
+        ctx.lineTo(CANVAS_W, groundY + 2);
         ctx.stroke();
       }
 
