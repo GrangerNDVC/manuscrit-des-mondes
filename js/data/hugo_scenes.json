@@ -1,8 +1,6 @@
 {
   "acts": {
-
     "ponctuation": {
-
       "intro": [
         {
           "background": "/assets/backgrounds/decors_Hugo_baricades.png",
@@ -35,24 +33,119 @@
           "portraitLeft": "/assets/characters/gavroche-reflexion.png",
           "portraitRight": "/assets/characters/esprit-reflexion.png",
           "text": "Hugo, c'est ça ? Ouais, je connais cette histoire. On raconte qu'une clé se cache quelque part dans ce monde... et que celui qui la trouve doit nous aider à le délivrer. Bon. Si on doit faire équipe, autant commencer tout de suite."
+        },
+        {
+          "background": "/assets/backgrounds/decors_Hugo_baricades.png",
+          "speakerName": "Gavroche",
+          "speakerSide": "left",
+          "portraitLeft": "/assets/characters/gavroche-malicieux.png",
+          "portraitRight": "/assets/characters/esprit-neutre.png",
+          "text": "Tu vois cette barricade ? On ne se bat pas pour du pain, cette fois. L'Empereur Noir a volé toute la ponctuation de Paris. Plus un point, plus une virgule nulle part — dans les journaux, les lettres, les livres. Alors les Parisiens se sont soulevés pour la reprendre."
+        },
+        {
+          "background": "/assets/backgrounds/decors_Hugo_baricades.png",
+          "speakerName": "L'Esprit de la Littérature",
+          "speakerSide": "right",
+          "portraitLeft": "/assets/characters/gavroche-malicieux.png",
+          "portraitRight": "/assets/characters/esprit-reflexion.png",
+          "text": "Sans ponctuation... comment sait-on où une phrase s'arrête ? Où elle commence ?"
+        },
+        {
+          "background": "/assets/backgrounds/decors_Hugo_baricades.png",
+          "speakerName": "Gavroche",
+          "speakerSide": "left",
+          "portraitLeft": "/assets/characters/gavroche-reflexion.png",
+          "portraitRight": "/assets/characters/esprit-reflexion.png",
+          "text": "C'est bien tout le problème ! Le point arrête la phrase et annonce la majuscule d'après. La virgule, elle, fait juste une petite pause : la phrase continue. Le point d'exclamation, c'est pour crier ou s'affoler. Le point d'interrogation, pour une question. Sans ça, plus rien ne tient debout."
+        },
+        {
+          "background": "/assets/backgrounds/decors_Hugo_baricades.png",
+          "speakerName": "Gavroche",
+          "speakerSide": "left",
+          "portraitLeft": "/assets/characters/gavroche-surpris.png",
+          "portraitRight": "/assets/characters/esprit-reflexion.png",
+          "text": "Attends... Thénardier ?! Qu'est-ce qu'il fait par ici, celui-là..."
+        },
+        {
+          "background": "/assets/backgrounds/decors_Hugo_baricades.png",
+          "speakerName": "Gavroche",
+          "speakerSide": "left",
+          "portraitLeft": "/assets/characters/gavroche-reflexion.png",
+          "portraitRight": "/assets/characters/esprit-reflexion.png",
+          "text": "Écoute-moi bien. Thénardier, c'est un personnage du livre de Victor Hugo, comme moi. Sauf que les forces de l'Empereur Noir l'ont retourné : il est à leur solde, maintenant. Méfie-toi de ce qu'il te propose. Mais il connaît quand même ses leçons — alors autant s'en servir contre lui."
         }
       ],
-
-      "qcm": {
-        "background": "/assets/backgrounds/decors_Hugo_baricades.png",
-        "speakerName": "Thénardier",
-        "portraitLeft": "/assets/characters/Thenardier_neutre.png",
-        "portraitRight": null,
-        "question": "Avant de poursuivre... Sais-tu ce qu'il faut placer à la fin d'une phrase qui pose une question : « As-tu vu mon chat ___ »",
-        "options": [
-          { "text": "Un point", "correct": false },
-          { "text": "Un point d'interrogation", "correct": true },
-          { "text": "Une virgule", "correct": false }
-        ],
-        "feedbackCorrect": "Hé... pas bête pour une lumière errante.",
-        "feedbackIncorrect": "Ha ! Je le savais. Tu n'es pas prêt."
-      },
-
+      "qcm": [
+        {
+          "background": "/assets/backgrounds/decors_Hugo_baricades.png",
+          "speakerName": "Thénardier",
+          "portraitLeft": "/assets/characters/Thenardier_neutre.png",
+          "portraitRight": null,
+          "question": "Avant de poursuivre... Sais-tu ce qu'il faut placer à la fin d'une phrase qui pose une question : « As-tu vu mon chat ___ »",
+          "options": [
+            {
+              "text": "Un point",
+              "correct": false
+            },
+            {
+              "text": "Un point d'interrogation",
+              "correct": true
+            },
+            {
+              "text": "Une virgule",
+              "correct": false
+            }
+          ],
+          "feedbackCorrect": "Hé... pas bête pour une lumière errante.",
+          "feedbackIncorrect": "Ha ! Je le savais. Tu n'es pas prêt."
+        },
+        {
+          "background": "/assets/backgrounds/decors_Hugo_baricades.png",
+          "speakerName": "Thénardier",
+          "portraitLeft": "/assets/characters/Thenardier_neutre.png",
+          "portraitRight": null,
+          "question": "Une phrase qui exprime un ordre pressant ou une grande émotion — comme « Attention, la barricade va céder ___ » — se termine par :",
+          "options": [
+            {
+              "text": "Un point d'exclamation",
+              "correct": true
+            },
+            {
+              "text": "Une virgule",
+              "correct": false
+            },
+            {
+              "text": "Un point d'interrogation",
+              "correct": false
+            }
+          ],
+          "feedbackCorrect": "Tiens, tiens... tu sais lire l'urgence, on dirait.",
+          "feedbackIncorrect": "Pfft. Avec une réponse pareille, tu te ferais écraser par la première charrette venue."
+        },
+        {
+          "background": "/assets/backgrounds/decors_Hugo_baricades.png",
+          "speakerName": "Thénardier",
+          "portraitLeft": "/assets/characters/Thenardier_neutre.png",
+          "portraitRight": null,
+          "question": "Quand une phrase commence par un complément placé devant, comme « Dans les rues de Paris ___ les gardes patrouillaient », qu'est-ce qu'on met avant de continuer ?",
+          "options": [
+            {
+              "text": "Une virgule",
+              "correct": true
+            },
+            {
+              "text": "Un point",
+              "correct": false
+            },
+            {
+              "text": "Rien du tout",
+              "correct": false
+            }
+          ],
+          "feedbackCorrect": "Exact. Dommage pour moi, tu n'es pas totalement inutile.",
+          "feedbackIncorrect": "Une virgule, évidemment ! Même les gamins des barricades savent ça."
+        }
+      ],
       "formative": {
         "background": "/assets/backgrounds/decors_Hugo_baricades.png",
         "speakerName": "Gavroche",
@@ -61,13 +154,30 @@
         "portraitRight": "/assets/characters/esprit-neutre.png",
         "segments": [
           "Gavroche regarda l'Esprit droit dans les yeux",
-          { "type": "blank", "options": [",", ".", "!", "?"], "correct": "." },
+          {
+            "type": "blank",
+            "options": [
+              ",",
+              ".",
+              "!",
+              "?"
+            ],
+            "correct": "."
+          },
           " Puis il éclata de rire",
-          { "type": "blank", "options": [",", ".", "!", "?"], "correct": "!" }
+          {
+            "type": "blank",
+            "options": [
+              ",",
+              ".",
+              "!",
+              "?"
+            ],
+            "correct": "!"
+          }
         ],
         "successThreshold": 1.0
       },
-
       "transfer": {
         "background": "/assets/backgrounds/decors_Hugo_baricades.png",
         "speakerName": "Gavroche",
@@ -76,18 +186,33 @@
         "portraitRight": "/assets/characters/esprit-content.png",
         "segments": [
           "Alors, c'est décidé",
-          { "type": "blank", "options": [",", ".", "!", "?"], "correct": "." },
+          {
+            "type": "blank",
+            "options": [
+              ",",
+              ".",
+              "!",
+              "?"
+            ],
+            "correct": "."
+          },
           " On y va ensemble",
-          { "type": "blank", "options": [",", ".", "!", "?"], "correct": "?" }
+          {
+            "type": "blank",
+            "options": [
+              ",",
+              ".",
+              "!",
+              "?"
+            ],
+            "correct": "?"
+          }
         ],
         "successThreshold": 1.0
       },
-
       "minigame_notion": "ponctuation"
     },
-
     "ordre_des_mots": {
-
       "intro": [
         {
           "background": "/assets/backgrounds/decors_Hugo_baricades.png",
@@ -122,7 +247,6 @@
           "text": "En français, on dit d'abord QUI fait l'action, ensuite l'action elle-même, puis sur QUOI ou COMMENT. Sujet, verbe, complément. Retiens bien ça avant de sauter !"
         }
       ],
-
       "qcm": {
         "background": "/assets/backgrounds/decors_Hugo_egouts.png",
         "speakerName": "Frollo",
@@ -130,14 +254,22 @@
         "portraitRight": null,
         "question": "Une voix sifflante s'éleva des ténèbres. Quel est l'ordre correct pour : « ___ » ?",
         "options": [
-          { "text": "Mangea la pomme Gavroche rouge", "correct": false },
-          { "text": "Gavroche mangea la pomme rouge", "correct": true },
-          { "text": "Rouge Gavroche la pomme mangea", "correct": false }
+          {
+            "text": "Mangea la pomme Gavroche rouge",
+            "correct": false
+          },
+          {
+            "text": "Gavroche mangea la pomme rouge",
+            "correct": true
+          },
+          {
+            "text": "Rouge Gavroche la pomme mangea",
+            "correct": false
+          }
         ],
         "feedbackCorrect": "Tiens, tiens... Tu sais lire l'ordre des choses. Intéressant.",
         "feedbackIncorrect": "L'ordre, petit, l'ordre ! Sans lui, le monde s'effondre..."
       },
-
       "formative": {
         "background": "/assets/backgrounds/decors_Hugo_egouts.png",
         "speakerName": "Gavroche",
@@ -148,13 +280,20 @@
         "segments": [
           {
             "type": "reorder",
-            "chunks": ["Gavroche", "avançait", "sans bruit"],
-            "correctOrder": [0, 1, 2]
+            "chunks": [
+              "Gavroche",
+              "avançait",
+              "sans bruit"
+            ],
+            "correctOrder": [
+              0,
+              1,
+              2
+            ]
           }
         ],
         "successThreshold": 1.0
       },
-
       "transfer": {
         "background": "/assets/backgrounds/decors_Hugo_egouts.png",
         "speakerName": "Gavroche",
@@ -165,18 +304,23 @@
         "segments": [
           {
             "type": "reorder",
-            "chunks": ["L'Esprit", "suivait", "Gavroche en silence"],
-            "correctOrder": [0, 1, 2]
+            "chunks": [
+              "L'Esprit",
+              "suivait",
+              "Gavroche en silence"
+            ],
+            "correctOrder": [
+              0,
+              1,
+              2
+            ]
           }
         ],
         "successThreshold": 1.0
       },
-
       "minigame_notion": "ordre_des_mots"
     },
-
     "subordonnees": {
-
       "intro": [
         {
           "background": "/assets/backgrounds/decors_Hugo_egouts.png",
@@ -211,7 +355,6 @@
           "text": "Vous venez délivrer les auteurs, n'est-ce pas ? Casimodo, là-haut, surveille les cloches. Quand elles sonnent ensemble, c'est qu'une idée principale et son explication se sont enfin retrouvées."
         }
       ],
-
       "qcm": {
         "background": "/assets/backgrounds/decors_Hugo_parvis_Notre_Dame.png",
         "speakerName": "Frollo",
@@ -219,14 +362,22 @@
         "portraitRight": null,
         "question": "Frollo apparut sur les marches. Laquelle de ces phrases contient une proposition subordonnée ?",
         "options": [
-          { "text": "Gavroche courut vite.", "correct": false },
-          { "text": "Gavroche courut parce qu'il avait peur.", "correct": true },
-          { "text": "Gavroche et Esmeralda coururent.", "correct": false }
+          {
+            "text": "Gavroche courut vite.",
+            "correct": false
+          },
+          {
+            "text": "Gavroche courut parce qu'il avait peur.",
+            "correct": true
+          },
+          {
+            "text": "Gavroche et Esmeralda coururent.",
+            "correct": false
+          }
         ],
         "feedbackCorrect": "Hmpf. Tu commences à comprendre les liens entre les idées...",
         "feedbackIncorrect": "Une subordonnée explique, complète, justifie. Cherche le lien !"
       },
-
       "formative": {
         "background": "/assets/backgrounds/decors_Hugo_parvis_Notre_Dame.png",
         "speakerName": "Esmeralda",
@@ -238,14 +389,19 @@
           {
             "type": "match",
             "pairs": [
-              { "left": "Gavroche se cacha", "right": "parce que Frollo arrivait" },
-              { "left": "L'Esprit comprit", "right": "que Casimodo les protégeait" }
+              {
+                "left": "Gavroche se cacha",
+                "right": "parce que Frollo arrivait"
+              },
+              {
+                "left": "L'Esprit comprit",
+                "right": "que Casimodo les protégeait"
+              }
             ]
           }
         ],
         "successThreshold": 1.0
       },
-
       "transfer": {
         "background": "/assets/backgrounds/decors_Hugo_parvis_Notre_Dame.png",
         "speakerName": "Esmeralda",
@@ -257,19 +413,22 @@
           {
             "type": "match",
             "pairs": [
-              { "left": "Esmeralda sourit", "right": "quand elle vit l'Esprit" },
-              { "left": "Casimodo sonna les cloches", "right": "pour annoncer leur arrivée" }
+              {
+                "left": "Esmeralda sourit",
+                "right": "quand elle vit l'Esprit"
+              },
+              {
+                "left": "Casimodo sonna les cloches",
+                "right": "pour annoncer leur arrivée"
+              }
             ]
           }
         ],
         "successThreshold": 1.0
       },
-
       "minigame_notion": "subordonnees"
     },
-
     "coherence_paragraphe": {
-
       "intro": [
         {
           "background": "/assets/backgrounds/decors_Hugo_parvis_Notre_Dame.png",
@@ -304,7 +463,6 @@
           "text": "Chaque vitrail raconte un morceau d'une histoire. Mais ils sont rangés dans le désordre, et un paragraphe désordonné... ne raconte plus rien."
         }
       ],
-
       "qcm": {
         "background": "/assets/backgrounds/decors_Hugo_interieur_Notre_Dame.png",
         "speakerName": "Frollo",
@@ -312,14 +470,22 @@
         "portraitRight": null,
         "question": "Frollo, affaibli, murmura encore : Quel mot sert à enchaîner logiquement deux idées dans un paragraphe ?",
         "options": [
-          { "text": "Ensuite", "correct": true },
-          { "text": "Banane", "correct": false },
-          { "text": "Rouge", "correct": false }
+          {
+            "text": "Ensuite",
+            "correct": true
+          },
+          {
+            "text": "Banane",
+            "correct": false
+          },
+          {
+            "text": "Rouge",
+            "correct": false
+          }
         ],
         "feedbackCorrect": "Les connecteurs... Oui. Ils tissent le fil du récit.",
         "feedbackIncorrect": "Sans connecteur, les idées flottent, séparées, sans lien..."
       },
-
       "formative": {
         "background": "/assets/backgrounds/decors_Hugo_interieur_Notre_Dame.png",
         "speakerName": "Casimodo",
@@ -335,12 +501,15 @@
               "Ensuite, il aperçut Paris tout entier sous ses pieds.",
               "Enfin, il redescendit, le sourire aux lèvres."
             ],
-            "correctOrder": [0, 1, 2]
+            "correctOrder": [
+              0,
+              1,
+              2
+            ]
           }
         ],
         "successThreshold": 1.0
       },
-
       "transfer": {
         "background": "/assets/backgrounds/decors_Hugo_interieur_Notre_Dame.png",
         "speakerName": "Casimodo",
@@ -356,17 +525,18 @@
               "Puis il l'arracha doucement du mur.",
               "Enfin, il le tendit à l'Esprit avec précaution."
             ],
-            "correctOrder": [0, 1, 2]
+            "correctOrder": [
+              0,
+              1,
+              2
+            ]
           }
         ],
         "successThreshold": 1.0
       },
-
       "minigame_notion": "coherence_paragraphe"
     },
-
     "selection_info": {
-
       "intro": [
         {
           "background": "/assets/backgrounds/decors_Hugo_interieur_Notre_Dame.png",
@@ -401,7 +571,6 @@
           "text": "L'homme s'arrêta et les regarda. Si vous voulez m'aider, dit-il, vous devrez apprendre à voir l'essentiel. Trop de détails inutiles, et on se perd."
         }
       ],
-
       "qcm": {
         "background": "/assets/backgrounds/decors_Hugo_Paris_Nuit.png",
         "speakerName": "Jean Valjean",
@@ -409,14 +578,22 @@
         "portraitRight": null,
         "question": "Si je te raconte ma journée et que je te dis : « Je me suis levé, j'ai mangé une pomme verte, puis j'ai marché 10 km pour trouver du travail », quelle information est la PLUS importante pour comprendre mon histoire ?",
         "options": [
-          { "text": "La pomme était verte", "correct": false },
-          { "text": "J'ai marché 10 km pour trouver du travail", "correct": true },
-          { "text": "Je me suis levé", "correct": false }
+          {
+            "text": "La pomme était verte",
+            "correct": false
+          },
+          {
+            "text": "J'ai marché 10 km pour trouver du travail",
+            "correct": true
+          },
+          {
+            "text": "Je me suis levé",
+            "correct": false
+          }
         ],
         "feedbackCorrect": "Voilà. L'essentiel, c'est ce qui fait avancer l'histoire.",
         "feedbackIncorrect": "Ce détail n'aide pas à comprendre l'histoire... regarde mieux."
       },
-
       "formative": {
         "background": "/assets/backgrounds/decors_Hugo_Paris_Nuit.png",
         "speakerName": "Jean Valjean",
@@ -429,15 +606,23 @@
             "type": "select_relevant",
             "context": "Jean Valjean marchait depuis l'aube. Il portait un sac usé sur son épaule. Le ciel était gris. Il cherchait un village où trouver du travail.",
             "options": [
-              { "text": "Le ciel était gris", "relevant": false },
-              { "text": "Il cherchait un village où trouver du travail", "relevant": true },
-              { "text": "Le sac était usé", "relevant": false }
+              {
+                "text": "Le ciel était gris",
+                "relevant": false
+              },
+              {
+                "text": "Il cherchait un village où trouver du travail",
+                "relevant": true
+              },
+              {
+                "text": "Le sac était usé",
+                "relevant": false
+              }
             ]
           }
         ],
         "successThreshold": 1.0
       },
-
       "transfer": {
         "background": "/assets/backgrounds/decors_Hugo_Paris_Nuit.png",
         "speakerName": "Jean Valjean",
@@ -450,20 +635,26 @@
             "type": "select_relevant",
             "context": "Valjean s'arrêta devant une maison isolée. La porte était bleue, légèrement écaillée. Une faible lumière brillait à l'intérieur : quelqu'un était réveillé.",
             "options": [
-              { "text": "La porte était bleue", "relevant": false },
-              { "text": "Quelqu'un était réveillé à l'intérieur", "relevant": true },
-              { "text": "La peinture était écaillée", "relevant": false }
+              {
+                "text": "La porte était bleue",
+                "relevant": false
+              },
+              {
+                "text": "Quelqu'un était réveillé à l'intérieur",
+                "relevant": true
+              },
+              {
+                "text": "La peinture était écaillée",
+                "relevant": false
+              }
             ]
           }
         ],
         "successThreshold": 1.0
       },
-
       "minigame_notion": "selection_info"
     },
-
     "construction_recit": {
-
       "intro": [
         {
           "background": "/assets/backgrounds/decors_Hugo_Paris_Nuit.png",
@@ -498,7 +689,6 @@
           "text": "Notre histoire à nous, par exemple : ça a commencé cette nuit, sur ces pavés. Tu veux voir si tu sais la raconter ?"
         }
       ],
-
       "qcm": {
         "background": "/assets/backgrounds/decors_Hugo_baricades.png",
         "speakerName": "Thénardier",
@@ -506,14 +696,22 @@
         "portraitRight": null,
         "question": "Thénardier, tapi dans l'ombre, ricana une dernière fois : Dans une histoire, qu'est-ce qui arrive juste APRÈS la situation de départ ?",
         "options": [
-          { "text": "La situation finale", "correct": false },
-          { "text": "L'élément qui déclenche l'aventure", "correct": true },
-          { "text": "Rien, l'histoire est déjà finie", "correct": false }
+          {
+            "text": "La situation finale",
+            "correct": false
+          },
+          {
+            "text": "L'élément qui déclenche l'aventure",
+            "correct": true
+          },
+          {
+            "text": "Rien, l'histoire est déjà finie",
+            "correct": false
+          }
         ],
         "feedbackCorrect": "...Tch. Va-t'en, alors. Tu as gagné.",
         "feedbackIncorrect": "Une histoire sans problème n'intéresse personne, petit."
       },
-
       "formative": {
         "background": "/assets/backgrounds/decors_Hugo_baricades.png",
         "speakerName": "Gavroche",
@@ -525,17 +723,31 @@
           {
             "type": "narrative_order",
             "cards": [
-              { "text": "L'Esprit se réveillait, seul, sans souvenirs.", "stage": "situation_initiale" },
-              { "text": "La voix de Victor Hugo lui confia sa mission.", "stage": "element_declencheur" },
-              { "text": "Gavroche l'aida à traverser Paris, les égouts, Notre-Dame.", "stage": "peripeties" },
-              { "text": "Ensemble, ils comprirent comment raconter une histoire.", "stage": "resolution" },
-              { "text": "Gavroche obtint sa clé, prêt pour la suite du voyage.", "stage": "situation_finale" }
+              {
+                "text": "L'Esprit se réveillait, seul, sans souvenirs.",
+                "stage": "situation_initiale"
+              },
+              {
+                "text": "La voix de Victor Hugo lui confia sa mission.",
+                "stage": "element_declencheur"
+              },
+              {
+                "text": "Gavroche l'aida à traverser Paris, les égouts, Notre-Dame.",
+                "stage": "peripeties"
+              },
+              {
+                "text": "Ensemble, ils comprirent comment raconter une histoire.",
+                "stage": "resolution"
+              },
+              {
+                "text": "Gavroche obtint sa clé, prêt pour la suite du voyage.",
+                "stage": "situation_finale"
+              }
             ]
           }
         ],
         "successThreshold": 1.0
       },
-
       "transfer": {
         "background": "/assets/backgrounds/decors_Hugo_baricades.png",
         "speakerName": "Gavroche",
@@ -547,22 +759,34 @@
           {
             "type": "narrative_order",
             "cards": [
-              { "text": "Le soleil se levait enfin sur Paris.", "stage": "situation_initiale" },
-              { "text": "Une lumière dorée jaillit de la poche de Gavroche.", "stage": "element_declencheur" },
-              { "text": "L'Esprit et Gavroche regardèrent la clé apparaître.", "stage": "peripeties" },
-              { "text": "Gavroche serra la clé contre lui, ému.", "stage": "resolution" },
-              { "text": "Le chemin vers le monde suivant s'ouvrit devant eux.", "stage": "situation_finale" }
+              {
+                "text": "Le soleil se levait enfin sur Paris.",
+                "stage": "situation_initiale"
+              },
+              {
+                "text": "Une lumière dorée jaillit de la poche de Gavroche.",
+                "stage": "element_declencheur"
+              },
+              {
+                "text": "L'Esprit et Gavroche regardèrent la clé apparaître.",
+                "stage": "peripeties"
+              },
+              {
+                "text": "Gavroche serra la clé contre lui, ému.",
+                "stage": "resolution"
+              },
+              {
+                "text": "Le chemin vers le monde suivant s'ouvrit devant eux.",
+                "stage": "situation_finale"
+              }
             ]
           }
         ],
         "successThreshold": 1.0
       },
-
       "minigame_notion": "construction_recit"
     }
-
   },
-
   "ending": {
     "scenes": [
       {
