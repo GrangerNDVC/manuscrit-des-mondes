@@ -70,7 +70,7 @@
   const CANVAS_W = 800;
   const CANVAS_H = 450;
   const GRAVITY = 0.6;
-  const JUMP_VELOCITY = -10;
+  const JUMP_VELOCITY = -11;
   const WALK_SPEED = 3.2; // vitesse de déplacement au clavier (joueur), remplace l'avancée automatique
 
   const DRAW_W = 56, DRAW_H = 56; // le sprite source est carré (48x48) : on garde un rendu carré
@@ -98,8 +98,11 @@
   const BG_SRC = "/assets/backgrounds/decors_ponctuation_hugo.jpg";
 
   const WORLD_MARGIN = 40;         // marge avant le premier mot / après le dernier
-  const TEXT_Y = 60;                // hauteur fixe de l'unique ligne de texte (monde = écran en Y, seul X défile)
-  const GROUND_Y = 200;             // sol (invisible), assez proche du texte pour que le saut l'atteigne visuellement
+  // v10 : repositionnés en fonction du décor fourni par Julie (mesuré
+  // directement sur l'image) — avant, texte et sol flottaient dans un
+  // ciel vide sans rapport avec la ligne de marche réelle du décor.
+  const TEXT_Y = 230;                // hauteur de l'unique ligne de texte : juste au-dessus de la barricade du décor
+  const GROUND_Y = 385;              // sol (invisible) : aligné sur le niveau du trottoir/herbe du décor
   const HIT_TOLERANCE_X = 40;       // marge horizontale tolérée pour valider un saut sous le bon trou
   const CYCLE_INTERVAL = 110;       // frames entre deux signes (~1.8s à 60fps) : lent, lisible
   const CAMERA_LEAD = 0.35;         // le joueur reste à ~35% depuis la gauche de l'écran pendant le défilement
@@ -401,10 +404,31 @@
         `);
       }
 
+      // v10 : vrai bug trouvé — resolveHit mettait `paused=true` dans le
+      // MÊME tick que le saut (tryJump l'appelle juste après avoir réglé
+      // player.vy). Comme la physique (gravité/position) ne tourne que
+      // dans la branche "non pausée" de la boucle, le personnage n'avait
+      // jamais l'occasion de bouger avant que le jeu se fige : le saut
+      // n'était donc JAMAIS visible, correct ou incorrect. On sépare
+      // maintenant en deux temps : resolveHit() calcule le résultat et le
+      // met en attente (RESOLVE_DELAY frames, le temps que le saut soit
+      // visible), et c'est finalizeResolve() qui applique réellement la
+      // pause + le retour visuel (jeton rouge, message, etc.).
+      const RESOLVE_DELAY = 20;
+      let resolveTimer = 0;
+      let pendingResolve = null;
+
       function resolveHit(cp) {
-        if (cp.state !== "cycling") return;
+        if (cp.state !== "cycling" || cp.locked) return;
         const shownSymbol = cp.blank.options[cp.optionIndex];
-        const isCorrect = shownSymbol === cp.blank.correct;
+        cp.locked = true; // fige le jeton (n'avance plus pendant que le saut se joue)
+        pendingResolve = { cp, isCorrect: shownSymbol === cp.blank.correct };
+        resolveTimer = RESOLVE_DELAY;
+      }
+
+      function finalizeResolve() {
+        const { cp, isCorrect } = pendingResolve;
+        pendingResolve = null;
         paused = true;
         pauseTimer = 115;
 
@@ -517,13 +541,18 @@
           }
 
           checkpoints.forEach(c => {
-            if (c.state !== "cycling") return;
+            if (c.state !== "cycling" || c.locked) return;
             c.cycleTimer++;
             if (c.cycleTimer >= CYCLE_INTERVAL) {
               c.cycleTimer = 0;
               c.optionIndex = (c.optionIndex + 1) % c.blank.options.length;
             }
           });
+
+          if (pendingResolve) {
+            resolveTimer--;
+            if (resolveTimer <= 0) finalizeResolve();
+          }
 
         }
 
@@ -567,8 +596,21 @@
       }
 
       function render() {
+        // v10 : le décor défile maintenant AVEC la caméra (avant, il
+        // restait fixe pendant que texte/personnage bougeaient, d'où
+        // l'impression de décrochage). On le répète côte à côte plutôt
+        // que d'étirer une seule image sur toute la largeur du monde
+        // (ce qui déformerait fortement les bâtiments) : l'image de
+        // Julie fait 1024×572, on la redessine à la hauteur du canevas
+        // en conservant ses proportions (~806px de large), et on colle
+        // des copies bout à bout pour couvrir tout ce qui est visible.
         if (bgImage.complete && bgImage.naturalWidth > 0) {
-          ctx.drawImage(bgImage, 0, 0, CANVAS_W, CANVAS_H);
+          const decorW = CANVAS_H * (bgImage.naturalWidth / bgImage.naturalHeight);
+          const startTile = Math.floor(cameraX / decorW) - 1;
+          const endTile = Math.floor((cameraX + CANVAS_W) / decorW) + 1;
+          for (let t = startTile; t <= endTile; t++) {
+            ctx.drawImage(bgImage, t * decorW - cameraX, 0, decorW, CANVAS_H);
+          }
         } else {
           ctx.fillStyle = "#1a1530";
           ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
