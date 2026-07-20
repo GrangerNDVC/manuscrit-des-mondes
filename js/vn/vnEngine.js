@@ -48,6 +48,13 @@
      ],
      successThreshold: 1.0  // proportion de trous corrects requise (1.0 = tout juste)
    }
+   ============================================================
+
+   DÉPENDANCE : chromaKeyFilter.js doit être chargé AVANT ce fichier
+   (balise <script> dans l'ordre : chromaKeyFilter.js puis vnEngine.js),
+   pour que l'objet global ChromaKey soit disponible. Sert au détourage
+   automatique du fond bleu des portraits de personnages, voir
+   updatePortrait() ci-dessous.
    ============================================================ */
 
 const VNEngine = (() => {
@@ -89,7 +96,17 @@ const VNEngine = (() => {
       imgEl.classList.remove("visible", "speaking");
       return;
     }
-    imgEl.src = src;
+    // Détourage automatique du fond bleu (voir chromaKeyFilter.js) : le
+    // traitement est asynchrone, mais classList change tout de suite
+    // (le portrait apparaît/s'anime normalement) — seule l'affectation
+    // de src attend le résultat, pour ne jamais laisser voir une image
+    // avec son fond bleu, même une fraction de seconde.
+    ChromaKey.load(src)
+      .then(canvas => { imgEl.src = canvas.toDataURL(); })
+      .catch(err => {
+        console.error(`Détourage impossible pour "${src}" — affichage du fichier original (avec son fond bleu).`, err);
+        imgEl.src = src;
+      });
     imgEl.classList.add("visible");
     imgEl.classList.toggle("speaking", !!isSpeaking);
     imgEl.classList.toggle("dimmed", !isSpeaking);
