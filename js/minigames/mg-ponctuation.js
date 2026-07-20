@@ -173,6 +173,91 @@
         { correct: ",", options: [",", ".", "!", ";"], why: "L'apposition « du haut de la tour » se referme par une seconde virgule." },
         { correct: "?", options: ["?", ".", "!", ","], why: "Le verbe inversé (« cria-t-il ») signale une question directe : elle se termine par un point d'interrogation." }
       ]
+    },
+    {
+      title: "Les Misérables",
+      segments: ["Éponine", "silencieuse", "regardait Marius s'éloigner"],
+      blanks: [
+        { correct: ",", options: [",", ".", "!", ";"], why: "« silencieuse » est une apposition qui décrit l'attitude d'Éponine : elle s'ouvre par une virgule." },
+        { correct: ",", options: [",", ".", "!", ";"], why: "L'apposition « silencieuse » se referme par une seconde virgule avant la suite de la phrase." },
+        { correct: ".", options: [".", ",", "!", "?"], why: "C'est la fin de la phrase : un point la clôt normalement." }
+      ]
+    },
+    {
+      title: "Les Misérables",
+      segments: ["Marius", "bouleversé", "déclara enfin son amour à Cosette"],
+      blanks: [
+        { correct: ",", options: [",", ".", "!", ";"], why: "« bouleversé » est une apposition qui décrit l'état de Marius : elle s'ouvre par une virgule." },
+        { correct: ",", options: [",", ".", "!", ";"], why: "L'apposition « bouleversé » se referme par une seconde virgule." },
+        { correct: "!", options: ["!", ".", "?", ","], why: "L'intensité de l'aveu de Marius appelle un point d'exclamation plutôt qu'un simple point." }
+      ]
+    },
+    {
+      title: "Les Misérables",
+      segments: ["Quand la police arriva", "Javert", "inflexible", "traqua Jean Valjean sans relâche"],
+      blanks: [
+        { correct: ",", options: [",", ".", "!", "?"], why: "« Quand la police arriva » est une proposition placée en tête de phrase : une virgule la sépare de la suite." },
+        { correct: ",", options: [",", ".", "!", ";"], why: "« inflexible » est une apposition qui décrit le caractère de Javert : elle s'ouvre par une virgule." },
+        { correct: ",", options: [",", ".", "!", ";"], why: "L'apposition « inflexible » se referme par une seconde virgule." },
+        { correct: ".", options: [".", ",", "!", "?"], why: "C'est la fin de la phrase : un point la clôt normalement." }
+      ]
+    },
+    {
+      title: "Les Misérables",
+      segments: ["Du haut de la barricade", "Enjolras", "galvanisé", "appela ses amis à se battre"],
+      blanks: [
+        { correct: ",", options: [",", ".", "!", "?"], why: "« Du haut de la barricade » est un complément de lieu placé en tête de phrase : virgule d'introduction." },
+        { correct: ",", options: [",", ".", "!", ";"], why: "« galvanisé » est une apposition qui décrit l'état d'Enjolras : elle s'ouvre par une virgule." },
+        { correct: ",", options: [",", ".", "!", ";"], why: "L'apposition « galvanisé » se referme par une seconde virgule." },
+        { correct: "!", options: ["!", ".", "?", ","], why: "Enjolras lance un appel au combat : l'intensité de l'action appelle un point d'exclamation." }
+      ]
+    },
+    {
+      title: "Les Misérables",
+      segments: ["Grantaire", "sceptique", "demanda si la révolte avait un sens"],
+      blanks: [
+        { correct: ",", options: [",", ".", "!", ";"], why: "« sceptique » est une apposition qui décrit l'attitude de Grantaire : elle s'ouvre par une virgule." },
+        { correct: ",", options: [",", ".", "!", ";"], why: "L'apposition « sceptique » se referme par une seconde virgule." },
+        { correct: ".", options: [".", "?", "!", ","], why: "Attention : « demanda si » introduit une question INDIRECTE (rapportée). Contrairement à une question directe, elle se termine par un point, pas un point d'interrogation." }
+      ]
+    },
+    {
+      title: "Les Misérables",
+      segments: ["Fantine", "mourante", "songea une dernière fois à Cosette"],
+      blanks: [
+        { correct: ",", options: [",", ".", "!", ";"], why: "« mourante » est une apposition qui décrit l'état de Fantine : elle s'ouvre par une virgule." },
+        { correct: ",", options: [",", ".", "!", ";"], why: "L'apposition « mourante » se referme par une seconde virgule." },
+        { correct: ".", options: [".", ",", "!", "?"], why: "C'est la fin de la phrase : un point la clôt normalement." }
+      ]
+    },
+    {
+      title: "Les Misérables",
+      segments: ["Dans les égouts de Paris", "Jean Valjean", "épuisé", "porta Marius jusqu'à la sortie"],
+      blanks: [
+        { correct: ",", options: [",", ".", "!", "?"], why: "« Dans les égouts de Paris » est un complément de lieu placé en tête de phrase : virgule d'introduction." },
+        { correct: ",", options: [",", ".", "!", ";"], why: "« épuisé » est une apposition qui décrit l'état de Jean Valjean : elle s'ouvre par une virgule." },
+        { correct: ",", options: [",", ".", "!", ";"], why: "L'apposition « épuisé » se referme par une seconde virgule." },
+        { correct: ".", options: [".", ",", "!", "?"], why: "C'est la fin de la phrase : un point la clôt normalement." }
+      ]
+    },
+    {
+      title: "Les Misérables",
+      segments: ["Marius", "ému aux larmes", "demanda-t-il enfin la main de Cosette"],
+      blanks: [
+        { correct: ",", options: [",", ".", "!", ";"], why: "« ému aux larmes » est une apposition insérée après Marius : elle s'ouvre par une virgule." },
+        { correct: ",", options: [",", ".", "!", ";"], why: "L'apposition « ému aux larmes » se referme par une seconde virgule." },
+        { correct: "?", options: ["?", ".", "!", ","], why: "Le verbe inversé (« demanda-t-il ») signale une question directe : elle se termine par un point d'interrogation." }
+      ]
+    },
+    {
+      title: "Les Misérables",
+      segments: ["Sous les balles", "Gavroche", "insouciant", "ramassait des cartouches"],
+      blanks: [
+        { correct: ",", options: [",", ".", "!", "?"], why: "« Sous les balles » est un complément de lieu placé en tête de phrase : virgule d'introduction." },
+        { correct: ",", options: [",", ".", "!", ";"], why: "« insouciant » est une apposition qui décrit l'attitude de Gavroche : elle s'ouvre par une virgule." },
+        { correct: ",", options: [",", ".", "!", ";"], why: "L'apposition « insouciant » se referme par une seconde virgule." },
+        { correct: ".", options: [".", ",", "!", "?"], why: "C'est la fin de la phrase : un point la clôt normalement." }
+      ]
     }
   ];
 
