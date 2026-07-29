@@ -1,9 +1,9 @@
 /* ============================================================
    LE MANUSCRIT DES MONDES — hubManager.js
    ============================================================
-   Gère UNIQUEMENT le hub : menu principal, intro, carte des
-   mondes. Ne connaît rien du déroulement d'un monde (VN,
-   mini-jeux) — ça, c'est le rôle de worldRunner.js, chargé
+   Gère UNIQUEMENT le hub : menu principal, connexion, intro,
+   carte des mondes. Ne connaît rien du déroulement d'un monde
+   (VN, mini-jeux) — ça, c'est le rôle de worldRunner.js, chargé
    séparément dans chaque page /mondes/<worldId>.html.
 
    Navigation entre le hub et un monde = un vrai changement de
@@ -16,11 +16,16 @@ const HubManager = (() => {
 
   const screens = {
     menu: document.getElementById("screen-menu"),
+    login: document.getElementById("screen-login"),
     intro: document.getElementById("screen-intro"),
     map: document.getElementById("screen-map")
   };
 
   const overlay = document.getElementById("transition-overlay");
+
+  // "signup" avant Nouvelle partie, "login" avant Continuer —
+  // décide quelle action AuthManager appelle à la validation.
+  let loginMode = "signup";
 
   /**
    * Chemin de la page de chaque monde. À compléter au fur et à
@@ -64,6 +69,64 @@ const HubManager = (() => {
   function goToMap() {
     renderMap();
     showScreen("map");
+  }
+
+  /**
+   * Ouvre l'écran de connexion. mode = "signup" (avant une
+   * nouvelle partie) ou "login" (avant de continuer).
+   */
+  function goToLogin(mode) {
+    loginMode = mode;
+    document.getElementById("login-title").textContent =
+      mode === "signup" ? "Choisis ton identité" : "Reconnexion";
+    document.getElementById("login-error").hidden = true;
+    document.getElementById("login-nom").value = "";
+    document.getElementById("login-code").value = "";
+    showScreen("login");
+  }
+
+  function afficherErreurLogin(message) {
+    const err = document.getElementById("login-error");
+    err.textContent = message;
+    err.hidden = false;
+  }
+
+  /**
+   * Appelée par le bouton Valider de l'écran de connexion.
+   * Signup ou login selon loginMode, puis reprend exactement
+   * ce que faisaient déjà btn-new-game / btn-continue avant.
+   */
+  async function validerLogin() {
+    const nom = document.getElementById("login-nom").value.trim();
+    const code = document.getElementById("login-code").value.trim();
+
+    if (!nom || !code) {
+      afficherErreurLogin("Merci de remplir le nom et le code.");
+      return;
+    }
+
+    const bouton = document.getElementById("btn-login-submit");
+    bouton.disabled = true;
+
+    try {
+      if (loginMode === "signup") {
+        await AuthManager.signUp(nom, code);
+        GameState.reset();
+        if (GameState.get().introWatched) {
+          goToMap();
+        } else {
+          goToIntro();
+        }
+      } else {
+        await AuthManager.logIn(nom, code);
+        GameState.load();
+        goToMap();
+      }
+    } catch (err) {
+      afficherErreurLogin(err.message);
+    } finally {
+      bouton.disabled = false;
+    }
   }
 
   function renderMap() {
@@ -121,18 +184,15 @@ const HubManager = (() => {
     GameState.load();
 
     document.getElementById("btn-new-game").addEventListener("click", () => {
-      GameState.reset();
-      if (GameState.get().introWatched) {
-        goToMap();
-      } else {
-        goToIntro();
-      }
+      goToLogin("signup");
     });
 
     document.getElementById("btn-continue").addEventListener("click", () => {
-      GameState.load();
-      goToMap();
+      goToLogin("login");
     });
+
+    document.getElementById("btn-login-submit").addEventListener("click", validerLogin);
+    document.getElementById("btn-login-cancel").addEventListener("click", goToMenu);
 
     document.getElementById("btn-skip-intro").addEventListener("click", () => {
       GameState.get().introWatched = true;
