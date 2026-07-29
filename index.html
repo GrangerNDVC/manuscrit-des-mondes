@@ -58,6 +58,23 @@
     margin-bottom: 4%;
     pointer-events: none;
   }
+
+  /* Écran de connexion — provisoire, à déplacer/harmoniser avec
+     main.css quand tu l'auras sous la main. */
+  #screen-login .menu-content input {
+    display: block;
+    width: 100%;
+    max-width: 320px;
+    margin: 0.5rem auto;
+    padding: 0.6rem 0.8rem;
+    font-size: 1rem;
+    box-sizing: border-box;
+  }
+  #screen-login .login-error {
+    color: #e06060;
+    max-width: 320px;
+    margin: 0.5rem auto;
+  }
 </style>
 </head>
 <body>
@@ -68,6 +85,18 @@
       <h1 class="title-game">Le Manuscrit<br><span>des Mondes</span></h1>
       <button id="btn-new-game" class="btn-primary">Nouvelle partie</button>
       <button id="btn-continue" class="btn-secondary">Continuer</button>
+    </div>
+  </section>
+
+  <!-- ============ ÉCRAN : IDENTITÉ (connexion / inscription) ============ -->
+  <section id="screen-login" class="screen">
+    <div class="menu-content">
+      <h2 id="login-title" class="title-game">Connexion</h2>
+      <p id="login-error" class="login-error" hidden></p>
+      <input type="text" id="login-nom" placeholder="Nom d'être de lumière" autocomplete="off">
+      <input type="text" id="login-code" placeholder="Code secret (4 chiffres)" maxlength="4" inputmode="numeric" autocomplete="off">
+      <button id="btn-login-submit" class="btn-primary">Valider</button>
+      <button id="btn-login-cancel" class="btn-secondary">◀ Retour</button>
     </div>
   </section>
 
@@ -98,6 +127,7 @@
 
   <!-- ============ SCRIPTS ============ -->
   <script src="/js/core/gameState.js"></script>
+  <script src="/js/core/authManager.js"></script>
   <script src="/js/core/hubManager.js"></script>
 </body>
 </html>
