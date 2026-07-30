@@ -159,6 +159,13 @@ const GameState = (() => {
     // Un acte est "completed" quand le transfert différé est réussi
     if (step === "vn_transfer_passed" && passed) {
       act.completed = true;
+      // L'étape entière vient d'être terminée : on envoie le résumé
+      // de progression vers Supabase. Ne bloque jamais le jeu si ça
+      // échoue (voir syncManager.js) — la sauvegarde locale ci-dessous
+      // reste de toute façon la source de vérité immédiate.
+      if (typeof SyncManager !== "undefined") {
+        SyncManager.envoyerProgression();
+      }
     }
     save();
   }
