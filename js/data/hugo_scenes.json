@@ -197,7 +197,7 @@
               "!",
               "?"
             ],
-            "correct": "?"
+            "correct": [".", "!"]
           }
         ],
         "successThreshold": 1.0
