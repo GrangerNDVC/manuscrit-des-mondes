@@ -30,7 +30,13 @@
     { main: "Esmeralda sourit", sub: "quand elle reconnut Gavroche" },
     { main: "Les cloches sonnèrent", sub: "dès que la nuit tomba" },
     { main: "Casimodo descendit", sub: "pour accueillir ses amis" },
-    { main: "Frollo s'enfuit", sub: "avant que la lumière n'arrive" }
+    { main: "Frollo s'enfuit", sub: "avant que la lumière n'arrive" },
+    { main: "Gavroche hésita", sub: "bien qu'il connût le chemin par cœur" },
+    { main: "L'Esprit s'arrêta", sub: "là où les vitraux brillaient encore" },
+    { main: "Quasimodo se tut", sub: "de peur que Frollo ne l'entende" },
+    { main: "Esmeralda attendit", sub: "jusqu'à ce que la cloche sonne" },
+    { main: "Les gardes reculèrent", sub: "quand ils virent la barricade" },
+    { main: "Gavroche revint", sub: "après avoir prévenu ses amis" }
   ];
 
   function shuffle(arr) {
@@ -50,7 +56,7 @@
 
     await MinigameUI.showInstructions({
       title: "Les Cloches de Notre-Dame",
-      objective: "C'est un jeu de memory. Clique sur deux cloches pour les retourner : trouve les paires proposition principale ↔ proposition subordonnée qui vont logiquement ensemble. Tu as droit à 3 erreurs maximum."
+      objective: "C'est un jeu de memory. Clique sur deux cloches pour les retourner : trouve les paires proposition principale ↔ proposition subordonnée qui vont logiquement ensemble. Tu as droit à 4 erreurs maximum."
     });
 
     return new Promise(resolve => {
@@ -59,7 +65,7 @@
       canvas.height = CANVAS_H;
       const ctx = canvas.getContext("2d");
 
-      const NUM_PAIRS = 3;
+      const NUM_PAIRS = 4;
       const pairs = pickPairs(NUM_PAIRS);
 
       // Construit les cartes "cloches" : { pairId, role, text, x, y, flipped, matched }
@@ -70,12 +76,13 @@
       });
       cards = shuffle(cards);
 
-      // Grille 3 colonnes x 2 lignes (pour 3 paires = 6 cartes)
-      const COLS = 3;
+      // Grille 4 colonnes x 2 lignes (pour 4 paires = 8 cartes) — cartes
+      // plus compactes que l'ancienne grille 3x2 pour tenir dans le canevas.
+      const COLS = 4;
       const ROWS = Math.ceil(cards.length / COLS);
-      const CARD_W = 220;
-      const CARD_H = 140;
-      const GAP = 24;
+      const CARD_W = 170;
+      const CARD_H = 130;
+      const GAP = 18;
       const gridW = COLS * CARD_W + (COLS - 1) * GAP;
       const gridH = ROWS * CARD_H + (ROWS - 1) * GAP;
       const startX = (CANVAS_W - gridW) / 2;
@@ -92,7 +99,7 @@
 
       let flippedCards = [];
       let mistakes = 0;
-      const MAX_MISTAKES = 3;
+      const MAX_MISTAKES = 4;
       let resultGiven = false;
       let lockInput = false;
 

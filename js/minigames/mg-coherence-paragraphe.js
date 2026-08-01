@@ -28,19 +28,29 @@
    */
   const PARAGRAPH_BANK = [
     [
-      "D'abord, Quasimodo grimpa tout en haut de la tour.",
-      "Ensuite, il observa les toits de Paris s'étendre au loin.",
-      "Enfin, il redescendit pour préparer les cloches du soir."
+      "Quasimodo grimpa tout en haut de la tour, le souffle court.",
+      "Là-haut, il découvrit les toits de Paris s'étendre à perte de vue.",
+      "Le spectacle l'apaisa, et il redescendit préparer les cloches du soir."
     ],
     [
-      "D'abord, l'Esprit poussa la lourde porte de pierre.",
-      "Ensuite, une lumière douce envahit la pièce.",
-      "Enfin, Quasimodo apparut entre les vitraux brisés."
+      "L'Esprit poussa la lourde porte de pierre, qui grinça dans le silence.",
+      "Une lumière douce envahit alors la pièce, révélant des vitraux brisés.",
+      "Entre les fragments de verre coloré, Quasimodo apparut, immobile."
     ],
     [
-      "D'abord, Gavroche ramassa un vitrail tombé au sol.",
-      "Ensuite, il le tendit avec précaution à Quasimodo.",
-      "Enfin, Quasimodo le replaça avec un sourire ému."
+      "Gavroche ramassa un vitrail tombé au sol, encore intact malgré la chute.",
+      "Il le tendit avec précaution à Quasimodo, qui hésitait à le toucher.",
+      "Ce dernier le replaça enfin dans son cadre, un sourire ému aux lèvres."
+    ],
+    [
+      "Une cloche se brisa net durant l'orage, et son éclat retentit dans toute la tour.",
+      "Quasimodo se précipita, alerté par un bruit qu'il n'avait plus entendu depuis des années.",
+      "Il ne restait plus qu'à rassembler les morceaux avant que quiconque ne les découvre."
+    ],
+    [
+      "Esmeralda dansait sur le parvis lorsque Gavroche l'aperçut de loin.",
+      "Il courut la rejoindre, oubliant un instant sa mission auprès de l'Esprit.",
+      "Elle s'arrêta net en le reconnaissant et son sourire trahit son inquiétude."
     ]
   ];
 
@@ -57,7 +67,7 @@
 
     await MinigameUI.showInstructions({
       title: "Le Rangement de Quasimodo",
-      objective: "Fais glisser les 3 phrases-vitraux (à gauche) vers les 3 emplacements de la verrière (à droite), dans l'ordre logique du récit — repère les mots comme « d'abord », « ensuite », « enfin ». Clique sur Valider une fois les 3 placées."
+      objective: "Fais glisser les 3 phrases-vitraux (à gauche) vers les 3 emplacements de la verrière (à droite), dans l'ordre logique du récit. Attention : il n'y a pas toujours un mot comme « d'abord » pour te guider — suis le sens de l'histoire, ce qui doit se passer avant, et ce qui en découle. Clique sur Valider une fois les 3 placées."
     });
 
     return new Promise(resolve => {

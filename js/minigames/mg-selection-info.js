@@ -31,7 +31,9 @@
         { text: "Il trouva une porte ouverte", relevant: true },
         { text: "Le ciel était gris", relevant: false },
         { text: "Une voix l'appela depuis l'intérieur", relevant: true },
-        { text: "Ses chaussures étaient usées", relevant: false }
+        { text: "Ses chaussures étaient usées", relevant: false },
+        { text: "Il reconnut la voix d'un vieil ami", relevant: true },
+        { text: "La rue sentait la pluie", relevant: false }
       ]
     },
     {
@@ -40,7 +42,9 @@
         { text: "Il devint un homme respecté", relevant: true },
         { text: "Il aimait le pain encore chaud", relevant: false },
         { text: "Il ouvrit une fabrique", relevant: true },
-        { text: "La route était poussiéreuse", relevant: false }
+        { text: "La route était poussiéreuse", relevant: false },
+        { text: "Personne ne reconnut son ancien visage", relevant: true },
+        { text: "Il portait souvent un chapeau noir", relevant: false }
       ]
     },
     {
@@ -49,7 +53,31 @@
         { text: "Elle ne connaissait pas son passé", relevant: true },
         { text: "Elle aimait les rubans bleus", relevant: false },
         { text: "Valjean veillait sur elle en secret", relevant: true },
-        { text: "La maison avait un grand jardin", relevant: false }
+        { text: "La maison avait un grand jardin", relevant: false },
+        { text: "Elle ignorait tout des Thénardier", relevant: true },
+        { text: "Elle chantait souvent le soir", relevant: false }
+      ]
+    },
+    {
+      context: "Javert traquait Jean Valjean depuis des années.",
+      items: [
+        { text: "Il refusait de croire qu'un homme puisse changer", relevant: true },
+        { text: "Il portait un uniforme impeccable", relevant: false },
+        { text: "Il retrouva sa trace grâce à un vieux témoin", relevant: true },
+        { text: "Il marchait toujours d'un pas rapide", relevant: false },
+        { text: "Cette obsession finit par le consumer", relevant: true },
+        { text: "Il n'aimait pas la pluie", relevant: false }
+      ]
+    },
+    {
+      context: "Marius tomba amoureux de Cosette sans connaître son nom.",
+      items: [
+        { text: "Il la croisait chaque jour au jardin du Luxembourg", relevant: true },
+        { text: "Le jardin était bordé de tilleuls", relevant: false },
+        { text: "Il finit par suivre son père jusqu'à sa demeure", relevant: true },
+        { text: "Il portait toujours les mêmes vêtements élimés", relevant: false },
+        { text: "Il apprit son prénom par hasard", relevant: true },
+        { text: "Il aimait s'asseoir sur le même banc", relevant: false }
       ]
     }
   ];

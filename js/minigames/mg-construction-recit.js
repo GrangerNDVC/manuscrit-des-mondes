@@ -60,6 +60,20 @@
       { stage: "peripeties", text: "Il chercha un abri sous un grand arbre." },
       { stage: "resolution", text: "Il aperçut enfin une maison éclairée." },
       { stage: "situation_finale", text: "Il s'y dirigea, trempé mais soulagé." }
+    ],
+    [
+      { stage: "situation_initiale", text: "Esmeralda dansait tranquillement sur le parvis." },
+      { stage: "element_declencheur", text: "Frollo surgit et voulut l'arrêter." },
+      { stage: "peripeties", text: "Quasimodo descendit à toute vitesse pour s'interposer." },
+      { stage: "resolution", text: "Frollo recula, surpris par cette résistance." },
+      { stage: "situation_finale", text: "Esmeralda remercia Quasimodo d'un simple regard." }
+    ],
+    [
+      { stage: "situation_initiale", text: "Gavroche gardait précieusement un vieux plan de Paris." },
+      { stage: "element_declencheur", text: "Le plan lui fut arraché par un garde en pleine rue." },
+      { stage: "peripeties", text: "Il le poursuivit à travers les ruelles, sans jamais le perdre de vue." },
+      { stage: "resolution", text: "Il récupéra le plan au détour d'une impasse." },
+      { stage: "situation_finale", text: "Il le cacha désormais dans une poche cousue exprès." }
     ]
   ];
 

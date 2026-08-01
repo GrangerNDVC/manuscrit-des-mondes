@@ -35,7 +35,13 @@
     { chunks: ["Gavroche", "courait", "vers la sortie"] },
     { chunks: ["L'Esprit", "suivait", "le jeune garçon"] },
     { chunks: ["Les égouts", "résonnaient", "sous leurs pas"] },
-    { chunks: ["Une lumière", "filtrait", "depuis la rue"] }
+    { chunks: ["Une lumière", "filtrait", "depuis la rue"] },
+    { chunks: ["Gavroche", "avançait", "sans bruit", "dans l'obscurité"] },
+    { chunks: ["L'eau", "coulait", "lentement", "le long des murs"] },
+    { chunks: ["Une ombre", "glissa", "silencieusement", "derrière eux"] },
+    { chunks: ["L'Esprit", "sentit", "un courant d'air", "venu de nulle part"] },
+    { chunks: ["Des voix", "résonnaient", "au loin"] },
+    { chunks: ["Gavroche", "reconnut", "le chemin", "malgré l'obscurité"] }
   ];
 
   function pickSentence() {
