@@ -131,12 +131,13 @@ const SceneManager = (() => {
       GameState.setActStep(worldId, actId, "vn_check_passed", formativeResult.passed);
     }
 
-    const transferResult = await VNEngine.playFillBlank(actData.transfer, { fixedText: true });
+    let transferResult = await VNEngine.playFillBlank(actData.transfer, { fixedText: true });
     GameState.setActStep(worldId, actId, "vn_transfer_passed", transferResult.passed);
 
-    if (!transferResult.passed) {
+    while (!transferResult.passed) {
       await playMinigameForNotion(worldId, actId, actData.minigame_notion, true);
-      return runActSequence(worldId, actId, actData);
+      transferResult = await VNEngine.playFillBlank(actData.transfer, { fixedText: true });
+      GameState.setActStep(worldId, actId, "vn_transfer_passed", transferResult.passed);
     }
 
     advanceAct(worldId, actId);
