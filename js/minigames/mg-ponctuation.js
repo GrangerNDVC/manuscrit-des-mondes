@@ -271,6 +271,27 @@
     return selected === correct;
   }
 
+  /**
+   * Choisit l'index de départ du jeton cyclique d'un trou. BUG CORRIGÉ
+   * cette session : la banque PITCH_BANK écrit systématiquement la
+   * bonne réponse en options[0], et le jeton démarrait à optionIndex=0
+   * — il affichait donc TOUJOURS la bonne réponse dès l'apparition,
+   * avant même de commencer à tourner. Plus aucun indice ne doit être
+   * donné par la position de départ : on démarre toujours sur "?"
+   * (repère neutre, sans lien avec la bonne réponse dans l'immense
+   * majorité des trous), sauf si "?" est justement la bonne réponse
+   * pour CE trou — auquel cas on prend le premier symbole disponible
+   * qui n'est pas correct.
+   */
+  function pickStartIndex(options, correct) {
+    const NEUTRAL = "?";
+    if (options.includes(NEUTRAL) && !isCorrectSymbol(NEUTRAL, correct)) {
+      return options.indexOf(NEUTRAL);
+    }
+    const idx = options.findIndex(o => !isCorrectSymbol(o, correct));
+    return idx >= 0 ? idx : 0;
+  }
+
   function pickPitch(excludeIndex) {
     let idx;
     do {
@@ -376,7 +397,7 @@
         checkpoints = pitch.blanks.map((blank, i) => ({
           blank,
           blankIndex: i,
-          optionIndex: 0,
+          optionIndex: pickStartIndex(blank.options, blank.correct),
           cycleTimer: 0,
           lastX: WORLD_MARGIN, lastY: TEXT_Y, // dernière position connue (monde), pour les particules ; mise à jour chaque frame
           state: "cycling" // cycling | correct | wrong
