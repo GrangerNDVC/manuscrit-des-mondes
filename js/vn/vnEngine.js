@@ -255,9 +255,23 @@ const VNEngine = (() => {
     }, 1200);
   }
 
+  /**
+   * Vérifie une réponse de trou face à sa correction.
+   * `correct` peut être une chaîne unique ("." — comportement historique)
+   * ou un tableau de réponses toutes valides ([".", "!"] — pour les cas
+   * où plusieurs signes sont légitimement acceptables, ex. ambiguïté
+   * point / point d'exclamation selon l'intensité perçue de la phrase).
+   */
+  function isBlankAnswerCorrect(selected, correct) {
+    if (Array.isArray(correct)) return correct.includes(selected);
+    return selected === correct;
+  }
+
   /* ------------------------------------------------------------
      TYPE "blank" — texte à trous classique (ponctuation, etc.)
      segments: alternance de string et { type:"blank", options, correct }
+     correct: string (une seule bonne réponse) OU array de strings
+              (plusieurs réponses tolérées, ex. [".", "!"])
      ------------------------------------------------------------ */
   function renderBlankExercise(exerciseData) {
     return new Promise(resolve => {
@@ -272,7 +286,7 @@ const VNEngine = (() => {
           const span = document.createElement("span");
           span.className = "fill-slot";
           span.textContent = "?";
-          span.dataset.correct = seg.correct;
+          span.dataset.correct = Array.isArray(seg.correct) ? seg.correct.join("") : seg.correct;
           span.dataset.selectedIndex = "-1";
 
           const opts = seg.options;
@@ -295,7 +309,7 @@ const VNEngine = (() => {
         blanks.forEach(b => {
           const idx = parseInt(b.el.dataset.selectedIndex, 10);
           const selected = idx >= 0 ? b.options[idx] : null;
-          const isCorrect = selected === b.correct;
+          const isCorrect = isBlankAnswerCorrect(selected, b.correct);
           b.el.classList.toggle("correct", isCorrect);
           b.el.classList.toggle("incorrect", !isCorrect);
           if (isCorrect) correctCount++;
