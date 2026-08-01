@@ -32,15 +32,7 @@
           "speakerSide": "left",
           "portraitLeft": "/assets/characters/gavroche-reflexion.png",
           "portraitRight": "/assets/characters/esprit-reflexion.png",
-          "text": "Hugo, c'est ça ? Ouais, je connais cette histoire. On raconte qu'une clé se cache quelque part dans ce monde... et que celui qui la trouve doit nous aider à le délivrer. Bon. Si on doit faire équipe, autant commencer tout de suite."
-        },
-        {
-          "background": "/assets/backgrounds/decors_Hugo_baricades.png",
-          "speakerName": "Gavroche",
-          "speakerSide": "left",
-          "portraitLeft": "/assets/characters/gavroche-malicieux.png",
-          "portraitRight": "/assets/characters/esprit-neutre.png",
-          "text": "Tu vois cette barricade ? On ne se bat pas pour du pain, cette fois. L'Empereur Noir a volé toute la ponctuation de Paris. Plus un point, plus une virgule nulle part — dans les journaux, les lettres, les livres. Alors les Parisiens se sont soulevés pour la reprendre."
+          "text": "Hugo, c'est ça ? Je connais l'histoire : une clé se cache ici, et celui qui la trouve doit nous aider à nous libérer. Tu vois cette barricade ? On ne se bat pas pour du pain, cette fois : l'Empereur Noir a volé toute la ponctuation de Paris. Plus un point, plus une virgule nulle part. Alors on s'est soulevés pour la reprendre."
         },
         {
           "background": "/assets/backgrounds/decors_Hugo_baricades.png",
@@ -54,17 +46,17 @@
           "background": "/assets/backgrounds/decors_Hugo_baricades.png",
           "speakerName": "Gavroche",
           "speakerSide": "left",
-          "portraitLeft": "/assets/characters/gavroche-reflexion.png",
-          "portraitRight": "/assets/characters/esprit-reflexion.png",
-          "text": "C'est bien tout le problème ! Le point arrête la phrase et annonce la majuscule d'après. La virgule, elle, fait juste une petite pause : la phrase continue. Le point d'exclamation, c'est pour crier ou s'affoler. Le point d'interrogation, pour une question. Sans ça, plus rien ne tient debout."
-        },
-        {
-          "background": "/assets/backgrounds/decors_Hugo_baricades.png",
-          "speakerName": "Gavroche",
-          "speakerSide": "left",
           "portraitLeft": "/assets/characters/gavroche-surpris.png",
           "portraitRight": "/assets/characters/esprit-reflexion.png",
-          "text": "Attends... Thénardier ?! Qu'est-ce qu'il fait par ici, celui-là..."
+          "text": "Tu le sentiras vite une fois en jeu, crois-moi. Mais chut... j'entends des pas du côté des gravats."
+        },
+        {
+          "background": "/assets/backgrounds/decors_Hugo_baricades.png",
+          "speakerName": "Thénardier",
+          "speakerSide": "left",
+          "portraitLeft": "/assets/characters/Thenardier_neutre.png",
+          "portraitRight": "/assets/characters/esprit-surpris.png",
+          "text": "Tiens, tiens... de la visite. Le gamin ferait bien de se méfier de qui il traîne dans le coin."
         },
         {
           "background": "/assets/backgrounds/decors_Hugo_baricades.png",
@@ -72,7 +64,7 @@
           "speakerSide": "left",
           "portraitLeft": "/assets/characters/gavroche-reflexion.png",
           "portraitRight": "/assets/characters/esprit-reflexion.png",
-          "text": "Écoute-moi bien. Thénardier, c'est un personnage du livre de Victor Hugo, comme moi. Sauf que les forces de l'Empereur Noir l'ont retourné : il est à leur solde, maintenant. Méfie-toi de ce qu'il te propose. Mais il connaît quand même ses leçons — alors autant s'en servir contre lui."
+          "text": "Thénardier... Écoute-moi bien : c'est un personnage du livre de Victor Hugo, comme moi, sauf que l'Empereur Noir l'a retourné — il est à leur solde, maintenant. Méfie-toi de ce qu'il te propose. Mais il connaît quand même ses leçons : autant s'en servir contre lui."
         }
       ],
       "qcm": [
