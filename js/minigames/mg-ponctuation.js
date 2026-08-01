@@ -162,7 +162,7 @@
         { correct: ",", options: [",", ".", "!", "?"], why: "« Du haut de la tour » est un complément de lieu placé en tête de phrase : virgule d'introduction." },
         { correct: ",", options: [",", ".", "!", ";"], why: "« affolé » est une apposition qui décrit l'état de Quasimodo : elle s'ouvre par une virgule." },
         { correct: ",", options: [",", ".", "!", ";"], why: "L'apposition « affolé » se referme par une seconde virgule." },
-        { correct: "!", options: ["!", ".", "?", ","], why: "Quasimodo hurle un danger : l'intensité de l'action appelle un point d'exclamation." }
+        { correct: ["!", "."], options: ["!", ".", "?", ","], why: "Les deux se défendent ici : le point d'exclamation souligne l'intensité du cri de Quasimodo, mais comme « hurla que » reste une phrase déclarative (on rapporte ce qu'il crie), un simple point est aussi correct." }
       ]
     },
     {
@@ -189,7 +189,7 @@
       blanks: [
         { correct: ",", options: [",", ".", "!", ";"], why: "« bouleversé » est une apposition qui décrit l'état de Marius : elle s'ouvre par une virgule." },
         { correct: ",", options: [",", ".", "!", ";"], why: "L'apposition « bouleversé » se referme par une seconde virgule." },
-        { correct: "!", options: ["!", ".", "?", ","], why: "L'intensité de l'aveu de Marius appelle un point d'exclamation plutôt qu'un simple point." }
+        { correct: ["!", "."], options: ["!", ".", "?", ","], why: "Les deux se défendent ici : le point d'exclamation souligne l'émotion de l'aveu, mais « déclara » reste un verbe déclaratif classique — un simple point est aussi correct." }
       ]
     },
     {
@@ -209,7 +209,7 @@
         { correct: ",", options: [",", ".", "!", "?"], why: "« Du haut de la barricade » est un complément de lieu placé en tête de phrase : virgule d'introduction." },
         { correct: ",", options: [",", ".", "!", ";"], why: "« galvanisé » est une apposition qui décrit l'état d'Enjolras : elle s'ouvre par une virgule." },
         { correct: ",", options: [",", ".", "!", ";"], why: "L'apposition « galvanisé » se referme par une seconde virgule." },
-        { correct: "!", options: ["!", ".", "?", ","], why: "Enjolras lance un appel au combat : l'intensité de l'action appelle un point d'exclamation." }
+        { correct: ["!", "."], options: ["!", ".", "?", ","], why: "Les deux se défendent ici : le point d'exclamation souligne l'urgence de l'appel, mais « appela ses amis à se battre » reste une phrase déclarative — un simple point est aussi correct." }
       ]
     },
     {
@@ -260,6 +260,16 @@
       ]
     }
   ];
+
+  /**
+   * Vérifie une réponse face à sa correction : `correct` peut être une
+   * chaîne unique ou un tableau de réponses toutes valides (voir
+   * vnEngine.js/isBlankAnswerCorrect, même principe).
+   */
+  function isCorrectSymbol(selected, correct) {
+    if (Array.isArray(correct)) return correct.includes(selected);
+    return selected === correct;
+  }
 
   function pickPitch(excludeIndex) {
     let idx;
@@ -356,12 +366,13 @@
       const ctx = canvas.getContext("2d");
 
       let pitchIndex = pickPitch(-1);
-      let pitch, checkpoints, resolvedFlags;
+      let pitch, checkpoints, resolvedFlags, resolvedSymbols;
 
       function loadPitch(idx) {
         pitchIndex = idx;
         pitch = PITCH_BANK[idx];
         resolvedFlags = pitch.blanks.map(() => false);
+        resolvedSymbols = pitch.blanks.map(() => null);
         checkpoints = pitch.blanks.map((blank, i) => ({
           blank,
           blankIndex: i,
@@ -507,12 +518,12 @@
         if (cp.state !== "cycling" || cp.locked) return;
         const shownSymbol = cp.blank.options[cp.optionIndex];
         cp.locked = true; // fige le jeton (n'avance plus pendant que le saut se joue)
-        pendingResolve = { cp, isCorrect: shownSymbol === cp.blank.correct };
+        pendingResolve = { cp, isCorrect: isCorrectSymbol(shownSymbol, cp.blank.correct), symbol: shownSymbol };
         resolveTimer = RESOLVE_DELAY;
       }
 
       function finalizeResolve() {
-        const { cp, isCorrect } = pendingResolve;
+        const { cp, isCorrect, symbol } = pendingResolve;
         pendingResolve = null;
         paused = true;
         pauseTimer = 115;
@@ -520,6 +531,7 @@
         if (isCorrect) {
           cp.state = "correct";
           resolvedFlags[cp.blankIndex] = true;
+          resolvedSymbols[cp.blankIndex] = symbol; // le signe réellement joué (utile si plusieurs étaient tolérés)
           spawnBurst(cp.lastX, cp.lastY, "#6fcf97");
           showFeedback(true, cp.blank.why);
           pendingAction = "next";
@@ -723,7 +735,7 @@
               ctx.textAlign = "center";
               ctx.fillStyle = "#e8c468";
               ctx.font = TEXT_FONT;
-              ctx.fillText(pitch.blanks[tok.index].correct, screenX + tok.w / 2, TEXT_Y);
+              ctx.fillText(resolvedSymbols[tok.index], screenX + tok.w / 2, TEXT_Y);
             } else {
               // v8 : le jeton (jaune/rouge selon l'état) s'affiche ICI, à
               // la place du signe, directement dans la phrase.
