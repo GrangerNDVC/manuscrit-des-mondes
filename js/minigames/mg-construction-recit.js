@@ -11,6 +11,21 @@
    "parchemin" (le récit de Gavroche), par clic successif
    (carte sélectionnée -> emplacement cible).
 
+   ---- CORRECTION (session du 1er août 2026) ----
+   Bug repéré et non corrigé lors de la session précédente (voir
+   ETAT_DU_PROJET.md, section 6) : avec 5 cartes disposées en
+   2 colonnes, la dernière ligne du pool débordait d'environ 44px
+   sous le bas du canevas (450px) et chevauchait visuellement le
+   dernier emplacement du parchemin.
+   Corrigé en passant le pool de 2 à 3 colonnes, avec des cartes
+   plus compactes (largeur/hauteur réduites, police plus petite
+   pour ce bloc uniquement). Vérifié par calcul : avec 5 cartes en
+   3 colonnes (2 lignes), la grille tient désormais entre y=338 et
+   y=440, avec une marge de 10px au-dessus (sous le dernier
+   emplacement du parchemin, qui se termine à y=328) et de 10px en
+   dessous (canevas = 450px de haut). Aucune autre partie du
+   mini-jeu n'a été modifiée.
+
    Enregistré sous la notion "construction_recit",
    variante "parchemin_hugo".
    ============================================================ */
@@ -115,15 +130,28 @@
         filled: null
       }));
 
-      const CARD_W = 340;
-      const CARD_H = 60;
+      // Correction de débordement (voir ETAT_DU_PROJET.md, section 6) :
+      // avec 5 cartes en 2 colonnes, la dernière ligne débordait d'environ
+      // 44px sous le bas du canevas et chevauchait le dernier emplacement
+      // du parchemin (qui se termine à y=328). Passage à 3 colonnes, avec
+      // des cartes plus compactes : la grille tient désormais entre
+      // y=338 et y=440 (marge de 10px de chaque côté).
+      const POOL_COLS = 3;
+      const CARD_W = 230;
+      const CARD_H = 46;
+      const CARD_GAP_X = 15;
+      const CARD_GAP_Y = 10;
+      const POOL_START_Y = 338;
+      const poolGridW = POOL_COLS * CARD_W + (POOL_COLS - 1) * CARD_GAP_X;
+      const POOL_START_X = (CANVAS_W - poolGridW) / 2;
+
       const cards = order.map((storyIdx, i) => {
-        const col = i % 2;
-        const row = Math.floor(i / 2);
+        const col = i % POOL_COLS;
+        const row = Math.floor(i / POOL_COLS);
         return {
           storyIdx,
-          x: 40 + col * (CARD_W + 20),
-          y: 290 + row * (CARD_H + 12),
+          x: POOL_START_X + col * (CARD_W + CARD_GAP_X),
+          y: POOL_START_Y + row * (CARD_H + CARD_GAP_Y),
           w: CARD_W,
           h: CARD_H,
           placedInSlot: null,
@@ -261,8 +289,9 @@
           }
         });
 
-        // Cartes (pool du bas)
-        ctx.font = "13px sans-serif";
+        // Cartes (pool du bas) — police réduite (11px) pour ce bloc
+        // uniquement, cohérente avec le format plus compact des cartes
+        // depuis la correction du débordement.
         cards.forEach(card => {
           if (card.placedInSlot !== null) return; // affichée dans le slot
 
@@ -276,9 +305,10 @@
           ctx.lineWidth = card.selected ? 3 : 2;
           ctx.strokeRect(card.x, card.y, card.w, card.h);
 
+          ctx.font = "11px sans-serif";
           ctx.fillStyle = "#f4f1ea";
-          const lines = wrapText(story[card.storyIdx].text, card.w - 20);
-          const lineHeight = 16;
+          const lines = wrapText(story[card.storyIdx].text, card.w - 16);
+          const lineHeight = 13;
           const totalH = lines.length * lineHeight;
           let ty = card.y + card.h / 2 - totalH / 2 + lineHeight / 2;
           ctx.textAlign = "center";
