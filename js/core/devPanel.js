@@ -10,6 +10,23 @@
    entier. Utile pour tester la sauvegarde et la synchronisation
    Supabase sans refaire tout le jeu à chaque fois.
 
+   ---- CORRECTION (session du 2 août 2026) ----
+   Bug trouvé suite à un retour de Julie : "même en mode test, je
+   n'ai pas accès à l'étape 2". Cause : le bouton marquait bien les
+   4 sous-étapes de l'acte comme réussies (via GameState.setActStep),
+   mais ne touchait JAMAIS à world.currentAct — la donnée que
+   SceneManager.startWorld() regarde pour savoir quel acte lancer.
+   Seul un vrai parcours de jeu (sceneManager.js/advanceAct(), appelé
+   en fin d'acte réussi) faisait avancer currentAct. Résultat : marquer
+   un acte "terminé" cochait des cases en interne, mais ne débloquait
+   jamais l'accès à l'acte suivant en relançant le monde depuis la
+   carte — currentAct restait bloqué sur l'acte en cours.
+
+   Corrigé : le bouton fait maintenant explicitement avancer
+   world.currentAct vers l'acte suivant (ou termine le monde et
+   libère le compagnon si c'est le dernier acte), en reproduisant
+   ce que sceneManager.js fait normalement en fin d'acte.
+
    Utilise GameState.setActStep(...) — exactement la même
    fonction que le vrai jeu utiliserait. Donc tout ce qui est
    branché dessus (sauvegarde locale, envoi Supabase) se
@@ -20,6 +37,20 @@
 const DevPanel = (() => {
 
   let panelBuilt = false;
+
+  // Même correspondance que sceneManager.js/companionByWorld — dupliquée
+  // ici car sceneManager.js ne vit que dans les pages /mondes/*.html,
+  // jamais dans le hub (où vit devPanel.js).
+  const COMPANION_BY_WORLD = {
+    hugo: "gavroche",
+    dumas: "dartagnan",
+    verne: "nemo",
+    shakespeare: "puck",
+    christie: "marple",
+    shelley: "creature",
+    carroll: "alice",
+    galland: "sheherazade"
+  };
 
   function nomLisible(id) {
     // Transforme "ordre_des_mots" en "Ordre des mots", juste pour
@@ -90,7 +121,22 @@ const DevPanel = (() => {
       GameState.setActStep(worldId, actId, "vn_transfer_passed", true);
       // ↑ c'est cette dernière ligne qui déclenche l'envoi vers Supabase
 
-      status.textContent = `Fait : ${nomLisible(worldId)} / ${nomLisible(actId)} — vérifie Supabase.`;
+      // NOUVEAU (correctif débloquant l'acte suivant) : fait avancer
+      // world.currentAct, exactement ce que sceneManager.js/advanceAct()
+      // fait après un vrai parcours réussi. Sans cette étape, l'acte
+      // suivant restait inaccessible même après avoir "marqué terminé".
+      const idx = GameState.ACT_IDS.indexOf(actId);
+      const w = GameState.get().worlds[worldId];
+      if (idx < GameState.ACT_IDS.length - 1) {
+        w.currentAct = idx + 1;
+        GameState.save();
+      } else {
+        // Dernier acte du monde : simule la fin de monde (libère le
+        // compagnon, obtient la clé), comme sceneManager.js/finishWorld().
+        GameState.completeWorld(worldId, COMPANION_BY_WORLD[worldId]);
+      }
+
+      status.textContent = `Fait : ${nomLisible(worldId)} / ${nomLisible(actId)} — acte suivant débloqué. Vérifie Supabase.`;
     });
 
     document.getElementById("dev-panel").style.display = "block";
