@@ -5,6 +5,39 @@
    Persisté en localStorage. Toute lecture/écriture de la
    progression passe par cet objet pour rester cohérente
    entre VN, mini-jeux et carte des mondes.
+
+   ---- CORRECTION (session du 2 août 2026) ----
+   Bug trouvé suite à un retour de Julie : l'écran restait figé
+   après avoir réellement terminé l'acte 1 en jouant (pas via le
+   Mode Test). Cause identifiée dans la console :
+       Uncaught (in promise) TypeError:
+       SyncManager.envoyerProgression is not a function
+   L'appel avait lieu ici, dans setActStep(), au moment précis où
+   le transfert différé (vn_transfer_passed) est validé — c'est-à-
+   dire exactement à la fin de l'acte 1, juste avant que
+   sceneManager.js n'appelle advanceAct(). Comme setActStep() est
+   appelée de façon synchrone à l'intérieur d'une fonction async
+   (runActSequence) et que rien n'attrapait l'erreur, toute la
+   suite de la chaîne asynchrone s'arrêtait net : advanceAct()
+   n'était jamais atteinte, d'où l'écran figé.
+
+   Corrigé : l'appel à SyncManager est maintenant entouré d'un
+   try/catch ET vérifie que envoyerProgression est bien une
+   fonction avant de l'appeler (pas seulement que SyncManager est
+   défini). Si la synchronisation échoue pour n'importe quelle
+   raison, un avertissement est loggé en console mais LE JEU
+   CONTINUE — cohérent avec la philosophie déjà affichée dans
+   syncManager.js lui-même ("Ne bloque jamais le jeu").
+
+   ⚠️ Cette correction traite le SYMPTÔME (le jeu ne doit plus
+   jamais se figer à cause d'un souci de synchronisation). Elle ne
+   dit pas pourquoi SyncManager.envoyerProgression n'était pas une
+   fonction ce jour-là (version différente de syncManager.js
+   servie en ligne ? cache navigateur ?) — à vérifier si le
+   problème de sync Supabase lui-même persiste après ce correctif
+   (le jeu progressera normalement, mais peut-être sans
+   synchronisation réelle vers Supabase tant que la cause profonde
+   n'est pas identifiée).
    ============================================================ */
 
 const GameState = (() => {
@@ -160,11 +193,26 @@ const GameState = (() => {
     if (step === "vn_transfer_passed" && passed) {
       act.completed = true;
       // L'étape entière vient d'être terminée : on envoie le résumé
-      // de progression vers Supabase. Ne bloque jamais le jeu si ça
+      // de progression vers Supabase. Ne bloque JAMAIS le jeu si ça
       // échoue (voir syncManager.js) — la sauvegarde locale ci-dessous
       // reste de toute façon la source de vérité immédiate.
-      if (typeof SyncManager !== "undefined") {
-        SyncManager.envoyerProgression();
+      //
+      // CORRECTIF : avant, seul `typeof SyncManager !== "undefined"`
+      // était vérifié. Si SyncManager existait mais sans la méthode
+      // envoyerProgression (ex. version différente chargée, script
+      // corrompu...), l'appel plantait avec une erreur non rattrapée
+      // en plein milieu d'une chaîne async (setActStep est appelée de
+      // façon synchrone depuis runActSequence dans sceneManager.js) —
+      // ce qui arrêtait tout net la suite du parcours (l'acte suivant
+      // n'était jamais lancé, écran figé). On vérifie maintenant aussi
+      // que c'est bien une fonction, ET on entoure l'appel d'un
+      // try/catch : quoi qu'il arrive, la partie continue.
+      try {
+        if (typeof SyncManager !== "undefined" && typeof SyncManager.envoyerProgression === "function") {
+          SyncManager.envoyerProgression();
+        }
+      } catch (e) {
+        console.warn("Synchronisation Supabase impossible (setActStep) — la progression locale n'est pas affectée.", e);
       }
     }
     save();
