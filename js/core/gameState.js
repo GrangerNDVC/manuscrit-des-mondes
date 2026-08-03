@@ -6,43 +6,84 @@
    progression passe par cet objet pour rester cohérente
    entre VN, mini-jeux et carte des mondes.
 
-   ---- CORRECTION (session du 2 août 2026) ----
-   Bug trouvé suite à un retour de Julie : l'écran restait figé
-   après avoir réellement terminé l'acte 1 en jouant (pas via le
-   Mode Test). Cause identifiée dans la console :
-       Uncaught (in promise) TypeError:
-       SyncManager.envoyerProgression is not a function
-   L'appel avait lieu ici, dans setActStep(), au moment précis où
-   le transfert différé (vn_transfer_passed) est validé — c'est-à-
-   dire exactement à la fin de l'acte 1, juste avant que
-   sceneManager.js n'appelle advanceAct(). Comme setActStep() est
-   appelée de façon synchrone à l'intérieur d'une fonction async
-   (runActSequence) et que rien n'attrapait l'erreur, toute la
-   suite de la chaîne asynchrone s'arrêtait net : advanceAct()
-   n'était jamais atteinte, d'où l'écran figé.
+   ---- CORRECTION (session du 2 août 2026, bug n°2) ----
+   Bug urgent signalé par Julie : en jouant avec le compte "juju"
+   jusqu'à l'acte 2, puis en créant un second compte "juju2" pour
+   tester le Mode Test, la progression de "juju" a été effacée —
+   revenue au tout début en rechargeant "Continuer".
 
-   Corrigé : l'appel à SyncManager est maintenant entouré d'un
-   try/catch ET vérifie que envoyerProgression est bien une
-   fonction avant de l'appeler (pas seulement que SyncManager est
-   défini). Si la synchronisation échoue pour n'importe quelle
-   raison, un avertissement est loggé en console mais LE JEU
-   CONTINUE — cohérent avec la philosophie déjà affichée dans
-   syncManager.js lui-même ("Ne bloque jamais le jeu").
+   Cause : la sauvegarde locale utilisait une clé localStorage
+   FIXE et UNIQUE ("manuscrit_des_mondes_save"), jamais liée au
+   compte connecté. Il n'existait donc qu'une seule case mémoire
+   pour toute progression, quel que soit le compte. Créer un
+   second compte appelle GameState.reset(), qui écrase cette même
+   case unique — donc la progression du compte précédent, même si
+   elle n'a techniquement rien à voir avec le nouveau compte.
 
-   ⚠️ Cette correction traite le SYMPTÔME (le jeu ne doit plus
-   jamais se figer à cause d'un souci de synchronisation). Elle ne
-   dit pas pourquoi SyncManager.envoyerProgression n'était pas une
-   fonction ce jour-là (version différente de syncManager.js
-   servie en ligne ? cache navigateur ?) — à vérifier si le
-   problème de sync Supabase lui-même persiste après ce correctif
-   (le jeu progressera normalement, mais peut-être sans
-   synchronisation réelle vers Supabase tant que la cause profonde
-   n'est pas identifiée).
+   Corrigé : la clé de sauvegarde intègre maintenant le nom du
+   compte actuellement connecté (lu directement depuis la session
+   sauvegardée par authManager.js, sans avoir besoin que ce fichier
+   soit chargé sur la page en cours — important car les pages de
+   mondes, ex. /mondes/hugo.html, ne chargent pas authManager.js).
+   Chaque compte a désormais sa propre case de sauvegarde, totalement
+   indépendante des autres.
+
+   ⚠️ Effet de bord attendu, à signaler à Julie : les anciennes
+   sauvegardes stockées sous l'ancienne clé unique ne seront plus
+   retrouvées automatiquement après ce correctif (le nouveau format
+   de clé est différent). Vu que la progression de "juju" a de toute
+   façon déjà été perdue par le bug lui-même, il n'y a normalement
+   rien à récupérer — mais toute progression en cours au moment du
+   déploiement de ce correctif devra être rejouée une dernière fois.
    ============================================================ */
 
 const GameState = (() => {
 
-  const STORAGE_KEY = "manuscrit_des_mondes_save";
+  // Même clé que SESSION_KEY dans authManager.js — dupliquée ici
+  // volontairement pour ne pas dépendre du chargement d'authManager.js
+  // sur les pages qui n'en ont pas besoin par ailleurs (mondes/*.html).
+  const SESSION_STORAGE_KEY = "manuscrit_des_mondes_session";
+  const STORAGE_KEY_BASE = "manuscrit_des_mondes_save";
+
+  /**
+   * Lit l'identifiant du compte actuellement connecté (nom_lumiere),
+   * directement depuis le localStorage de session — sans passer par
+   * l'objet AuthManager, qui n'est pas forcément chargé sur cette page.
+   * Renvoie null si personne n'est connecté (ex. tout premier écran).
+   */
+  function getActiveAccountId() {
+    try {
+      const raw = localStorage.getItem(SESSION_STORAGE_KEY);
+      if (!raw) return null;
+      const session = JSON.parse(raw);
+      return session && session.nom_lumiere ? session.nom_lumiere : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /**
+   * Nettoie l'identifiant de compte pour en faire une clé localStorage
+   * sûre (le nom d'être de lumière est saisi librement par l'élève,
+   * peut contenir espaces/accents/caractères spéciaux).
+   */
+  function sanitizeAccountId(id) {
+    return id.replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 60);
+  }
+
+  /**
+   * Calcule la clé de sauvegarde à utiliser, propre au compte
+   * actuellement connecté. "anonyme" sert uniquement de filet de
+   * sécurité pour le tout premier chargement du hub, avant qu'un
+   * compte ait été choisi (aucune vraie partie ne devrait rester
+   * sous cette clé une fois connecté).
+   */
+  function getStorageKey() {
+    const account = getActiveAccountId();
+    return account
+      ? `${STORAGE_KEY_BASE}__${sanitizeAccountId(account)}`
+      : `${STORAGE_KEY_BASE}__anonyme`;
+  }
 
   /**
    * IDs des 8 mondes (alignés sur les auteurs).
@@ -138,11 +179,12 @@ const GameState = (() => {
   let state = null;
 
   /**
-   * Charge l'état depuis localStorage, ou crée une nouvelle partie.
+   * Charge l'état depuis localStorage (case propre au compte connecté),
+   * ou crée une nouvelle partie si rien n'existe encore pour ce compte.
    */
   function load() {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
+      const raw = localStorage.getItem(getStorageKey());
       if (raw) {
         state = JSON.parse(raw);
         return state;
@@ -155,11 +197,12 @@ const GameState = (() => {
   }
 
   /**
-   * Sauvegarde l'état courant dans localStorage.
+   * Sauvegarde l'état courant dans localStorage, sous la case propre
+   * au compte actuellement connecté.
    */
   function save() {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      localStorage.setItem(getStorageKey(), JSON.stringify(state));
     } catch (e) {
       console.error("Impossible de sauvegarder la progression.", e);
     }
@@ -167,6 +210,8 @@ const GameState = (() => {
 
   /**
    * Réinitialise complètement la progression (Nouvelle partie).
+   * N'affecte que la case du compte actuellement connecté — ne touche
+   * plus jamais à la progression d'un autre compte.
    */
   function reset() {
     state = createDefaultState();
@@ -194,19 +239,8 @@ const GameState = (() => {
       act.completed = true;
       // L'étape entière vient d'être terminée : on envoie le résumé
       // de progression vers Supabase. Ne bloque JAMAIS le jeu si ça
-      // échoue (voir syncManager.js) — la sauvegarde locale ci-dessous
+      // échoue (voir syncManager.js) — la sauvegarde locale ci-dessus
       // reste de toute façon la source de vérité immédiate.
-      //
-      // CORRECTIF : avant, seul `typeof SyncManager !== "undefined"`
-      // était vérifié. Si SyncManager existait mais sans la méthode
-      // envoyerProgression (ex. version différente chargée, script
-      // corrompu...), l'appel plantait avec une erreur non rattrapée
-      // en plein milieu d'une chaîne async (setActStep est appelée de
-      // façon synchrone depuis runActSequence dans sceneManager.js) —
-      // ce qui arrêtait tout net la suite du parcours (l'acte suivant
-      // n'était jamais lancé, écran figé). On vérifie maintenant aussi
-      // que c'est bien une fonction, ET on entoure l'appel d'un
-      // try/catch : quoi qu'il arrive, la partie continue.
       try {
         if (typeof SyncManager !== "undefined" && typeof SyncManager.envoyerProgression === "function") {
           SyncManager.envoyerProgression();
