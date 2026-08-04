@@ -1,65 +1,74 @@
 /* ============================================================
-   LE MANUSCRIT DES MONDES — mg-ordre-mots.js (v3)
+   LE MANUSCRIT DES MONDES — mg-ordre-mots.js (v4)
    ============================================================
    Mini-jeu "Le Pont de Gavroche" (Monde 1 — Hugo).
    Notion : ordre des mots / structure de la phrase.
 
-   ---- CORRECTIONS (session du 3 août 2026) ----
-   Trois problèmes remontés par Julie sur la v2, tous corrigés ici :
+   ---- CORRECTIONS (session du 3 août 2026, suite au 1er test réel) ----
+   Quatre problèmes remontés par Julie après avoir vraiment joué à la
+   v3 (capture d'écran à l'appui) :
 
-   1. L'ESPRIT VOLE, IL NE MARCHE PAS.
-      L'animation de marche (cycle de 3 poses) n'avait aucun sens
-      pour un être qui vole. `animFrame` est désormais FIGÉ sur la
-      pose "pieds joints" (index du milieu de chaque feuille — face,
-      dos, ET profil), quelle que soit la direction. À la place d'un
-      cycle de marche, deux effets suggèrent le vol :
-        - un léger flottement vertical continu (`flightPhase`,
-          sinusoïde appliquée à la position Y de rendu) ;
-        - un petit nuage de poussière lumineuse (`spawnDust()`) émis
-          sous les pieds à chaque case franchie, qui monte et
-          s'estompe (`particles`).
+   1. CAISSES BLOQUÉES TROP PRÈS DU BORD DE L'ÉCRAN.
+      Une caisse collée à la colonne 0 (bord gauche) ou à la dernière
+      colonne (bord droit), ou aux rangées extrêmes (haut/bas), ne
+      pouvait plus jamais être poussée dans cette direction : il
+      aurait fallu que le joueur se tienne HORS du monde pour la
+      pousser depuis "derrière" — impossible. Corrigé : les caisses ne
+      peuvent plus jamais toucher les bords absolus du monde
+      (`CRATE_COL_MIN`, `CRATE_COL_MAX`, `CRATE_ROW_MIN`,
+      `CRATE_ROW_MAX`) — une marge d'une case est toujours réservée
+      tout autour, pour que le joueur (qui vole, lui, sans restriction)
+      puisse toujours se placer de l'autre côté.
 
-   2. CAISSES : DÉPLACEMENT FIN + VERTICAL.
-      Avant : une caisse poussée GLISSAIT jusqu'au premier obstacle
-      (mécanique façon Sokoban "glissant"), et ne pouvait être
-      poussée qu'horizontalement — impossible d'intervertir deux
-      caisses puisqu'elles ne peuvent jamais se croiser sur un seul
-      axe. Corrigé :
-        - une caisse poussée avance désormais D'UNE SEULE CASE à la
-          fois, exactement comme le joueur (plus de glissement) ;
-        - elle peut être poussée dans les 4 directions. Cela permet
-          de sortir temporairement une caisse de la rangée du pont
-          (vers le haut ou le bas, sur sa rive), de faire passer une
-          autre caisse à cet endroit, puis de la redescendre — donc
-          de réordonner les caisses.
-        - Garde-fou logique : une caisse ne flotte pas. Elle ne peut
-          jamais être poussée dans une case d'eau (le canal, en
-          dehors de l'unique rangée du pont) — seul le joueur, qui
-          vole, peut survoler l'eau librement.
+   2. CAISSES "COINCÉES" AU-DESSUS DE L'EAU (ex. "vite" / "comprit").
+      Deux caisses adjacentes ne pouvaient pas être poussées ensemble
+      (l'ancienne mécanique ne poussait que LA caisse directement
+      touchée) — si une troisième caisse bloquait juste derrière,
+      tout se figeait, et comme il est interdit de sortir une caisse
+      de l'eau ailleurs que sur la rangée du pont, il n'y avait alors
+      plus aucun moyen de les déplacer. Corrigé : la poussée fonctionne
+      maintenant EN CHAÎNE (`buildHorizontalChain` / `buildVerticalChain`)
+      — pousser une caisse pousse aussi toutes celles alignées juste
+      derrière elle, tant qu'il y a de la place au bout de la chaîne.
 
-   3. GAVROCHE : SENS, DISTANCE, ET CHUTE AVEC LES CAISSES.
-      - Sprite retourné (`drawGavroche()`) pour qu'il coure bien vers
-        la droite, dans le sens réel de la traversée (le fichier
-        fourni semble orienté vers la gauche par défaut — à l'inverse
-        de la convention utilisée pour l'Esprit).
-      - Point de départ éloigné du bord du canevas et du canal
-        (`GAVROCHE_START_X`), pour lui laisser une vraie course
-        d'élan visible au lieu d'apparaître collé au bord.
-      - Nouveau : si le pont est FAUX, les caisses qui le composaient
-        au moment du déclenchement (`gavroche.bridgePieces`) coulent
-        AVEC Gavroche — même fondu/chute qu'auparavant réservé à lui
-        seul — puis réapparaissent réparties ailleurs sur les deux
-        rives (`respawnPieces()`) une fois la chute terminée. Le
-        joueur doit donc reconstruire le pont, pas seulement
-        réessayer avec les caisses déjà alignées (fausses).
+   3. CAISSES TROP PROCHES DE LA TAILLE DU MOT + TEXTE BLANC TROP VOYANT.
+      La largeur de la caisse pouvait être plus étroite que son texte
+      (selon la longueur réelle du mot une fois rendu), et le texte en
+      blanc cassé tranchait trop fort sur le décor. Corrigé : la caisse
+      est maintenant TOUJOURS dessinée un peu plus large que son texte
+      (marge fixe des deux côtés, `CRATE_TEXT_PAD`), et le texte est
+      recoloré dans un ton bois clair (`CRATE_TEXT_COLOR`) au lieu du
+      blanc.
 
-   Reste inchangé : banque de phrases, règle des 4 morceaux par
-   phrase, notion/variante enregistrée ("ordre_des_mots" /
-   "egouts_hugo") — aucune modification nécessaire ailleurs dans le
-   code (hugo_scenes.json, sceneManager.js, etc.).
+   4. LE BOUTON "FAIRE TRAVERSER GAVROCHE" SEMBLAIT NE RIEN FAIRE.
+      Aucune erreur JS ne remonte dans la console au clic (vérifié sur
+      la capture fournie) — le code s'exécute donc bien. L'hypothèse la
+      plus probable : l'échec est très bref (Gavroche parcourt une
+      partie du canal puis coule en un peu plus d'une seconde) et
+      passait inaperçu, surtout avec l'attention sur les caisses.
+      Corrigé, sans certitude à 100% que c'était LE souci, mais qui
+      rend le problème visible si ça persiste :
+        - retour visuel INSTANTANÉ dès le clic (indépendant de la boucle
+          d'animation), bouton désactivé pendant la traversée pour
+          éviter les double-clics silencieux ;
+        - message d'échec conservé plus longtemps à l'écran ;
+        - logs de diagnostic (`console.log`) à chaque étape clé
+          (clic reçu, résultat évalué, chute déclenchée) : si le
+          bouton semble encore inactif, regarder la console (F12) au
+          moment du clic dira exactement où ça coince.
+
+   Reste inchangé : banque de phrases, notion/variante enregistrée
+   ("ordre_des_mots" / "egouts_hugo"), vol figé de l'Esprit + poussière
+   lumineuse (v3), retournement + distance de Gavroche (v3).
+
+   ⚠️ Contrainte resserrée sur la banque de phrases (section PITCH_BANK) :
+   à cause de la marge de bord (point 1), chaque rive utilisable passe
+   de 8 à 7 colonnes. La somme des tailles de deux morceaux quelconques
+   d'une même phrase ne doit donc plus dépasser 7, mais 6. Vérifié :
+   toutes les phrases actuelles respectent cette nouvelle limite.
    ============================================================ */
 
-(function registerOrdreMotsHugoV3() {
+(function registerOrdreMotsHugoV4() {
 
   const CANVAS_W = 960;
   const CANVAS_H = 400;
@@ -75,6 +84,16 @@
 
   const BRIDGE_ROW = 5; // rangée unique où le canal est franchissable
 
+  // Marge de bord réservée pour les CAISSES uniquement (jamais pour le
+  // joueur, qui vole et peut toujours se placer n'importe où, y compris
+  // sur la case bord elle-même, pour pousser une caisse depuis l'autre
+  // côté). Sans cette marge, une caisse collée au bord ne peut plus
+  // jamais être poussée dans cette direction — voir point 1 du header.
+  const CRATE_COL_MIN = 1;
+  const CRATE_COL_MAX = COLS - 1;   // une caisse ne doit jamais atteindre colStart+size > ceci
+  const CRATE_ROW_MIN = 1;
+  const CRATE_ROW_MAX = ROWS - 2;   // une caisse ne doit jamais atteindre row > ceci
+
   const BG_SRC = "/assets/backgrounds/decors_egouts_traversee_hugo.jpg";
 
   const CRATE_IMAGES_SRC = {
@@ -84,13 +103,19 @@
     4: "/assets/sprites/props/boite-tres-longue.png"
   };
 
+  // Rendu du texte porté par chaque caisse : ton bois clair (au lieu
+  // du blanc cassé d'origine, jugé trop voyant), et marge fixe garantie
+  // de chaque côté du mot pour que la caisse paraisse toujours un peu
+  // plus grande que son texte, jamais pile ajustée dessus.
+  const CRATE_TEXT_COLOR = "#d9b482";
+  const CRATE_TEXT_PAD = 22; // marge (px) de chaque côté du texte
+
   /**
-   * Banque de phrases. La taille de chaque caisse (1 à 4) est
-   * calculée automatiquement à partir du nombre de mots du morceau.
-   * Contrainte technique inchangée : exactement 4 morceaux par
-   * phrase, et la somme des tailles de deux morceaux quelconques ne
-   * doit jamais dépasser 7 (marge pour le placement initial sur
-   * chaque rive de 8 colonnes).
+   * Banque de phrases. La taille de chaque caisse (1 à 4) est calculée
+   * automatiquement à partir du nombre de mots du morceau. Contrainte
+   * technique : exactement 4 morceaux par phrase, et la somme des
+   * tailles de deux morceaux quelconques ne doit jamais dépasser 6
+   * (marge resserrée depuis la v4 — voir avertissement en en-tête).
    */
   const PITCH_BANK = [
     { chunks: ["Dans les égouts", "Gavroche", "avançait", "sans un bruit"], hint: "Le complément de lieu se place en tête de phrase." },
@@ -123,7 +148,7 @@
 
     await MinigameUI.showInstructions({
       title: "Le Pont de Gavroche",
-      objective: "L'Esprit vole : déplace-le avec les flèches (ou les boutons tactiles), il n'a peur ni de l'eau ni du vide. Fonce dans une caisse pour la pousser d'une case dans la direction où tu avances — y compris vers le haut ou le bas, pour la sortir du chemin d'une autre. Aligne les caisses dans le canal, dans le bon ordre pour reconstituer la phrase, puis clique sur « Faire traverser Gavroche ». Si l'ordre est bon, il passe. Sinon le pont cède : les caisses coulent avec lui, et il faut tout reconstruire."
+      objective: "L'Esprit vole : déplace-le avec les flèches (ou les boutons tactiles), il n'a peur ni de l'eau ni du vide. Fonce dans une caisse pour la pousser d'une case dans la direction où tu avances — y compris vers le haut ou le bas, pour la sortir du chemin d'une autre (et si plusieurs caisses se suivent, elles avancent toutes ensemble). Aligne les caisses dans le canal, dans le bon ordre pour reconstituer la phrase, puis clique sur « Faire traverser Gavroche ». Si l'ordre est bon, il passe. Sinon le pont cède : les caisses coulent avec lui, et il faut tout reconstruire."
     });
 
     return new Promise(resolve => {
@@ -146,7 +171,7 @@
       const gavrocheSide = [1, 2, 3].map(n => loadImg(`/assets/sprites/characters/gavroche-marche-${n}.png`));
 
       // Pose "pieds joints" figée sur les 3 feuilles (face/dos/profil) :
-      // l'Esprit vole, il ne marche pas — plus de cycle d'animation.
+      // l'Esprit vole, il ne marche pas — pas de cycle d'animation.
       const IDLE_FRAME = 1;
 
       // --- Choix de la phrase ---
@@ -172,28 +197,28 @@
         return pieces.find(p => row === p.row && col >= p.colStart && col < p.colStart + p.size);
       }
 
-      /** Une autre caisse que `excludePiece` occupe-t-elle une des cases visées ? */
-      function otherCratesOccupy(excludePiece, colStart, size, row) {
+      /** Une autre caisse que celles de `excludeList` occupe-t-elle une des cases visées ? */
+      function otherCratesOccupy(excludeList, colStart, size, row) {
         for (let c = colStart; c < colStart + size; c++) {
           const occ = crateAt(c, row);
-          if (occ && occ !== excludePiece) return true;
+          if (occ && !excludeList.includes(occ)) return true;
         }
         return false;
       }
 
       /**
-       * Cherche une case libre sur l'une des deux rives (n'importe
-       * quelle rangée, puisque les rives ne sont jamais de l'eau)
-       * pour reposer une caisse qui vient de couler.
+       * Cherche une case libre sur l'une des deux rives (dans les
+       * limites de marge autorisées) pour reposer une caisse qui vient
+       * de couler.
        */
       function findFreeSpotForPiece(piece) {
         const banks = [
-          { start: 0, end: BANK_COLS },
-          { start: RIGHT_BANK_START_COL, end: RIGHT_BANK_START_COL + BANK_COLS }
+          { start: CRATE_COL_MIN, end: BANK_COLS },
+          { start: RIGHT_BANK_START_COL, end: CRATE_COL_MAX }
         ];
         const candidates = [];
         banks.forEach(bank => {
-          for (let row = 0; row < ROWS; row++) {
+          for (let row = CRATE_ROW_MIN; row <= CRATE_ROW_MAX; row++) {
             for (let col = bank.start; col + piece.size <= bank.end; col++) {
               candidates.push({ col, row });
             }
@@ -201,9 +226,9 @@
         });
         shuffle(candidates);
         for (const c of candidates) {
-          if (!otherCratesOccupy(piece, c.col, piece.size, c.row)) return c;
+          if (!otherCratesOccupy([piece], c.col, piece.size, c.row)) return c;
         }
-        return { col: banks[0].start, row: 0 }; // filet de sécurité, ne devrait jamais servir
+        return { col: CRATE_COL_MIN, row: CRATE_ROW_MIN }; // filet de sécurité, ne devrait jamais servir
       }
 
       function respawnPieces(subset) {
@@ -217,7 +242,7 @@
       // --- Placement initial mélangé, réparti rive gauche / rive droite ---
       function placePiecesInitial() {
         const order = shuffle(pieces.map((_, i) => i));
-        let leftCursor = 0;
+        let leftCursor = CRATE_COL_MIN;
         let rightCursor = RIGHT_BANK_START_COL;
         order.forEach((pieceIdx, k) => {
           const piece = pieces[pieceIdx];
@@ -255,8 +280,6 @@
       }
 
       // --- Gavroche (purement visuel : hors grille, anime seulement la traversée) ---
-      // Point de départ éloigné du bord gauche du canevas ET du canal,
-      // pour une vraie course d'élan visible (avant : collé au bord).
       const GAVROCHE_START_X = 90;
       const gavrocheEndX = CANAL_END_COL * CELL + 90;
       const GAVROCHE_Y = BRIDGE_ROW * CELL + (CELL - 42) / 2;
@@ -288,12 +311,51 @@
       `);
 
       /**
-       * Déplacement du joueur, D'UNE SEULE CASE. S'il y a une caisse
-       * sur la case visée, elle est poussée d'UNE SEULE CASE dans la
-       * même direction (plus de glissement jusqu'au bout) — et dans
-       * n'importe laquelle des 4 directions, avec un unique garde-fou :
-       * une caisse ne peut jamais être poussée dans l'eau (le canal,
-       * hors de la rangée du pont).
+       * Rassemble la CHAÎNE de caisses alignées à partir de `first`,
+       * dans la direction (dx,0). Renvoie la chaîne complète et la
+       * première case libre juste après son dernier élément.
+       */
+      function buildHorizontalChain(first, dx) {
+        const row = first.row;
+        const chain = [first];
+        let edge = dx > 0 ? first.colStart + first.size : first.colStart - 1;
+        while (true) {
+          const next = crateAt(edge, row);
+          if (!next || chain.includes(next)) break;
+          chain.push(next);
+          edge = dx > 0 ? next.colStart + next.size : next.colStart - 1;
+        }
+        return { chain, edge };
+      }
+
+      /**
+       * Idem pour une chaîne verticale (0,dy). Ne concerne que des
+       * caisses occupant EXACTEMENT la même plage de colonnes (cas
+       * rare, mais géré par sécurité).
+       */
+      function buildVerticalChain(first, dy) {
+        const chain = [first];
+        let edge = dy > 0 ? first.row + 1 : first.row - 1;
+        while (true) {
+          const next = pieces.find(p =>
+            !chain.includes(p) && p.row === edge &&
+            p.colStart === first.colStart && p.size === first.size
+          );
+          if (!next) break;
+          chain.push(next);
+          edge = dy > 0 ? next.row + 1 : next.row - 1;
+        }
+        return { chain, edge };
+      }
+
+      /**
+       * Déplacement du joueur, D'UNE SEULE CASE. S'il y a une (ou
+       * plusieurs) caisse(s) alignée(s) sur la case visée, elles sont
+       * poussées EN CHAÎNE d'UNE SEULE CASE dans la même direction —
+       * dans n'importe laquelle des 4 directions — avec deux
+       * garde-fous : une caisse ne peut jamais être poussée dans l'eau
+       * (le canal, hors de la rangée du pont), ni jamais toucher les
+       * bords absolus du monde (voir CRATE_COL_MIN/MAX, CRATE_ROW_MIN/MAX).
        */
       function tryMove(dx, dy) {
         if (gavroche.crossing) return;
@@ -312,19 +374,24 @@
           return;
         }
 
-        const newColStart = blocking.colStart + dx;
-        const newRow = blocking.row + dy;
-
-        if (newColStart < 0 || newColStart + blocking.size > COLS) return;
-        if (newRow < 0 || newRow >= ROWS) return;
-
-        for (let c = newColStart; c < newColStart + blocking.size; c++) {
-          if (isWaterCell(c, newRow)) return; // une caisse ne flotte pas
+        if (dx !== 0) {
+          const { chain, edge } = buildHorizontalChain(blocking, dx);
+          if (edge < 0 || edge >= COLS) return;
+          if (isWaterCell(edge, blocking.row)) return;
+          for (const c of chain) {
+            const newStart = c.colStart + dx;
+            if (newStart < CRATE_COL_MIN || newStart + c.size > CRATE_COL_MAX) return;
+          }
+          chain.forEach(c => { c.colStart += dx; });
+        } else {
+          const { chain, edge } = buildVerticalChain(blocking, dy);
+          if (edge < CRATE_ROW_MIN || edge > CRATE_ROW_MAX) return;
+          for (let c = blocking.colStart; c < blocking.colStart + blocking.size; c++) {
+            if (isWaterCell(c, edge)) return;
+          }
+          chain.forEach(c => { c.row += dy; });
         }
-        if (otherCratesOccupy(blocking, newColStart, blocking.size, newRow)) return;
 
-        blocking.colStart = newColStart;
-        blocking.row = newRow;
         player.col = targetCol;
         player.row = targetRow;
         spawnDust();
@@ -360,27 +427,44 @@
         return true;
       }
 
-      function showFeedback(text, color) {
+      function showFeedback(text, color, durationFrames) {
         feedbackText = text;
         feedbackColor = color;
-        feedbackTimer = 90;
+        feedbackTimer = durationFrames || 90;
       }
 
+      const crossBtn = document.getElementById("mg-cross");
+
       function attemptCrossing() {
-        if (gavroche.crossing || resultGiven) return;
+        console.log("[Pont de Gavroche] Clic sur « Faire traverser Gavroche » reçu.");
+        if (gavroche.crossing || resultGiven) {
+          console.log("[Pont de Gavroche] Ignoré : traversée déjà en cours ou mini-jeu déjà terminé.");
+          return;
+        }
         // Capture les caisses actuellement dans le canal (bonnes ou
         // pas) : ce sont elles qui couleront si la traversée échoue.
         gavroche.bridgePieces = pieces.filter(p =>
           p.row === BRIDGE_ROW && p.colStart >= CANAL_START_COL && p.colStart + p.size <= CANAL_END_COL
         );
         gavroche.correct = checkBridgeCorrect();
+        console.log(`[Pont de Gavroche] Pont ${gavroche.correct ? "CORRECT" : "incorrect"} — ${gavroche.bridgePieces.length}/${pieces.length} caisse(s) dans le canal.`);
         gavroche.crossing = true;
         gavroche.falling = false;
         gavroche.fallTriggered = false;
         gavroche.x = GAVROCHE_START_X;
+
+        // Retour visuel INSTANTANÉ, indépendant de la boucle d'animation,
+        // et bouton désactivé pour éviter les double-clics pendant la
+        // traversée (elle ne dure que ~1 à 3 secondes).
+        if (crossBtn) crossBtn.disabled = true;
+        showFeedback("🏃 Gavroche s'élance sur le pont...", "#e8c468", 200);
       }
 
-      document.getElementById("mg-cross").addEventListener("click", attemptCrossing);
+      if (crossBtn) {
+        crossBtn.addEventListener("click", attemptCrossing);
+      } else {
+        console.error("[Pont de Gavroche] Bouton #mg-cross introuvable dans le DOM au moment du branchement de l'écouteur.");
+      }
 
       function cleanup() {
         window.removeEventListener("keydown", onKeyDown);
@@ -402,47 +486,57 @@
 
       let rafId;
       function loop() {
-        flightPhase += 0.12;
+        try {
+          flightPhase += 0.12;
 
-        // --- Particules de poussière ---
-        for (let i = particles.length - 1; i >= 0; i--) {
-          const p = particles[i];
-          p.x += p.vx; p.y += p.vy; p.life--;
-          if (p.life <= 0) particles.splice(i, 1);
-        }
+          // --- Particules de poussière ---
+          for (let i = particles.length - 1; i >= 0; i--) {
+            const p = particles[i];
+            p.x += p.vx; p.y += p.vy; p.life--;
+            if (p.life <= 0) particles.splice(i, 1);
+          }
 
-        // --- Traversée de Gavroche ---
-        if (gavroche.crossing) {
-          if (!gavroche.falling) {
-            gavroche.x += CROSS_SPEED;
-            const progress = (gavroche.x - GAVROCHE_START_X) / (gavrocheEndX - GAVROCHE_START_X);
-            if (!gavroche.correct && progress >= 0.5 && !gavroche.fallTriggered) {
-              gavroche.falling = true;
-              gavroche.fallTriggered = true;
-              gavroche.fallTimer = 40;
-            } else if (gavroche.correct && gavroche.x >= gavrocheEndX) {
-              endGame();
-              return;
-            }
-          } else {
-            gavroche.fallTimer--;
-            if (gavroche.fallTimer <= 0) {
-              gavroche.crossing = false;
-              gavroche.falling = false;
-              gavroche.x = GAVROCHE_START_X;
-              // Les caisses qui formaient le (mauvais) pont coulent
-              // avec lui : elles se réparties ailleurs sur les rives,
-              // à reconstruire.
-              respawnPieces(gavroche.bridgePieces);
-              gavroche.bridgePieces = [];
-              showFeedback("✗ Le pont cède... les caisses coulent, Gavroche retourne au départ.", "#d9534f");
+          // --- Traversée de Gavroche ---
+          if (gavroche.crossing) {
+            if (!gavroche.falling) {
+              gavroche.x += CROSS_SPEED;
+              const progress = (gavroche.x - GAVROCHE_START_X) / (gavrocheEndX - GAVROCHE_START_X);
+              if (!gavroche.correct && progress >= 0.5 && !gavroche.fallTriggered) {
+                console.log("[Pont de Gavroche] Chute déclenchée (pont incorrect).");
+                gavroche.falling = true;
+                gavroche.fallTriggered = true;
+                gavroche.fallTimer = 40;
+              } else if (gavroche.correct && gavroche.x >= gavrocheEndX) {
+                console.log("[Pont de Gavroche] Traversée réussie.");
+                endGame();
+                return;
+              }
+            } else {
+              gavroche.fallTimer--;
+              if (gavroche.fallTimer <= 0) {
+                gavroche.crossing = false;
+                gavroche.falling = false;
+                gavroche.x = GAVROCHE_START_X;
+                // Les caisses qui formaient le (mauvais) pont coulent
+                // avec lui : elles se réparties ailleurs sur les rives,
+                // à reconstruire.
+                respawnPieces(gavroche.bridgePieces);
+                gavroche.bridgePieces = [];
+                if (crossBtn) crossBtn.disabled = false;
+                showFeedback("✗ Le pont cède... les caisses coulent, Gavroche retourne au départ.", "#d9534f", 150);
+              }
             }
           }
+
+          if (feedbackTimer > 0) feedbackTimer--;
+
+          render();
+        } catch (err) {
+          // Filet de sécurité : si une erreur survient dans la boucle,
+          // on la voit clairement en console au lieu de figer le
+          // mini-jeu sans aucune explication.
+          console.error("[Pont de Gavroche] Erreur dans la boucle de jeu :", err);
         }
-
-        if (feedbackTimer > 0) feedbackTimer--;
-
-        render();
         if (!resultGiven) rafId = requestAnimationFrame(loop);
       }
 
@@ -459,8 +553,7 @@
       /**
        * Gavroche est dessiné RETOURNÉ (miroir horizontal) : la feuille
        * fournie semble orientée par défaut vers la gauche, à l'inverse
-       * de la convention utilisée pour l'Esprit — sans ce retournement
-       * il traversait le pont à reculons.
+       * de la convention utilisée pour l'Esprit.
        */
       function drawGavroche(x, y, w, h, alpha) {
         const img = gavrocheSide[1];
@@ -490,9 +583,15 @@
           const isSinking = gavroche.falling && gavroche.bridgePieces.includes(p);
           const sinkRatio = isSinking ? Math.max(0, gavroche.fallTimer / 40) : 1;
 
-          const x = p.colStart * CELL;
+          ctx.font = "12px sans-serif";
+          const textWidth = ctx.measureText(p.text).width;
+          const baseW = p.size * CELL - 4;
+          // La caisse est toujours dessinée un peu plus large que son
+          // texte (marge fixe des deux côtés), jamais pile ajustée.
+          const w = Math.max(baseW, textWidth + CRATE_TEXT_PAD * 2);
+          // Recentrée sur l'emplacement d'origine si elle a dû s'élargir.
+          const x = p.colStart * CELL + (baseW - w) / 2 + 2;
           const y = p.row * CELL + CELL * 0.1 + (1 - sinkRatio) * 14;
-          const w = p.size * CELL - 4;
           const h = CELL * 0.8;
 
           ctx.save();
@@ -500,21 +599,18 @@
 
           const img = crateImages[p.size];
           if (img && img.complete && img.naturalWidth > 0) {
-            ctx.drawImage(img, x + 2, y, w, h);
+            ctx.drawImage(img, x, y, w, h);
           } else {
             ctx.fillStyle = "#7a5230";
-            ctx.fillRect(x + 2, y, w, h);
+            ctx.fillRect(x, y, w, h);
           }
 
-          ctx.font = "12px sans-serif";
-          const textWidth = ctx.measureText(p.text).width;
-          const plaqueW = Math.min(w - 6, textWidth + 12);
           ctx.fillStyle = "rgba(26,21,48,0.65)";
-          ctx.fillRect(x + (w - plaqueW) / 2 + 2, y + h / 2 - 10, plaqueW, 20);
-          ctx.fillStyle = "#f4f1ea";
+          ctx.fillRect(x + (w - (textWidth + CRATE_TEXT_PAD)) / 2, y + h / 2 - 10, textWidth + CRATE_TEXT_PAD, 20);
+          ctx.fillStyle = CRATE_TEXT_COLOR;
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
-          ctx.fillText(p.text, x + w / 2 + 2, y + h / 2);
+          ctx.fillText(p.text, x + w / 2, y + h / 2);
 
           ctx.restore();
         });
@@ -568,8 +664,8 @@
 
         // --- Message de feedback ---
         if (feedbackTimer > 0) {
-          ctx.fillStyle = "rgba(26,21,48,0.8)";
-          ctx.fillRect(CANVAS_W / 2 - 240, 10, 480, 34);
+          ctx.fillStyle = "rgba(26,21,48,0.85)";
+          ctx.fillRect(CANVAS_W / 2 - 260, 10, 520, 34);
           ctx.fillStyle = feedbackColor;
           ctx.font = "bold 14px sans-serif";
           ctx.textAlign = "center";
