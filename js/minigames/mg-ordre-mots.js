@@ -61,6 +61,19 @@
    ("ordre_des_mots" / "egouts_hugo"), vol figé de l'Esprit + poussière
    lumineuse (v3), retournement + distance de Gavroche (v3).
 
+   ---- CORRECTION SUPPLÉMENTAIRE (v5, même session) ----
+   Le correctif du point 3 ci-dessus (boîte plus grande que le mot)
+   avait un effet de bord non anticipé : agrandir la caisse au-delà de
+   sa case logique la faisait chevaucher sa voisine à l'écran (repéré
+   par Julie : mots superposés, un morceau semblait "manquant" — en
+   réalité juste caché derrière un autre). Corrigé en inversant la
+   logique : la largeur AFFICHÉE d'une caisse reste désormais TOUJOURS
+   strictement égale à sa largeur LOGIQUE (celle de la grille/des
+   collisions, basée sur le nombre de mots — inchangée, donc toujours
+   garantie de tenir dans la largeur du canal). C'est la TAILLE DE
+   POLICE du texte qui s'adapte pour toujours tenir avec une marge
+   confortable (`fitCrateFontSize()`), jamais l'inverse.
+
    ⚠️ Contrainte resserrée sur la banque de phrases (section PITCH_BANK) :
    à cause de la marge de bord (point 1), chaque rive utilisable passe
    de 8 à 7 colonnes. La somme des tailles de deux morceaux quelconques
@@ -104,11 +117,15 @@
   };
 
   // Rendu du texte porté par chaque caisse : ton bois clair (au lieu
-  // du blanc cassé d'origine, jugé trop voyant), et marge fixe garantie
-  // de chaque côté du mot pour que la caisse paraisse toujours un peu
-  // plus grande que son texte, jamais pile ajustée dessus.
+  // du blanc cassé d'origine, jugé trop voyant). CRATE_TEXT_PAD est la
+  // marge TOTALE souhaitée autour du texte (répartie des deux côtés) ;
+  // c'est la taille de police qui s'ajuste pour la respecter, jamais
+  // la largeur de la caisse (voir fitCrateFontSize plus bas) — ce qui
+  // garantit qu'une caisse ne déborde jamais sur sa voisine.
   const CRATE_TEXT_COLOR = "#d9b482";
-  const CRATE_TEXT_PAD = 22; // marge (px) de chaque côté du texte
+  const CRATE_TEXT_PAD = 16;
+  const CRATE_FONT_MAX = 12;
+  const CRATE_FONT_MIN = 8;
 
   /**
    * Banque de phrases. La taille de chaque caisse (1 à 4) est calculée
@@ -540,6 +557,23 @@
         if (!resultGiven) rafId = requestAnimationFrame(loop);
       }
 
+      /**
+       * Choisit la plus grande taille de police (entre CRATE_FONT_MAX
+       * et CRATE_FONT_MIN) qui permet à `text` de tenir dans
+       * `maxWidth` pixels. C'est TOUJOURS la police qui s'adapte à la
+       * caisse, jamais la caisse qui s'agrandit pour le texte — c'est
+       * ce qui garantit l'absence totale de chevauchement entre deux
+       * caisses voisines (leur largeur affichée reste toujours égale
+       * à leur largeur logique dans la grille).
+       */
+      function fitCrateFontSize(text, maxWidth) {
+        for (let size = CRATE_FONT_MAX; size >= CRATE_FONT_MIN; size--) {
+          ctx.font = `${size}px sans-serif`;
+          if (ctx.measureText(text).width <= maxWidth) return size;
+        }
+        return CRATE_FONT_MIN;
+      }
+
       function drawSprite(images, index, x, y, w, h, fallback) {
         const img = images[index];
         if (img && img.complete && img.naturalWidth > 0) {
@@ -579,18 +613,22 @@
         }
 
         // --- Caisses ---
+        // IMPORTANT : la largeur AFFICHÉE d'une caisse est désormais
+        // TOUJOURS strictement égale à sa largeur LOGIQUE (p.size*CELL,
+        // la même que celle utilisée par la grille/les collisions).
+        // Une caisse ne déborde donc plus jamais sur sa voisine — le
+        // chevauchement venait précédemment d'un agrandissement de la
+        // caisse au-delà de sa case pour "faire de la place" au texte,
+        // ce qui décalait l'affichage sans toucher la grille réelle.
+        // Pour garantir malgré tout une marge confortable autour du
+        // mot, c'est la TAILLE DE POLICE qui s'adapte à la caisse
+        // (jamais l'inverse) via fitCrateFontSize().
         pieces.forEach(p => {
           const isSinking = gavroche.falling && gavroche.bridgePieces.includes(p);
           const sinkRatio = isSinking ? Math.max(0, gavroche.fallTimer / 40) : 1;
 
-          ctx.font = "12px sans-serif";
-          const textWidth = ctx.measureText(p.text).width;
-          const baseW = p.size * CELL - 4;
-          // La caisse est toujours dessinée un peu plus large que son
-          // texte (marge fixe des deux côtés), jamais pile ajustée.
-          const w = Math.max(baseW, textWidth + CRATE_TEXT_PAD * 2);
-          // Recentrée sur l'emplacement d'origine si elle a dû s'élargir.
-          const x = p.colStart * CELL + (baseW - w) / 2 + 2;
+          const w = p.size * CELL - 4;
+          const x = p.colStart * CELL + 2;
           const y = p.row * CELL + CELL * 0.1 + (1 - sinkRatio) * 14;
           const h = CELL * 0.8;
 
@@ -605,8 +643,13 @@
             ctx.fillRect(x, y, w, h);
           }
 
+          const fontSize = fitCrateFontSize(p.text, w - CRATE_TEXT_PAD * 2 - 6);
+          ctx.font = `${fontSize}px sans-serif`;
+          const textWidth = ctx.measureText(p.text).width;
+          const plaqueW = Math.min(w - 6, textWidth + CRATE_TEXT_PAD);
+
           ctx.fillStyle = "rgba(26,21,48,0.65)";
-          ctx.fillRect(x + (w - (textWidth + CRATE_TEXT_PAD)) / 2, y + h / 2 - 10, textWidth + CRATE_TEXT_PAD, 20);
+          ctx.fillRect(x + (w - plaqueW) / 2, y + h / 2 - 10, plaqueW, 20);
           ctx.fillStyle = CRATE_TEXT_COLOR;
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
