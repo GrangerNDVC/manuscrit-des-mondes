@@ -1,50 +1,84 @@
 /* ============================================================
-   LE MANUSCRIT DES MONDES — mg-ordre-mots.js (v7)
+   LE MANUSCRIT DES MONDES — mg-ordre-mots.js (v9)
    ============================================================
    Mini-jeu "Le Pont de Gavroche" (Monde 1 — Hugo).
-   Notion : ordre des mots / structure de la phrase (+ ponctuation
-   de fin de phrase).
+   Notion : ordre des mots / structure de la phrase, virgule
+   après un complément circonstanciel en tête de phrase, et
+   tolérance de placement pour les compléments circonstanciels
+   qui ne sont pas fixés en tête de phrase.
 
-   ---- CORRECTIONS v7 (contournement du bug "Gavroche n'avance
-   toujours pas", voir TRANSMISSION_pont-de-gavroche-blocage-
-   traversee.md) ----
+   ---- CORRECTIONS v9 (retours de Julie après test de la v7 —
+   la v8 n'avait en réalité jamais été sauvegardée à cause d'une
+   erreur technique, donc ces deux lots de corrections sont
+   fusionnés ici) ----
 
-   Sans accès à un navigateur en direct, impossible de confirmer
-   avec certitude l'hypothèse de superposition CSS invisible
-   (`.touch-controls` par-dessus le bouton `#mg-cross`, définie
-   dans minigames.css, jamais transmis). Plutôt que de deviner à
-   l'aveugle, cette version CONTOURNE le problème par plusieurs
-   filets de sécurité indépendants :
+   1. VIRGULE MANQUANTE APRÈS UN COMPLÉMENT CIRCONSTANCIEL EN
+      TÊTE DE PHRASE, + TOLÉRANCE DE PLACEMENT.
+      Ancien format : `chunks: [...]` avec un seul ordre correct
+      possible, jamais de virgule. Nouveau format par phrase :
+        - `pieces`: liste de morceaux à pousser (mots ET virgules,
+          les virgules étant maintenant des caisses à part entière,
+          minuscules, comme la ponctuation finale) ;
+        - `correctOrders`: TABLEAU d'ordres acceptés (des
+          permutations d'indices dans `pieces`), pas un seul ordre
+          figé. La ponctuation finale est toujours implicitement en
+          dernière position, ajoutée automatiquement.
+      Règle appliquée pour CHAQUE phrase de la banque (voir
+      commentaires par phrase ci-dessous) :
+        - un complément circonstanciel qui commence par une
+          MAJUSCULE est nécessairement en tête de phrase → une
+          seule caisse-virgule est ajoutée juste après lui, et un
+          seul `correctOrders` est fourni (pas de tolérance : la
+          majuscule fixe déjà sa place) ;
+        - un complément circonstanciel SANS majuscule (donc pas en
+          tête) peut, quand deux phrases s'y prêtent, être permuté
+          avec un autre complément circonstanciel également mobile
+          — dans ce cas `correctOrders` contient plusieurs
+          permutations acceptées, et aucune virgule n'est requise.
 
-   1. RACCOURCI CLAVIER (Entrée ou Espace) qui déclenche la
-      traversée exactement comme le bouton — totalement insensible
-      à un éventuel souci CSS, puisqu'il ne dépend d'aucun clic sur
-      un élément HTML.
-   2. Bouton "durci" : position/z-index forcés en `!important`
-      directement en style inline, pour qu'aucun autre élément ne
-      puisse passer par-dessus sans qu'on le voie (le bloc
-      `.touch-controls` est lui aussi forcé à un z-index inférieur).
-   3. Le bouton est récupéré via `uiContainer.querySelector(...)`
-      plutôt que `document.getElementById(...)` : si une instance
-      précédente du mini-jeu avait laissé un bouton fantôme ailleurs
-      dans la page (même id), on ne risque plus de cibler le mauvais.
-   4. `try/catch` à l'intérieur du minuteur de traversée : si une
-      erreur imprévue survenait à un moment donné, elle ne bloque
-      plus silencieusement tout le mini-jeu (bouton resté désactivé
-      pour toujours, sans aucun message).
-   5. Petits `console.log` de traçage (clic reçu, traversée démarrée)
-      + indicateur visuel permanent "Pont : prêt / incomplet" en
-      haut du canevas, pour voir immédiatement si le souci vient du
-      clic lui-même ou d'autre chose, sans même ouvrir les DevTools.
+   2. CAISSES QUI SE "FIGENT" DE FAÇON ÉTRANGE — bug réel trouvé.
+      Le déplacement VERTICAL d'une chaîne de caisses ne vérifiait
+      la présence d'une AUTRE caisse sur la case d'arrivée que si
+      elle avait EXACTEMENT la même largeur et le même alignement
+      que celle poussée (voir l'ancienne `buildVerticalChain`,
+      filtrait par `colStart === first.colStart && size === first.size`).
+      Une caisse de taille différente sur cette case (fréquent
+      maintenant qu'il y a aussi des petites caisses-virgules)
+      pouvait donc passer inaperçue de cette vérification, menant à
+      un chevauchement SILENCIEUX de deux caisses au même endroit —
+      et une fois ce chevauchement produit, les déplacements
+      suivants paraissent incohérents ou bloqués, ce qui correspond
+      exactement à ce qui a été signalé. Corrigé : après avoir
+      construit la chaîne (qui ne concerne toujours que les caisses
+      alignées de même taille, seules capables d'avancer ensemble),
+      une vérification SUPPLÉMENTAIRE et GÉNÉRALE détecte désormais
+      n'importe quelle autre caisse — de n'importe quelle taille —
+      sur la case d'arrivée, et bloque le mouvement si c'est le cas.
 
-   Aucune autre mécanique n'a été modifiée : déplacement de l'Esprit,
-   poussée en chaîne des caisses, tailles/police, canal dynamique,
-   ponctuation — tout reste identique à la v6, déjà validé par Julie.
+   3. LE JEU RÉVÉLAIT LA RÉPONSE AVANT LA TRAVERSÉE.
+      L'indicateur affiché en permanence ("Pont : complet — semble
+      correct ✅ / mauvais ordre ⚠️") appelait checkBridgeCorrect()
+      avant même que l'élève ne lance la traversée. Corrigé :
+      l'indicateur dit uniquement "Pont : complet" ou
+      "Pont : incomplet" — jamais si l'ordre est bon. Seule la
+      traversée elle-même (réussie ou ratée) révèle la réponse.
+
+   4. GAVROCHE TROP BAS ("passe dessous les caisses").
+      Sa position verticale est maintenant calée pour que ses PIEDS
+      restent toujours au-dessus (ou au même niveau) du HAUT visuel
+      des caisses, jamais en dessous — au lieu d'être calée près de
+      leur bas comme avant, ce qui donnait l'impression qu'il
+      marchait derrière/sous elles.
+
+   Tout le reste (raccourci clavier Entrée/Espace, bouton durci,
+   récupération du bouton via uiContainer, try/catch de sécurité,
+   déplacement, poussée en chaîne horizontale, tailles/police,
+   canal dynamique) reste inchangé.
    ============================================================ */
 
-(function registerOrdreMotsHugoV7() {
+(function registerOrdreMotsHugoV9() {
 
-  console.log("[Pont de Gavroche] Fichier mg-ordre-mots.js v7 chargé.");
+  console.log("[Pont de Gavroche] Fichier mg-ordre-mots.js v9 chargé.");
 
   const CANVAS_W = 960;
   const CANVAS_H = 400;
@@ -73,16 +107,108 @@
   const CRATE_TEXT_PAD = 20;
   const MAX_CRATE_SIZE = 6;
 
+  const GAVROCHE_GW = 30;
+  const GAVROCHE_GH = 42;
+  // v9 : petit espace de sécurité entre les pieds de Gavroche et le
+  // haut visuel des caisses, pour qu'il ne les touche/chevauche
+  // jamais (voir point 4 du header) — garantit qu'il apparaît
+  // toujours AU-DESSUS, jamais en dessous.
+  const GAVROCHE_CLEARANCE_ABOVE_CRATES = 4;
+
+  /**
+   * Banque de phrases. `pieces` liste les morceaux à replacer dans
+   * le canal (mots ET virgules, dans un ordre de référence quelconque
+   * — pas forcément l'ordre correct). `correctOrders` liste TOUS les
+   * ordres (permutations d'indices dans `pieces`) considérés comme
+   * corrects. La ponctuation finale n'est jamais incluse dans
+   * `pieces`/`correctOrders` : elle est ajoutée automatiquement à la
+   * toute fin, quelle que soit la phrase.
+   */
   const PITCH_BANK = [
-    { chunks: ["Dans les égouts", "Gavroche", "avançait", "sans un bruit"], punctuation: ".", hint: "Le complément de lieu se place en tête de phrase." },
-    { chunks: ["Sous les pavés", "l'Esprit", "guidait", "son ami"], punctuation: ".", hint: "Le complément de lieu se place en tête de phrase." },
-    { chunks: ["Frollo", "le", "suivait", "de près"], punctuation: ".", hint: "Le pronom complément (« le ») se place avant le verbe, jamais après." },
-    { chunks: ["Gavroche", "la", "traversa", "en courant"], punctuation: ".", hint: "Le pronom complément (« la ») se place avant le verbe, jamais après." },
-    { chunks: ["L'Esprit", "comprit", "vite", "le danger"], punctuation: ".", hint: "L'adverbe se colle juste après le verbe, avant le complément." },
-    { chunks: ["Gavroche", "grimpa", "vite", "sur la caisse"], punctuation: ".", hint: "L'adverbe se colle juste après le verbe, avant le complément." },
-    { chunks: ["Près du canal", "Frollo", "cherchait", "sa proie"], punctuation: ".", hint: "Le complément de lieu se place en tête de phrase." },
-    { chunks: ["L'Esprit", "les", "empila", "avec soin"], punctuation: ".", hint: "Le pronom complément (« les ») se place avant le verbe, jamais après." },
-    { chunks: ["Sans faire de bruit", "Gavroche", "franchit", "le pont"], punctuation: ".", hint: "Le complément de manière se place en tête de phrase." }
+    // Complément circonstanciel EN TÊTE (majuscule) → virgule requise
+    // juste après lui, un seul ordre accepté.
+    {
+      pieces: ["Dans les égouts", ",", "Gavroche", "avançait", "sans un bruit"],
+      correctOrders: [[0, 1, 2, 3, 4]],
+      punctuation: ".",
+      hint: "« Dans les égouts » est un complément de lieu placé en tête de phrase : il est suivi d'une virgule, et sa position ne peut pas changer."
+    },
+    {
+      pieces: ["Sous les pavés", ",", "l'Esprit", "guidait", "son ami"],
+      correctOrders: [[0, 1, 2, 3, 4]],
+      punctuation: ".",
+      hint: "« Sous les pavés » est un complément de lieu placé en tête de phrase : il est suivi d'une virgule, et sa position ne peut pas changer."
+    },
+    {
+      pieces: ["Près du canal", ",", "Frollo", "cherchait", "sa proie"],
+      correctOrders: [[0, 1, 2, 3, 4]],
+      punctuation: ".",
+      hint: "« Près du canal » est un complément de lieu placé en tête de phrase : il est suivi d'une virgule, et sa position ne peut pas changer."
+    },
+    {
+      pieces: ["Sans faire de bruit", ",", "Gavroche", "franchit", "le pont"],
+      correctOrders: [[0, 1, 2, 3, 4]],
+      punctuation: ".",
+      hint: "« Sans faire de bruit » est un complément de manière placé en tête de phrase : il est suivi d'une virgule, et sa position ne peut pas changer."
+    },
+
+    // Pronom complément avant le verbe — aucune virgule, ordre unique
+    // (la place du pronom, elle, n'est jamais mobile).
+    {
+      pieces: ["Frollo", "le", "suivait", "de près"],
+      correctOrders: [[0, 1, 2, 3]],
+      punctuation: ".",
+      hint: "Le pronom complément (« le ») se place avant le verbe, jamais après."
+    },
+    {
+      pieces: ["Gavroche", "la", "traversa", "en courant"],
+      correctOrders: [[0, 1, 2, 3]],
+      punctuation: ".",
+      hint: "Le pronom complément (« la ») se place avant le verbe, jamais après."
+    },
+    {
+      pieces: ["L'Esprit", "les", "empila", "avec soin"],
+      correctOrders: [[0, 1, 2, 3]],
+      punctuation: ".",
+      hint: "Le pronom complément (« les ») se place avant le verbe, jamais après."
+    },
+
+    // Adverbe collé au verbe — pas de virgule, ordre unique.
+    {
+      pieces: ["L'Esprit", "comprit", "vite", "le danger"],
+      correctOrders: [[0, 1, 2, 3]],
+      punctuation: ".",
+      hint: "L'adverbe se colle juste après le verbe, avant le complément."
+    },
+    {
+      pieces: ["Gavroche", "grimpa", "vite", "sur la caisse"],
+      correctOrders: [[0, 1, 2, 3]],
+      punctuation: ".",
+      hint: "L'adverbe se colle juste après le verbe, avant le complément."
+    },
+
+    // v9 : NOUVEAU — compléments circonstanciels SANS majuscule (donc
+    // pas en tête de phrase) : leur ordre entre eux est réellement
+    // interchangeable, pas de virgule nécessaire dans ce cas. Deux
+    // ordres différents sont acceptés.
+    {
+      pieces: ["L'Esprit", "avança", "sans un bruit", "dans les égouts"],
+      correctOrders: [
+        [0, 1, 2, 3],
+        [0, 1, 3, 2]
+      ],
+      punctuation: ".",
+      hint: "« sans un bruit » et « dans les égouts » sont deux compléments circonstanciels : aucun des deux n'est en tête de phrase, donc ils peuvent s'échanger sans changer le sens — les deux ordres sont acceptés, tant que le sujet et le verbe restent en tête."
+    },
+    {
+      pieces: ["L'Esprit", "se cacha", "derrière une caisse", "dans le silence"],
+      correctOrders: [
+        [0, 1, 2, 3],
+        [0, 1, 3, 2]
+      ],
+      punctuation: ".",
+      hint: "« derrière une caisse » et « dans le silence » sont deux compléments circonstanciels : aucun des deux n'est en tête de phrase, donc ils peuvent s'échanger sans changer le sens — les deux ordres sont acceptés, tant que le sujet et le verbe restent en tête."
+    }
   ];
 
   function shuffle(arr) {
@@ -104,7 +230,7 @@
 
     await MinigameUI.showInstructions({
       title: "Le Pont de Gavroche",
-      objective: "L'Esprit vole : déplace-le avec les flèches (ou les boutons tactiles), il n'a peur ni de l'eau ni du vide. Fonce dans une caisse pour la pousser d'une case dans la direction où tu avances — y compris vers le haut ou le bas — et si plusieurs caisses se suivent, elles avancent toutes ensemble. Aligne les caisses-mots ET la petite caisse de ponctuation dans le canal, dans le bon ordre, puis clique sur « Faire traverser Gavroche » (ou appuie sur Entrée / Espace). Si l'ordre est bon, il passe. Sinon le pont cède : les caisses coulent avec lui, et il faut tout reconstruire."
+      objective: "L'Esprit vole : déplace-le avec les flèches (ou les boutons tactiles), il n'a peur ni de l'eau ni du vide. Fonce dans une caisse pour la pousser d'une case dans la direction où tu avances, y compris vers le haut ou le bas ; si plusieurs caisses se suivent, elles avancent toutes ensemble. Certaines phrases ont une petite caisse-virgule à placer juste après un complément en tête de phrase. Aligne toutes les caisses dans le canal, dans un ordre qui te semble correct, puis clique sur « Faire traverser Gavroche » (ou appuie sur Entrée / Espace) : c'est SEULEMENT à ce moment-là que tu sauras si l'ordre est bon."
     });
 
     return new Promise(resolve => {
@@ -136,22 +262,31 @@
         return Math.max(1, Math.min(MAX_CRATE_SIZE, Math.ceil((textWidth + CRATE_TEXT_PAD) / CELL)));
       }
 
-      const pieces = pitch.chunks.map((text, i) => ({
+      // --- Construction des caisses : tous les `pieces` de la phrase
+      //     (mots + virgules éventuelles), puis la ponctuation finale
+      //     ajoutée automatiquement en dernier morceau. ---
+      const pieces = pitch.pieces.map((text, i) => ({
         chunkIndex: i,
         text,
         size: sizeForText(text),
-        isPunctuation: false,
         row: BRIDGE_ROW,
         colStart: 0
       }));
+      const finalPunctIndex = pieces.length;
       pieces.push({
-        chunkIndex: pieces.length,
+        chunkIndex: finalPunctIndex,
         text: pitch.punctuation || ".",
         size: 1,
-        isPunctuation: true,
         row: BRIDGE_ROW,
         colStart: 0
       });
+
+      // v9 : chaque ordre accepté (pitch.correctOrders) porte sur les
+      // `pieces` de la phrase UNIQUEMENT — la ponctuation finale est
+      // ajoutée ici automatiquement à la fin de CHAQUE ordre, puisqu'elle
+      // doit toujours être en dernière position quel que soit l'ordre
+      // choisi par ailleurs.
+      const acceptedOrders = pitch.correctOrders.map(order => order.concat([finalPunctIndex]));
 
       const CANAL_COLS = pieces.reduce((sum, p) => sum + p.size, 0);
       const CANAL_START_COL = Math.max(CRATE_COL_MIN, Math.floor((COLS - CANAL_COLS) / 2));
@@ -231,7 +366,14 @@
 
       const GAVROCHE_START_X = Math.max(50, CANAL_START_COL * CELL - 110);
       const gavrocheEndX = CANAL_END_COL * CELL + 110;
-      const GAVROCHE_Y = BRIDGE_ROW * CELL + (CELL - 42) / 2;
+
+      // v9 : Gavroche est calé au-dessus du HAUT visuel des caisses
+      // (jamais en dessous), avec une petite marge de sécurité — voir
+      // point 4 du header. Le haut visuel d'une caisse correspond à
+      // row*CELL + CELL*0.1 (voir son rendu plus bas).
+      const CRATE_VISUAL_TOP = BRIDGE_ROW * CELL + CELL * 0.1;
+      const GAVROCHE_Y = CRATE_VISUAL_TOP - GAVROCHE_GH - GAVROCHE_CLEARANCE_ABOVE_CRATES;
+
       const gavroche = {
         x: GAVROCHE_START_X,
         crossing: false,
@@ -245,10 +387,6 @@
       let feedbackText = "";
       let feedbackColor = "#f4f1ea";
 
-      // v7 : bouton "durci" (z-index/position forcés en !important en
-      // style inline) + rappel du raccourci clavier, et bloc tactile
-      // explicitement placé derrière (z-index inférieur) pour éliminer
-      // tout risque de superposition invisible.
       uiContainer.innerHTML = `
         <div class="hud-item">${isRemediation ? "Entraînement" : "Évaluation"} — construis le pont dans le bon ordre</div>
         <div class="hud-item" id="mg-cross-wrapper" style="position:relative !important; z-index:1000 !important; pointer-events:auto !important;">
@@ -328,6 +466,21 @@
           for (let c = blocking.colStart; c < blocking.colStart + blocking.size; c++) {
             if (isWaterCell(c, edge)) return;
           }
+          // v9 : vérification GÉNÉRALE supplémentaire — l'ancienne
+          // buildVerticalChain ne détecte que les caisses de taille et
+          // d'alignement IDENTIQUES à celle poussée pour continuer la
+          // chaîne ; une caisse de taille différente sur la case
+          // d'arrivée passait donc inaperçue, provoquant un
+          // chevauchement silencieux (source des blocages étranges
+          // signalés). On vérifie ici, pour CHAQUE caisse de la chaîne,
+          // qu'aucune AUTRE caisse (quelle que soit sa taille) n'occupe
+          // déjà sa case d'arrivée.
+          for (const c of chain) {
+            for (let col = c.colStart; col < c.colStart + c.size; col++) {
+              const occupant = crateAt(col, edge);
+              if (occupant && !chain.includes(occupant)) return;
+            }
+          }
           chain.forEach(c => { c.row += dy; });
         }
 
@@ -336,9 +489,6 @@
         spawnDust();
       }
 
-      // v7 : Entrée / Espace déclenchent aussi la traversée, en plus
-      // du clic sur le bouton — chemin totalement indépendant, qui ne
-      // dépend d'aucun positionnement CSS.
       function onKeyDown(e) {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
@@ -363,18 +513,24 @@
         btn.addEventListener("click", () => tryMove(d[0], d[1]));
       });
 
+      /**
+       * v9 : accepte désormais PLUSIEURS ordres valables
+       * (acceptedOrders), pas un seul — voir la banque de phrases.
+       */
       function checkBridgeCorrect() {
         const inCanal = pieces
           .filter(p => p.row === BRIDGE_ROW && p.colStart >= CANAL_START_COL && p.colStart + p.size <= CANAL_END_COL)
           .sort((a, b) => a.colStart - b.colStart);
         if (inCanal.length !== pieces.length) return false;
-        for (let i = 0; i < inCanal.length; i++) {
-          if (inCanal[i].chunkIndex !== i) return false;
-          if (i > 0 && inCanal[i].colStart !== inCanal[i - 1].colStart + inCanal[i - 1].size) return false;
+        for (let i = 1; i < inCanal.length; i++) {
+          if (inCanal[i].colStart !== inCanal[i - 1].colStart + inCanal[i - 1].size) return false;
         }
-        return true;
+        const placedOrder = inCanal.map(p => p.chunkIndex).join(",");
+        return acceptedOrders.some(order => order.join(",") === placedOrder);
       }
 
+      // Ne renvoie QUE si le pont est complet (toutes les caisses dans
+      // le canal) — jamais s'il est correct, voir point 3 du header.
       function isBridgeFull() {
         const inCanal = pieces.filter(p => p.row === BRIDGE_ROW && p.colStart >= CANAL_START_COL && p.colStart + p.size <= CANAL_END_COL);
         return inCanal.length === pieces.length;
@@ -386,10 +542,24 @@
         feedbackTimer = durationFrames || 90;
       }
 
-      // v7 : bouton récupéré via le conteneur du mini-jeu (pas
-      // document.getElementById global) — évite de cibler un bouton
-      // fantôme d'une instance précédente mal nettoyée si jamais deux
-      // instances du mini-jeu coexistaient dans le DOM.
+      /**
+       * Reconstruit le texte affiché pour un ensemble de caisses déjà
+       * triées par position (utilisé pour le message de fin) — une
+       * virgule s'attache directement au mot précédent, sans espace
+       * avant elle.
+       */
+      function joinPiecesText(orderedPieces) {
+        let out = "";
+        orderedPieces.forEach((p, i) => {
+          if (p.text === ",") {
+            out += ",";
+          } else {
+            out += (i === 0 ? "" : " ") + p.text;
+          }
+        });
+        return out;
+      }
+
       const crossBtn = uiContainer.querySelector("#mg-cross");
       const bridgeStatusEl = uiContainer.querySelector("#mg-bridge-status");
       const CROSS_SPEED = 4;
@@ -399,9 +569,9 @@
         if (gavroche.crossing || resultGiven) return;
         console.log("[Pont de Gavroche] attemptCrossing() démarrée.");
 
-        gavroche.bridgePieces = pieces.filter(p =>
-          p.row === BRIDGE_ROW && p.colStart >= CANAL_START_COL && p.colStart + p.size <= CANAL_END_COL
-        );
+        gavroche.bridgePieces = pieces
+          .filter(p => p.row === BRIDGE_ROW && p.colStart >= CANAL_START_COL && p.colStart + p.size <= CANAL_END_COL)
+          .sort((a, b) => a.colStart - b.colStart);
         const correct = checkBridgeCorrect();
 
         gavroche.crossing = true;
@@ -418,9 +588,6 @@
 
         clearInterval(crossInterval);
         crossInterval = setInterval(() => {
-          // v7 : try/catch — si une erreur imprévue survient, elle ne
-          // bloque plus silencieusement tout le mini-jeu (bouton
-          // resté désactivé pour toujours sans aucun message).
           try {
             if (!falling) {
               gavroche.x += CROSS_SPEED;
@@ -478,7 +645,7 @@
         if (resultGiven) return;
         resultGiven = true;
         cleanup();
-        const fullSentence = pitch.chunks.join(" ") + (pitch.punctuation || ".");
+        const fullSentence = joinPiecesText(gavroche.bridgePieces);
         await MinigameUI.showResult({
           passed: true,
           message: `Gavroche traverse sain et sauf ! « ${fullSentence} » — ${pitch.hint}`
@@ -501,7 +668,7 @@
 
           if (bridgeStatusEl && !gavroche.crossing) {
             bridgeStatusEl.textContent = isBridgeFull()
-              ? (checkBridgeCorrect() ? "Pont : complet — semble correct ✅" : "Pont : complet, mais dans le mauvais ordre ⚠️")
+              ? "Pont : complet — tente la traversée !"
               : "Pont : incomplet";
           }
 
@@ -579,6 +746,7 @@
           ctx.restore();
         });
 
+        // --- Joueur (l'Esprit) : pose figée + léger flottement vertical ---
         const PW = 34, PH = 46;
         const bob = Math.sin(flightPhase) * 2;
         const px = player.col * CELL + (CELL - PW) / 2;
@@ -615,12 +783,12 @@
           ctx.globalAlpha = 1;
         });
 
-        const GW = 30, GH = 42;
+        // --- Gavroche (v9 : toujours au-dessus du haut des caisses) ---
         if (gavroche.falling) {
           const shrink = Math.max(0, gavroche.fallTimer / 40);
-          drawGavroche(gavroche.x, GAVROCHE_Y + (1 - shrink) * 20, GW * shrink, GH * shrink, shrink);
+          drawGavroche(gavroche.x, GAVROCHE_Y + (1 - shrink) * 20, GAVROCHE_GW * shrink, GAVROCHE_GH * shrink, shrink);
         } else {
-          drawGavroche(gavroche.x, GAVROCHE_Y, GW, GH, 1);
+          drawGavroche(gavroche.x, GAVROCHE_Y, GAVROCHE_GW, GAVROCHE_GH, 1);
         }
 
         if (feedbackTimer > 0) {
