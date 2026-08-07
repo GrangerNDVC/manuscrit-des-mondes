@@ -1,5 +1,5 @@
 /* ============================================================
-   LE MANUSCRIT DES MONDES — mg-ordre-mots.js (v9)
+   LE MANUSCRIT DES MONDES — mg-ordre-mots.js (v10)
    ============================================================
    Mini-jeu "Le Pont de Gavroche" (Monde 1 — Hugo).
    Notion : ordre des mots / structure de la phrase, virgule
@@ -76,12 +76,12 @@
    canal dynamique) reste inchangé.
    ============================================================ */
 
-(function registerOrdreMotsHugoV9() {
+(function registerOrdreMotsHugoV10() {
 
-  console.log("[Pont de Gavroche] Fichier mg-ordre-mots.js v9 chargé.");
+  console.log("[Pont de Gavroche] Fichier mg-ordre-mots.js v10 chargé.");
 
-  const CANVAS_W = 960;
-  const CANVAS_H = 400;
+  const CANVAS_W = 1200;
+  const CANVAS_H = 440;
   const CELL = 40;
   const COLS = CANVAS_W / CELL; // 24
   const ROWS = CANVAS_H / CELL; // 10
@@ -91,7 +91,7 @@
   const CRATE_COL_MIN = 1;
   const CRATE_COL_MAX = COLS - 1;
   const CRATE_ROW_MIN = 1;
-  const CRATE_ROW_MAX = ROWS - 2;
+  const CRATE_ROW_MAX = ROWS - 2; // ROWS=11 avec le nouveau plateau v10 → lignes 1 à 9 disponibles
 
   const BG_SRC = "/assets/backgrounds/decors_egouts_traversee_hugo.jpg";
 
@@ -113,7 +113,11 @@
   // haut visuel des caisses, pour qu'il ne les touche/chevauche
   // jamais (voir point 4 du header) — garantit qu'il apparaît
   // toujours AU-DESSUS, jamais en dessous.
-  const GAVROCHE_CLEARANCE_ABOVE_CRATES = 4;
+  // v10 : remplace l'espace au-dessus des caisses par un léger
+  // chevauchement dans leur partie haute (Gavroche semblait "trop
+  // haut" avec un espace fixe) — il apparaît maintenant comme
+  // marchant SUR le pont plutôt que flottant au-dessus.
+  const GAVROCHE_OVERLAP_INTO_CRATES = 10;
 
   /**
    * Banque de phrases. `pieces` liste les morceaux à replacer dans
@@ -372,7 +376,7 @@
       // point 4 du header. Le haut visuel d'une caisse correspond à
       // row*CELL + CELL*0.1 (voir son rendu plus bas).
       const CRATE_VISUAL_TOP = BRIDGE_ROW * CELL + CELL * 0.1;
-      const GAVROCHE_Y = CRATE_VISUAL_TOP - GAVROCHE_GH - GAVROCHE_CLEARANCE_ABOVE_CRATES;
+      const GAVROCHE_Y = CRATE_VISUAL_TOP - GAVROCHE_GH + GAVROCHE_OVERLAP_INTO_CRATES;
 
       const gavroche = {
         x: GAVROCHE_START_X,
