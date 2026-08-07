@@ -55,6 +55,20 @@
    pour que l'objet global ChromaKey soit disponible. Sert au détourage
    automatique du fond bleu des portraits de personnages, voir
    updatePortrait() ci-dessous.
+
+   ---- CORRECTION (session en cours) ----
+   Bug signalé par Julie : dans les exercices "reorder" (mots à
+   remettre dans l'ordre, ex. acte "ordre des mots" — Monde 1, les
+   égouts) et "reorder_blocks" (phrases à remettre dans l'ordre, ex.
+   acte "cohérence du paragraphe"), une fois un mot/bloc placé dans
+   une case de la séquence, il était impossible de le retirer avant
+   de cliquer sur "Valider" — aucun moyen de corriger une erreur de
+   placement en cours de réflexion.
+   Corrigé dans renderReorderExercise() et renderReorderBlocksExercise()
+   : cliquer sur une case déjà remplie la vide et remet l'élément dans
+   la liste du bas, permettant de recomposer librement l'ordre avant de
+   valider. Aucun autre exercice ni aucune autre mécanique n'a été
+   modifié.
    ============================================================ */
 
 const VNEngine = (() => {
@@ -328,6 +342,10 @@ const VNEngine = (() => {
      segments: [{ type:"reorder", chunks: [...], correctOrder: [...] }]
      Affiche les chunks dans un ordre mélangé ; le joueur clique
      pour les sélectionner dans l'ordre voulu (1, 2, 3...).
+
+     CORRECTION : cliquer sur une case déjà remplie de la séquence la
+     vide et remet le mot dans la liste du bas — permet de revenir en
+     arrière et de recomposer l'ordre avant de cliquer sur "Valider".
      ------------------------------------------------------------ */
   function renderReorderExercise(exerciseData) {
     return new Promise(resolve => {
@@ -358,6 +376,15 @@ const VNEngine = (() => {
           if (selection[i] !== undefined) {
             slot.textContent = chunks[selection[i]];
             slot.classList.add("filled");
+            slot.style.cursor = "pointer";
+            slot.title = "Cliquer pour retirer ce mot et le remettre dans la liste";
+            // Retire CETTE case précise et décale les suivantes vers
+            // la gauche (comportement naturel : "j'enlève ce mot-là").
+            slot.addEventListener("click", () => {
+              selection.splice(i, 1);
+              refreshSequence();
+              refreshPool();
+            });
           } else {
             slot.textContent = (i + 1) + ".";
           }
@@ -500,6 +527,9 @@ const VNEngine = (() => {
      segments: [{ type:"reorder_blocks", blocks: [...], correctOrder: [...] }]
      Même interaction que "reorder" mais avec des blocs de texte
      plus longs, affichés en colonne (paragraphe).
+
+     CORRECTION : même correctif que pour "reorder" — cliquer sur un
+     bloc déjà placé le retire et le remet dans la liste du bas.
      ------------------------------------------------------------ */
   function renderReorderBlocksExercise(exerciseData) {
     return new Promise(resolve => {
@@ -528,6 +558,13 @@ const VNEngine = (() => {
           if (selection[i] !== undefined) {
             slot.textContent = blocks[selection[i]];
             slot.classList.add("filled");
+            slot.style.cursor = "pointer";
+            slot.title = "Cliquer pour retirer ce bloc et le remettre dans la liste";
+            slot.addEventListener("click", () => {
+              selection.splice(i, 1);
+              refreshSequence();
+              refreshPool();
+            });
           } else {
             slot.textContent = `Paragraphe ${i + 1}`;
             slot.classList.add("empty");
