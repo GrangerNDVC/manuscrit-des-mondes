@@ -5,70 +5,49 @@
    Toutes les fonctions retournent des Promises pour permettre
    à sceneManager.js d'enchaîner les séquences avec await.
 
-   FORMAT D'UNE SCÈNE (objet JS, généralement issu d'un JSON
-   chargé par vnParser.js) :
+   FORMAT D'UNE SCÈNE :
    {
-     background: "assets/backgrounds/m1-paris-nocturne.png",
+     background: "...",
      speakerName: "Gavroche",
-     speakerSide: "left" | "right",       // portrait actif
-     portraitLeft:  "assets/portraits/gavroche-content.png" | null,
-     portraitRight: "assets/portraits/esprit-neutre.png" | null,
-     text: "Texte affiché, en passé simple/imparfait selon le récit.",
-     // Optionnel : avance automatiquement après X ms (pour les
-     // scènes de cinématique sans interaction)
+     speakerSide: "left" | "center" | "right",
+     portraitLeft / portraitCenter / portraitRight: "..." | null,
+     portraitLeftFlipped / portraitCenterFlipped / portraitRightFlipped: true | false,
+     text: "...",
      autoAdvanceMs: null
    }
 
-   FORMAT D'UN QCM :
-   {
-     speakerName: "Thénardier",
-     portraitLeft: "assets/portraits/Thenardier_neutre.png",
-     background: "...",
-     question: "Quel signe faut-il placer ici : « Attention ___ »",
-     options: [
-       { text: "un point", correct: false },
-       { text: "un point d'exclamation", correct: true },
-       { text: "une virgule", correct: false }
-     ],
-     feedbackCorrect: "...",
-     feedbackIncorrect: "..."
-   }
+   ---- CORRECTION MAJEURE (session en cours) — transitions entre
+   personnages jugées trop abruptes par Julie : un personnage
+   "remplacé" visuellement par un autre sans qu'on comprenne où le
+   premier est parti, ni comment le second est arrivé. ----
 
-   FORMAT D'UN EXERCICE "TEXTE À TROUS" :
-   {
-     background: "...",
-     speakerName: "...",
-     portraitLeft / portraitRight: "...",
-     // segments alternant texte fixe (string) et trous (objet)
-     segments: [
-       "Gavroche courut",
-       { type: "blank", options: [",", ".", "!"], correct: "," },
-       " puis il s'arrêta",
-       { type: "blank", options: [".", "?", "!"], correct: "." }
-     ],
-     successThreshold: 1.0  // proportion de trous corrects requise (1.0 = tout juste)
-   }
-   ============================================================
+   1. TROISIÈME EMPLACEMENT DE PORTRAIT (portraitCenter / speakerSide
+      "center"), en plus de gauche/droite. Avec 3 personnages
+      simultanément possibles à l'écran, plus besoin de faire
+      disparaître quelqu'un juste parce qu'un autre arrive — les deux
+      compagnons peuvent rester visibles pendant qu'un antagoniste
+      apparaît au centre, par exemple.
 
-   DÉPENDANCE : chromaKeyFilter.js doit être chargé AVANT ce fichier
-   (balise <script> dans l'ordre : chromaKeyFilter.js puis vnEngine.js),
-   pour que l'objet global ChromaKey soit disponible. Sert au détourage
-   automatique du fond bleu des portraits de personnages, voir
-   updatePortrait() ci-dessous.
+   2. FONDU AUTOMATIQUE sur CHAQUE changement de portrait (apparition,
+      disparition, ou simple changement d'expression du même
+      personnage) : plus aucun remplacement instantané. updatePortrait()
+      détecte si l'image demandée est différente de celle actuellement
+      affichée (comparaison sur le chemin source, pas sur le canvas
+      généré) ; si oui et que le slot était déjà visible, on fait
+      d'abord un fondu vers l'invisible, PUIS on affiche la nouvelle
+      image en fondu — jamais un remplacement sec. Une disparition
+      (src = null) est également un fondu, jamais un retrait instantané.
 
-   ---- CORRECTION (session en cours) ----
-   Bug signalé par Julie : dans les exercices "reorder" (mots à
-   remettre dans l'ordre, ex. acte "ordre des mots" — Monde 1, les
-   égouts) et "reorder_blocks" (phrases à remettre dans l'ordre, ex.
-   acte "cohérence du paragraphe"), une fois un mot/bloc placé dans
-   une case de la séquence, il était impossible de le retirer avant
-   de cliquer sur "Valider" — aucun moyen de corriger une erreur de
-   placement en cours de réflexion.
-   Corrigé dans renderReorderExercise() et renderReorderBlocksExercise()
-   : cliquer sur une case déjà remplie la vide et remet l'élément dans
-   la liste du bas, permettant de recomposer librement l'ordre avant de
-   valider. Aucun autre exercice ni aucune autre mécanique n'a été
-   modifié.
+   3. playQCM() généralisé : accepte maintenant, comme une scène
+      normale, `speakerSide`, `portraitCenter`, et les indicateurs
+      `*Flipped` — ce qui permet aux personnages déjà présents (allié,
+      compagnon) de RESTER visibles pendant qu'un antagoniste apparaît,
+      au lieu de disparaître comme avant (l'ancienne version ne gérait
+      que portraitLeft/portraitRight, sans continuité).
+
+   Rétrocompatible : toute scène/QCM qui n'utilise pas portraitCenter
+   ni les champs *Flipped continue de fonctionner exactement comme
+   avant.
    ============================================================ */
 
 const VNEngine = (() => {
@@ -76,6 +55,7 @@ const VNEngine = (() => {
   const els = {
     bg: document.getElementById("vn-bg-image"),
     portraitLeft: document.getElementById("vn-portrait-left"),
+    portraitCenter: document.getElementById("vn-portrait-center"),
     portraitRight: document.getElementById("vn-portrait-right"),
     speakerName: document.getElementById("vn-speaker-name"),
     text: document.getElementById("vn-text"),
@@ -96,14 +76,10 @@ const VNEngine = (() => {
       els.bg.src = scene.background;
     }
 
-    // v2 : portraitLeftFlipped / portraitRightFlipped (optionnels,
-    // booléens) retournent horizontalement le portrait concerné —
-    // utilisé quand un personnage "change de côté" dans la mise en
-    // scène (ex. Gavroche qui glisse de l'autre côté de l'écran pour
-    // s'adresser à un nouveau personnage). Absent ou false = comportement
-    // inchangé (aucun retournement), donc rétrocompatible avec toutes
-    // les scènes existantes.
     updatePortrait(els.portraitLeft, scene.portraitLeft, scene.speakerSide === "left", scene.portraitLeftFlipped);
+    if (els.portraitCenter) {
+      updatePortrait(els.portraitCenter, scene.portraitCenter, scene.speakerSide === "center", scene.portraitCenterFlipped);
+    }
     updatePortrait(els.portraitRight, scene.portraitRight, scene.speakerSide === "right", scene.portraitRightFlipped);
 
     els.speakerName.textContent = scene.speakerName || "";
@@ -112,29 +88,75 @@ const VNEngine = (() => {
     els.text.textContent = scene.text || "";
   }
 
+  /**
+   * Lit la VRAIE durée de transition définie par vn.css pour cet
+   * élément (jamais supposée/codée en dur), afin de synchroniser nos
+   * changements d'image sur le fondu déjà prévu par la feuille de
+   * style plutôt que d'en inventer un nouveau en parallèle.
+   */
+  function getCssFadeDurationMs(imgEl) {
+    const raw = getComputedStyle(imgEl).transitionDuration.split(",")[0].trim();
+    const seconds = parseFloat(raw);
+    return (isNaN(seconds) ? 0.3 : seconds) * 1000;
+  }
+
+  /**
+   * Met à jour un emplacement de portrait.
+   *
+   * v4 (session en cours, après réception de vn.css) : RÉUTILISE le
+   * fondu + léger glissement déjà défini dans vn.css sur la classe
+   * ".visible" (opacity + transform: translateY), au lieu de le
+   * dupliquer en style inline comme la version précédente le faisait
+   * — ce qui entrait en conflit avec l'animation déjà prévue. Pour un
+   * changement de personnage/expression sur un portrait déjà visible :
+   * on retire la classe "visible" (déclenche le fondu de sortie déjà
+   * défini), on attend la VRAIE durée lue dans le CSS, on change
+   * l'image, puis on remet la classe (fondu d'entrée). Pour une
+   * disparition (src=null), on retire simplement la classe : vn.css
+   * anime déjà la sortie tout seul, aucun minuteur nécessaire.
+   *
+   * Le retournement miroir (flipped) utilise la propriété CSS `scale`
+   * (indépendante de `transform`), jamais `transform: scaleX(-1)` —
+   * qui écraserait le glissement d'apparition de vn.css, cette
+   * dernière étant justement pilotée via `transform`.
+   */
   function updatePortrait(imgEl, src, isSpeaking, flipped) {
+    if (!imgEl) return;
+
+    const wasVisible = imgEl.classList.contains("visible");
+    const isSameImage = imgEl.dataset.sourceSrc === (src || "");
+
     if (!src) {
-      imgEl.classList.remove("visible", "speaking");
-      imgEl.style.transform = "";
+      imgEl.classList.remove("visible", "speaking", "dimmed");
+      imgEl.dataset.sourceSrc = "";
       return;
     }
-    // Détourage automatique du fond bleu (voir chromaKeyFilter.js) : le
-    // traitement est asynchrone, mais classList change tout de suite
-    // (le portrait apparaît/s'anime normalement) — seule l'affectation
-    // de src attend le résultat, pour ne jamais laisser voir une image
-    // avec son fond bleu, même une fraction de seconde.
+
+    function showWithImage(finalSrc) {
+      imgEl.src = finalSrc;
+      imgEl.style.scale = flipped ? "-1 1" : "";
+      imgEl.classList.add("visible");
+      imgEl.classList.toggle("speaking", !!isSpeaking);
+      imgEl.classList.toggle("dimmed", !isSpeaking);
+    }
+
     ChromaKey.load(src)
-      .then(canvas => { imgEl.src = canvas.toDataURL(); })
+      .then(canvas => {
+        const dataUrl = canvas.toDataURL();
+        if (wasVisible && !isSameImage) {
+          imgEl.classList.remove("visible");
+          const fadeMs = getCssFadeDurationMs(imgEl);
+          setTimeout(() => showWithImage(dataUrl), fadeMs);
+        } else {
+          showWithImage(dataUrl);
+        }
+        imgEl.dataset.sourceSrc = src;
+      })
       .catch(err => {
         console.error(`Détourage impossible pour "${src}" — affichage du fichier original (avec son fond bleu).`, err);
-        imgEl.src = src;
+        showWithImage(src);
+        imgEl.dataset.sourceSrc = src;
       });
-    imgEl.classList.add("visible");
-    imgEl.classList.toggle("speaking", !!isSpeaking);
-    imgEl.classList.toggle("dimmed", !isSpeaking);
-    // Retournement horizontal simple (miroir), appliqué en style
-    // inline pour ne dépendre d'aucune classe CSS externe.
-    imgEl.style.transform = flipped ? "scaleX(-1)" : "";
   }
 
   /**
@@ -173,15 +195,25 @@ const VNEngine = (() => {
   /**
    * Joue un QCM (typiquement posé par un antagoniste).
    * Retourne { passed: boolean, selectedIndex: number }.
+   *
+   * v2 : généralisé comme une scène normale — accepte speakerSide,
+   * portraitCenter, et les indicateurs *Flipped, pour que les
+   * personnages déjà présents puissent RESTER visibles pendant le
+   * QCM (voir point 3 de l'en-tête). Toujours rétrocompatible avec
+   * l'ancien format (portraitLeft/portraitRight uniquement).
    */
   function playQCM(qcmData) {
     return new Promise(resolve => {
       renderScene({
         background: qcmData.background,
         speakerName: qcmData.speakerName,
-        speakerSide: "left",
+        speakerSide: qcmData.speakerSide || "left",
         portraitLeft: qcmData.portraitLeft,
+        portraitCenter: qcmData.portraitCenter,
         portraitRight: qcmData.portraitRight,
+        portraitLeftFlipped: qcmData.portraitLeftFlipped,
+        portraitCenterFlipped: qcmData.portraitCenterFlipped,
+        portraitRightFlipped: qcmData.portraitRightFlipped,
         text: qcmData.question
       });
 
@@ -252,7 +284,11 @@ const VNEngine = (() => {
       speakerName: exerciseData.speakerName,
       speakerSide: exerciseData.speakerSide,
       portraitLeft: exerciseData.portraitLeft,
+      portraitCenter: exerciseData.portraitCenter,
       portraitRight: exerciseData.portraitRight,
+      portraitLeftFlipped: exerciseData.portraitLeftFlipped,
+      portraitCenterFlipped: exerciseData.portraitCenterFlipped,
+      portraitRightFlipped: exerciseData.portraitRightFlipped,
       text: ""
     });
 
@@ -284,8 +320,7 @@ const VNEngine = (() => {
    * Vérifie une réponse de trou face à sa correction.
    * `correct` peut être une chaîne unique ("." — comportement historique)
    * ou un tableau de réponses toutes valides ([".", "!"] — pour les cas
-   * où plusieurs signes sont légitimement acceptables, ex. ambiguïté
-   * point / point d'exclamation selon l'intensité perçue de la phrase).
+   * où plusieurs signes sont légitimement acceptables).
    */
   function isBlankAnswerCorrect(selected, correct) {
     if (Array.isArray(correct)) return correct.includes(selected);
@@ -294,15 +329,12 @@ const VNEngine = (() => {
 
   /* ------------------------------------------------------------
      TYPE "blank" — texte à trous classique (ponctuation, etc.)
-     segments: alternance de string et { type:"blank", options, correct }
-     correct: string (une seule bonne réponse) OU array de strings
-              (plusieurs réponses tolérées, ex. [".", "!"])
      ------------------------------------------------------------ */
   function renderBlankExercise(exerciseData) {
     return new Promise(resolve => {
       const container = setupExerciseScreen(exerciseData);
 
-      const blanks = []; // { el, options, correct }
+      const blanks = [];
 
       exerciseData.segments.forEach(seg => {
         if (typeof seg === "string") {
@@ -350,13 +382,8 @@ const VNEngine = (() => {
 
   /* ------------------------------------------------------------
      TYPE "reorder" — remettre des groupes de mots dans l'ordre
-     segments: [{ type:"reorder", chunks: [...], correctOrder: [...] }]
-     Affiche les chunks dans un ordre mélangé ; le joueur clique
-     pour les sélectionner dans l'ordre voulu (1, 2, 3...).
-
-     CORRECTION : cliquer sur une case déjà remplie de la séquence la
-     vide et remet le mot dans la liste du bas — permet de revenir en
-     arrière et de recomposer l'ordre avant de cliquer sur "Valider".
+     Cliquer sur une case déjà remplie la vide et remet le mot dans
+     la liste du bas (retour en arrière possible avant validation).
      ------------------------------------------------------------ */
   function renderReorderExercise(exerciseData) {
     return new Promise(resolve => {
@@ -365,7 +392,6 @@ const VNEngine = (() => {
       const chunks = seg.chunks;
       const correctOrder = seg.correctOrder;
 
-      // Mélange l'ordre d'affichage (en évitant de retomber sur l'ordre correct)
       let displayIndices = chunks.map((_, i) => i);
       do {
         displayIndices = shuffle(displayIndices.slice());
@@ -377,7 +403,7 @@ const VNEngine = (() => {
       const poolArea = document.createElement("div");
       poolArea.className = "reorder-pool";
 
-      const selection = []; // indices originaux choisis, dans l'ordre du clic
+      const selection = [];
 
       function refreshSequence() {
         sequenceArea.innerHTML = "";
@@ -389,8 +415,6 @@ const VNEngine = (() => {
             slot.classList.add("filled");
             slot.style.cursor = "pointer";
             slot.title = "Cliquer pour retirer ce mot et le remettre dans la liste";
-            // Retire CETTE case précise et décale les suivantes vers
-            // la gauche (comportement naturel : "j'enlève ce mot-là").
             slot.addEventListener("click", () => {
               selection.splice(i, 1);
               refreshSequence();
@@ -428,7 +452,7 @@ const VNEngine = (() => {
       container.appendChild(poolArea);
 
       els.fillValidate.onclick = () => {
-        if (selection.length < chunks.length) return; // pas encore complet
+        if (selection.length < chunks.length) return;
         const passed = selection.join() === correctOrder.join();
 
         sequenceArea.querySelectorAll(".reorder-slot").forEach((slot, i) => {
@@ -443,9 +467,6 @@ const VNEngine = (() => {
 
   /* ------------------------------------------------------------
      TYPE "match" — associer principale <-> subordonnée
-     segments: [{ type:"match", pairs: [{left, right}, ...] }]
-     Le joueur clique un élément de gauche puis un de droite ;
-     une paire se forme et se colore selon sa validité.
      ------------------------------------------------------------ */
   function renderMatchExercise(exerciseData) {
     return new Promise(resolve => {
@@ -465,7 +486,7 @@ const VNEngine = (() => {
       rightCol.className = "match-column";
 
       let selectedLeft = null;
-      const userMatches = {}; // leftPairIndex -> rightPairIndex chosen
+      const userMatches = {};
       const leftButtons = [];
       const rightButtons = [];
 
@@ -475,7 +496,7 @@ const VNEngine = (() => {
         btn.textContent = item.text;
         btn.dataset.pairIndex = item.pairIndex;
         btn.addEventListener("click", () => {
-          if (userMatches[item.pairIndex] !== undefined) return; // déjà associé
+          if (userMatches[item.pairIndex] !== undefined) return;
           leftButtons.forEach(b => b.classList.remove("selected"));
           btn.classList.add("selected");
           selectedLeft = item.pairIndex;
@@ -491,7 +512,7 @@ const VNEngine = (() => {
         btn.dataset.pairIndex = item.pairIndex;
         btn.addEventListener("click", () => {
           if (selectedLeft === null) return;
-          if (Object.values(userMatches).includes(item.pairIndex)) return; // déjà utilisé
+          if (Object.values(userMatches).includes(item.pairIndex)) return;
           userMatches[selectedLeft] = item.pairIndex;
 
           const leftBtn = leftButtons.find(b => parseInt(b.dataset.pairIndex, 10) === selectedLeft);
@@ -511,13 +532,13 @@ const VNEngine = (() => {
 
       els.fillValidate.onclick = () => {
         const total = pairs.length;
-        if (Object.keys(userMatches).length < total) return; // incomplet
+        if (Object.keys(userMatches).length < total) return;
 
         let correctCount = 0;
         leftButtons.forEach(leftBtn => {
           const li = parseInt(leftBtn.dataset.pairIndex, 10);
           const chosenRi = userMatches[li];
-          const isCorrect = chosenRi === li; // pairIndex identique = bonne association
+          const isCorrect = chosenRi === li;
           leftBtn.classList.toggle("correct", isCorrect);
           leftBtn.classList.toggle("incorrect", !isCorrect);
           const rightBtn = rightButtons.find(b => parseInt(b.dataset.pairIndex, 10) === chosenRi);
@@ -535,12 +556,7 @@ const VNEngine = (() => {
 
   /* ------------------------------------------------------------
      TYPE "reorder_blocks" — remettre des phrases/blocs dans l'ordre
-     segments: [{ type:"reorder_blocks", blocks: [...], correctOrder: [...] }]
-     Même interaction que "reorder" mais avec des blocs de texte
-     plus longs, affichés en colonne (paragraphe).
-
-     CORRECTION : même correctif que pour "reorder" — cliquer sur un
-     bloc déjà placé le retire et le remet dans la liste du bas.
+     Même correctif de retour en arrière que "reorder".
      ------------------------------------------------------------ */
   function renderReorderBlocksExercise(exerciseData) {
     return new Promise(resolve => {
@@ -623,7 +639,6 @@ const VNEngine = (() => {
 
   /* ------------------------------------------------------------
      TYPE "select_relevant" — choisir l'information pertinente
-     segments: [{ type:"select_relevant", context, options:[{text, relevant}] }]
      ------------------------------------------------------------ */
   function renderSelectRelevantExercise(exerciseData) {
     return new Promise(resolve => {
@@ -666,7 +681,7 @@ const VNEngine = (() => {
           if (b.classList.contains("selected")) {
             b.classList.add(passed ? "correct" : "incorrect");
           } else if (opt.relevant) {
-            b.classList.add("correct"); // révèle la bonne réponse
+            b.classList.add("correct");
           }
           b.disabled = true;
         });
@@ -678,10 +693,6 @@ const VNEngine = (() => {
 
   /* ------------------------------------------------------------
      TYPE "narrative_order" — schéma narratif (5 étapes)
-     segments: [{ type:"narrative_order", cards:[{text, stage}] }]
-     Le joueur place les cartes dans l'ordre du schéma narratif :
-     situation_initiale, element_declencheur, peripeties,
-     resolution, situation_finale.
      ------------------------------------------------------------ */
   function renderNarrativeOrderExercise(exerciseData) {
     return new Promise(resolve => {
