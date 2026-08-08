@@ -96,8 +96,15 @@ const VNEngine = (() => {
       els.bg.src = scene.background;
     }
 
-    updatePortrait(els.portraitLeft, scene.portraitLeft, scene.speakerSide === "left");
-    updatePortrait(els.portraitRight, scene.portraitRight, scene.speakerSide === "right");
+    // v2 : portraitLeftFlipped / portraitRightFlipped (optionnels,
+    // booléens) retournent horizontalement le portrait concerné —
+    // utilisé quand un personnage "change de côté" dans la mise en
+    // scène (ex. Gavroche qui glisse de l'autre côté de l'écran pour
+    // s'adresser à un nouveau personnage). Absent ou false = comportement
+    // inchangé (aucun retournement), donc rétrocompatible avec toutes
+    // les scènes existantes.
+    updatePortrait(els.portraitLeft, scene.portraitLeft, scene.speakerSide === "left", scene.portraitLeftFlipped);
+    updatePortrait(els.portraitRight, scene.portraitRight, scene.speakerSide === "right", scene.portraitRightFlipped);
 
     els.speakerName.textContent = scene.speakerName || "";
     els.speakerName.style.display = scene.speakerName ? "inline-block" : "none";
@@ -105,9 +112,10 @@ const VNEngine = (() => {
     els.text.textContent = scene.text || "";
   }
 
-  function updatePortrait(imgEl, src, isSpeaking) {
+  function updatePortrait(imgEl, src, isSpeaking, flipped) {
     if (!src) {
       imgEl.classList.remove("visible", "speaking");
+      imgEl.style.transform = "";
       return;
     }
     // Détourage automatique du fond bleu (voir chromaKeyFilter.js) : le
@@ -124,6 +132,9 @@ const VNEngine = (() => {
     imgEl.classList.add("visible");
     imgEl.classList.toggle("speaking", !!isSpeaking);
     imgEl.classList.toggle("dimmed", !isSpeaking);
+    // Retournement horizontal simple (miroir), appliqué en style
+    // inline pour ne dépendre d'aucune classe CSS externe.
+    imgEl.style.transform = flipped ? "scaleX(-1)" : "";
   }
 
   /**
