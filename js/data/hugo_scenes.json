@@ -36,6 +36,14 @@
         },
         {
           "background": "/assets/backgrounds/decors_Hugo_baricades.png",
+          "speakerName": "Gavroche",
+          "speakerSide": "left",
+          "portraitLeft": "/assets/characters/gavroche-reflexion.png",
+          "portraitRight": "/assets/characters/esprit-reflexion.png",
+          "text": "Le Grand Barbarisme, c'est le maître de tout ce chaos. Il a compris un truc simple : qui contrôle les mots, contrôle tout le reste. Alors il a lâché le Mal-Dit sur la ville — un sort qui grignote la langue, petit bout par petit bout, jusqu'à ce que plus personne ne sache se faire comprendre. Sans les mots pour s'organiser, se défendre, se souvenir... on ne peut plus rien faire."
+        },
+        {
+          "background": "/assets/backgrounds/decors_Hugo_baricades.png",
           "speakerName": "L'Esprit de la Littérature",
           "speakerSide": "right",
           "portraitLeft": "/assets/characters/gavroche-malicieux.png",
@@ -481,7 +489,7 @@
         "speakerName": "Frollo",
         "speakerSide": "center",
         "portraitLeft": "/assets/characters/Esmeralda_sourire.png",
-        "portraitCenter": "/assets/characters/Frolo_colère.png",
+        "portraitCenter": "/assets/characters/Frolo_colere.png",
         "portraitRight": "/assets/characters/esprit-reflexion.png",
         "question": "Frollo apparut sur les marches. Laquelle de ces phrases contient une proposition subordonnée ?",
         "options": [
@@ -507,7 +515,7 @@
           "speakerName": "Frollo",
           "speakerSide": "center",
           "portraitLeft": "/assets/characters/Esmeralda_sourire.png",
-          "portraitCenter": "/assets/characters/Frolo_colère.png",
+          "portraitCenter": "/assets/characters/Frolo_colere.png",
           "portraitRight": "/assets/characters/esprit-content.png",
           "text": "Frollo recula d'un pas, vaincu par tant de bon sens, et s'évanouit dans l'ombre des porches sans un mot de plus."
         },
