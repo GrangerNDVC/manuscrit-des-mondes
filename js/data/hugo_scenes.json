@@ -48,31 +48,95 @@
           "speakerSide": "left",
           "portraitLeft": "/assets/characters/gavroche-surpris.png",
           "portraitRight": "/assets/characters/esprit-reflexion.png",
-          "text": "Tu le sentiras vite une fois en jeu, crois-moi. Mais chut... j'entends des pas du côté des gravats."
+          "text": "Gavroche se tut d'un coup, la tête penchée sur le côté. Chut... Tu entends ça ?"
+        },
+        {
+          "background": "/assets/backgrounds/decors_Hugo_baricades.png",
+          "speakerName": "L'Esprit de la Littérature",
+          "speakerSide": "right",
+          "portraitLeft": "/assets/characters/gavroche-surpris.png",
+          "portraitRight": "/assets/characters/esprit-reflexion.png",
+          "text": "Entendre quoi ? Il n'y a que le vent qui..."
+        },
+        {
+          "background": "/assets/backgrounds/decors_Hugo_baricades.png",
+          "speakerName": "Gavroche",
+          "speakerSide": "left",
+          "portraitLeft": "/assets/characters/gavroche-surpris.png",
+          "portraitRight": "/assets/characters/esprit-surpris.png",
+          "text": "Un gravat roula au loin, comme sous un pas mal assuré. Ça. Quelqu'un approche. Et ce pas-là, je le reconnaîtrais entre mille."
+        },
+        {
+          "background": "/assets/backgrounds/decors_Hugo_baricades.png",
+          "speakerName": "Thénardier (voix)",
+          "speakerSide": "left",
+          "portraitLeft": "/assets/characters/gavroche-surpris.png",
+          "portraitRight": "/assets/characters/esprit-surpris.png",
+          "text": "Tiens, tiens... une voix que je croyais ne plus jamais réentendre traîner par ici la nuit."
         },
         {
           "background": "/assets/backgrounds/decors_Hugo_baricades.png",
           "speakerName": "Thénardier",
           "speakerSide": "left",
           "portraitLeft": "/assets/characters/Thenardier_neutre.png",
+          "portraitCenter": "/assets/characters/gavroche-surpris.png",
           "portraitRight": "/assets/characters/esprit-surpris.png",
-          "text": "Tiens, tiens... de la visite. Le gamin ferait bien de se méfier de qui il traîne dans le coin."
+          "text": "Thénardier émergea des gravats, un sourire en coin. Gavroche se plaça bien en évidence, entre son ami et l'inconnu — inutile de laisser deviner qui commande ici."
+        },
+        {
+          "background": "/assets/backgrounds/decors_Hugo_baricades.png",
+          "speakerName": "Thénardier",
+          "speakerSide": "left",
+          "portraitLeft": "/assets/characters/Thenardier_neutre.png",
+          "portraitCenter": "/assets/characters/gavroche-surpris.png",
+          "portraitRight": "/assets/characters/esprit-surpris.png",
+          "text": "Le môme des rues, toujours à jouer les héros. Et cette drôle de lumière à tes côtés... elle a l'air toute retournée. Le Mal-Dit t'a déjà mordu, gamin ? Regarde, tu bafouilles déjà."
         },
         {
           "background": "/assets/backgrounds/decors_Hugo_baricades.png",
           "speakerName": "Gavroche",
-          "speakerSide": "left",
-          "portraitLeft": "/assets/characters/gavroche-reflexion.png",
+          "speakerSide": "center",
+          "portraitLeft": "/assets/characters/Thenardier_neutre.png",
+          "portraitCenter": "/assets/characters/gavroche-reflexion.png",
           "portraitRight": "/assets/characters/esprit-reflexion.png",
-          "text": "Thénardier... Écoute-moi bien : c'est un personnage du livre de Victor Hugo, comme moi, sauf que le Grand Barbarisme l'a retourné — il est à son service, maintenant. Méfie-toi de ce qu'il te propose. Mais il connaît quand même ses leçons : autant s'en servir contre lui."
+          "text": "Je ne bafouille pas. JE me tais quand il faut. Contrairement à toi, qui n'arrives même pas à finir une phrase sans cracher par terre entre deux mots."
+        },
+        {
+          "background": "/assets/backgrounds/decors_Hugo_baricades.png",
+          "speakerName": "Thénardier",
+          "speakerSide": "left",
+          "portraitLeft": "/assets/characters/Thenardier_neutre.png",
+          "portraitCenter": "/assets/characters/gavroche-reflexion.png",
+          "portraitRight": "/assets/characters/esprit-reflexion.png",
+          "text": "Ah ouais tiens goûte à ça la barricade elle tombera avant que le soleil se lève tu piges rien à ce que je raconte pas vrai."
+        },
+        {
+          "background": "/assets/backgrounds/decors_Hugo_baricades.png",
+          "speakerName": "Gavroche",
+          "speakerSide": "center",
+          "portraitLeft": "/assets/characters/Thenardier_neutre.png",
+          "portraitCenter": "/assets/characters/gavroche-malicieux.png",
+          "portraitRight": "/assets/characters/esprit-content.png",
+          "text": "Là, tu viens de le prouver toi-même : sans un seul point ni une seule virgule pour respirer, même TOI tu ne sais plus où une idée s'arrête et où la suivante commence. Le Mal-Dit t'a rendu confus sans même que tu le voies. Nous, on sait encore où les placer."
+        },
+        {
+          "background": "/assets/backgrounds/decors_Hugo_baricades.png",
+          "speakerName": "Thénardier",
+          "speakerSide": "left",
+          "portraitLeft": "/assets/characters/Thenardier_neutre.png",
+          "portraitCenter": "/assets/characters/gavroche-malicieux.png",
+          "portraitRight": "/assets/characters/esprit-content.png",
+          "text": "Pfft. Facile à dire. Voyons si ta petite lumière sait vraiment faire la différence, avant de continuer à jacasser."
         }
       ],
       "qcm": [
         {
           "background": "/assets/backgrounds/decors_Hugo_baricades.png",
           "speakerName": "Thénardier",
+          "speakerSide": "left",
           "portraitLeft": "/assets/characters/Thenardier_neutre.png",
-          "portraitRight": null,
+          "portraitCenter": "/assets/characters/gavroche-reflexion.png",
+          "portraitRight": "/assets/characters/esprit-reflexion.png",
           "question": "Avant de poursuivre... Sais-tu ce qu'il faut placer à la fin d'une phrase qui pose une question : « As-tu vu mon chat ___ »",
           "options": [
             {
@@ -94,8 +158,10 @@
         {
           "background": "/assets/backgrounds/decors_Hugo_baricades.png",
           "speakerName": "Thénardier",
+          "speakerSide": "left",
           "portraitLeft": "/assets/characters/Thenardier_neutre.png",
-          "portraitRight": null,
+          "portraitCenter": "/assets/characters/gavroche-reflexion.png",
+          "portraitRight": "/assets/characters/esprit-reflexion.png",
           "question": "Une phrase qui exprime un ordre pressant ou une grande émotion — comme « Attention, la barricade va céder ___ » — se termine par :",
           "options": [
             {
@@ -117,8 +183,10 @@
         {
           "background": "/assets/backgrounds/decors_Hugo_baricades.png",
           "speakerName": "Thénardier",
+          "speakerSide": "left",
           "portraitLeft": "/assets/characters/Thenardier_neutre.png",
-          "portraitRight": null,
+          "portraitCenter": "/assets/characters/gavroche-reflexion.png",
+          "portraitRight": "/assets/characters/esprit-reflexion.png",
           "question": "Quand une phrase commence par un complément placé devant, comme « Dans les rues de Paris ___ les gardes patrouillaient », qu'est-ce qu'on met avant de continuer ?",
           "options": [
             {
@@ -136,6 +204,26 @@
           ],
           "feedbackCorrect": "Exact. Dommage pour moi, tu n'es pas totalement inutile.",
           "feedbackIncorrect": "Une virgule, évidemment ! Même les gamins des barricades savent ça."
+        }
+      ],
+      "qcmOutro": [
+        {
+          "background": "/assets/backgrounds/decors_Hugo_baricades.png",
+          "speakerName": "Thénardier",
+          "speakerSide": "left",
+          "portraitLeft": "/assets/characters/Thenardier_vaincu.png",
+          "portraitCenter": "/assets/characters/gavroche-content.png",
+          "portraitRight": "/assets/characters/esprit-content.png",
+          "text": "Thénardier grommela, incapable de trouver une réplique — lui qui venait justement de prouver, sans le vouloir, à quel point sa propre phrase s'était effondrée. Il recula dans l'ombre des gravats. Bah... Amusez-vous bien avec vos leçons de grammaire. On se recroisera, comptez sur moi."
+        },
+        {
+          "background": "/assets/backgrounds/decors_Hugo_baricades.png",
+          "speakerName": "Gavroche",
+          "speakerSide": "center",
+          "portraitLeft": null,
+          "portraitCenter": "/assets/characters/gavroche-malicieux.png",
+          "portraitRight": "/assets/characters/esprit-content.png",
+          "text": "Bon débarras. Et la prochaine fois, essaie de finir une phrase sans t'étouffer dedans."
         }
       ],
       "formative": {
@@ -197,7 +285,10 @@
               "!",
               "?"
             ],
-            "correct": [".", "!"]
+            "correct": [
+              ".",
+              "!"
+            ]
           }
         ],
         "successThreshold": 1.0
@@ -241,10 +332,12 @@
       ],
       "qcm": {
         "background": "/assets/backgrounds/decors_Hugo_egouts.png",
-        "speakerName": "Frollo",
-        "portraitLeft": "/assets/characters/Frolo_neutre.png",
-        "portraitRight": null,
-        "question": "Une voix sifflante s'éleva des ténèbres. Quel est l'ordre correct pour : « ___ » ?",
+        "speakerName": "Frollo (voix)",
+        "speakerSide": "left",
+        "portraitLeft": "/assets/characters/gavroche-reflexion.png",
+        "portraitCenter": null,
+        "portraitRight": "/assets/characters/esprit-surpris.png",
+        "question": "Une voix sifflante s'éleva des ténèbres, sans qu'on voie personne. Quel est l'ordre correct pour : « ___ » ?",
         "options": [
           {
             "text": "Mangea la pomme Gavroche rouge",
@@ -262,6 +355,16 @@
         "feedbackCorrect": "Tiens, tiens... Tu sais lire l'ordre des choses. Intéressant.",
         "feedbackIncorrect": "L'ordre, petit, l'ordre ! Sans lui, le monde s'effondre..."
       },
+      "qcmOutro": [
+        {
+          "background": "/assets/backgrounds/decors_Hugo_egouts.png",
+          "speakerName": "Gavroche",
+          "speakerSide": "left",
+          "portraitLeft": "/assets/characters/gavroche-content.png",
+          "portraitRight": "/assets/characters/esprit-content.png",
+          "text": "La voix sifflante s'éloigna, hésitante, comme si Frollo répugnait à s'enfoncer plus loin sous terre. Bien joué. Il ne s'aventurera pas plus bas — le vieux hibou a horreur du noir."
+        }
+      ],
       "formative": {
         "background": "/assets/backgrounds/decors_Hugo_egouts.png",
         "speakerName": "Gavroche",
@@ -327,33 +430,29 @@
           "speakerName": "Gavroche",
           "speakerSide": "right",
           "portraitLeft": null,
+          "portraitCenter": "/assets/characters/esprit-surpris.png",
           "portraitRight": "/assets/characters/gavroche-content.png",
           "portraitRightFlipped": true,
-          "text": "Gavroche grimpa sur le parvis le premier, encore couvert de poussière. Esméralda ! T'es encore là, à danser comme si de rien n'était !"
+          "text": "Ils émergèrent sur le parvis l'un derrière l'autre. Gavroche se retourna vers la place, le sourire aux lèvres. Esméralda ! T'es encore là, à danser comme si de rien n'était !"
         },
         {
           "background": "/assets/backgrounds/decors_Hugo_parvis_Notre_Dame.png",
           "speakerName": "Esmeralda",
           "speakerSide": "left",
           "portraitLeft": "/assets/characters/Esmeralda_sourire.png",
+          "portraitCenter": "/assets/characters/esprit-surpris.png",
           "portraitRight": "/assets/characters/gavroche-content.png",
           "portraitRightFlipped": true,
-          "text": "Gavroche ! Ça faisait longtemps. Et tu ramènes de la compagnie, on dirait..."
-        },
-        {
-          "background": "/assets/backgrounds/decors_Hugo_parvis_Notre_Dame.png",
-          "speakerName": "L'Esprit de la Littérature",
-          "speakerSide": "right",
-          "portraitLeft": "/assets/characters/Esmeralda_sourire.png",
-          "portraitRight": "/assets/characters/esprit-surpris.png",
-          "text": "L'Esprit émergea à son tour derrière lui, encore un peu ébloui par la lumière du jour."
+          "text": "Une jeune femme s'arrêta de danser au centre du parvis. Gavroche ! Ça faisait longtemps. Et tu ramènes de la compagnie, on dirait..."
         },
         {
           "background": "/assets/backgrounds/decors_Hugo_parvis_Notre_Dame.png",
           "speakerName": "Gavroche",
-          "speakerSide": "left",
-          "portraitLeft": "/assets/characters/gavroche-content.png",
-          "portraitRight": "/assets/characters/esprit-neutre.png",
+          "speakerSide": "right",
+          "portraitLeft": "/assets/characters/Esmeralda_sourire.png",
+          "portraitCenter": "/assets/characters/esprit-content.png",
+          "portraitRight": "/assets/characters/gavroche-malicieux.png",
+          "portraitRightFlipped": true,
           "text": "Je te présente l'Esprit. Il cherche les clés pour libérer les auteurs — Casimodo doit savoir où se cache la nôtre."
         },
         {
@@ -361,15 +460,29 @@
           "speakerName": "Esmeralda",
           "speakerSide": "left",
           "portraitLeft": "/assets/characters/Esmeralda_sourire.png",
-          "portraitRight": "/assets/characters/esprit-content.png",
+          "portraitCenter": "/assets/characters/esprit-content.png",
+          "portraitRight": "/assets/characters/gavroche-content.png",
+          "portraitRightFlipped": true,
           "text": "Alors c'est vous, dont on parle... Casimodo, là-haut, surveille les cloches. Quand elles sonnent ensemble, c'est qu'une idée principale et son explication se sont enfin retrouvées."
+        },
+        {
+          "background": "/assets/backgrounds/decors_Hugo_parvis_Notre_Dame.png",
+          "speakerName": "Gavroche",
+          "speakerSide": "right",
+          "portraitLeft": "/assets/characters/Esmeralda_sourire.png",
+          "portraitCenter": "/assets/characters/esprit-reflexion.png",
+          "portraitRight": "/assets/characters/gavroche-surpris.png",
+          "portraitRightFlipped": true,
+          "text": "Gavroche tourna brusquement la tête vers les marches. Frollo... Je recule, cette fois — mieux vaut te laisser répondre, l'Esprit."
         }
       ],
       "qcm": {
         "background": "/assets/backgrounds/decors_Hugo_parvis_Notre_Dame.png",
         "speakerName": "Frollo",
-        "portraitLeft": "/assets/characters/Frolo_colère.png",
-        "portraitRight": null,
+        "speakerSide": "center",
+        "portraitLeft": "/assets/characters/Esmeralda_sourire.png",
+        "portraitCenter": "/assets/characters/Frolo_colère.png",
+        "portraitRight": "/assets/characters/esprit-reflexion.png",
         "question": "Frollo apparut sur les marches. Laquelle de ces phrases contient une proposition subordonnée ?",
         "options": [
           {
@@ -388,12 +501,35 @@
         "feedbackCorrect": "Hmpf. Tu commences à comprendre les liens entre les idées...",
         "feedbackIncorrect": "Une subordonnée explique, complète, justifie. Cherche le lien !"
       },
+      "qcmOutro": [
+        {
+          "background": "/assets/backgrounds/decors_Hugo_parvis_Notre_Dame.png",
+          "speakerName": "Frollo",
+          "speakerSide": "center",
+          "portraitLeft": "/assets/characters/Esmeralda_sourire.png",
+          "portraitCenter": "/assets/characters/Frolo_colère.png",
+          "portraitRight": "/assets/characters/esprit-content.png",
+          "text": "Frollo recula d'un pas, vaincu par tant de bon sens, et s'évanouit dans l'ombre des porches sans un mot de plus."
+        },
+        {
+          "background": "/assets/backgrounds/decors_Hugo_parvis_Notre_Dame.png",
+          "speakerName": "Gavroche",
+          "speakerSide": "right",
+          "portraitLeft": "/assets/characters/Esmeralda_sourire.png",
+          "portraitCenter": null,
+          "portraitRight": "/assets/characters/gavroche-content.png",
+          "portraitRightFlipped": true,
+          "text": "Gavroche ressortit de derrière l'Esprit, retrouvant illico son sourire. Pfft, il ne fait jamais long feu, celui-là non plus."
+        }
+      ],
       "formative": {
         "background": "/assets/backgrounds/decors_Hugo_parvis_Notre_Dame.png",
         "speakerName": "Esmeralda",
         "speakerSide": "left",
         "portraitLeft": "/assets/characters/Esmeralda_sourire.png",
-        "portraitRight": "/assets/characters/esprit-neutre.png",
+        "portraitCenter": "/assets/characters/esprit-neutre.png",
+        "portraitRight": "/assets/characters/gavroche-content.png",
+        "portraitRightFlipped": true,
         "instructions": "Associe chaque proposition principale (cloche de gauche) à la subordonnée qui lui correspond (cloche de droite).",
         "segments": [
           {
@@ -417,7 +553,9 @@
         "speakerName": "Esmeralda",
         "speakerSide": "left",
         "portraitLeft": "/assets/characters/Esmeralda_sourire.png",
-        "portraitRight": "/assets/characters/esprit-content.png",
+        "portraitCenter": "/assets/characters/esprit-content.png",
+        "portraitRight": "/assets/characters/gavroche-content.png",
+        "portraitRightFlipped": true,
         "instructions": "Associe les propositions pour continuer le récit.",
         "segments": [
           {
