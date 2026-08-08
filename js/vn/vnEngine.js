@@ -97,7 +97,13 @@ const VNEngine = (() => {
   function getCssFadeDurationMs(imgEl) {
     const raw = getComputedStyle(imgEl).transitionDuration.split(",")[0].trim();
     const seconds = parseFloat(raw);
-    return (isNaN(seconds) ? 0.3 : seconds) * 1000;
+    // Plancher de sécurité (50ms) : si la variable CSS --transition-medium
+    // référencée par vn.css n'était pas définie pour une raison ou une
+    // autre, la durée calculée pourrait valoir 0 — pas grave en soi
+    // depuis le correctif du jeton ci-dessous, mais on garde une petite
+    // marge pour que le fondu reste visible à l'œil dans tous les cas.
+    const ms = (isNaN(seconds) ? 0.3 : seconds) * 1000;
+    return Math.max(50, ms);
   }
 
   /**
@@ -123,6 +129,18 @@ const VNEngine = (() => {
   function updatePortrait(imgEl, src, isSpeaking, flipped) {
     if (!imgEl) return;
 
+    // v5 : CORRECTIF DE COURSE (bug signalé — clignotement/alternance
+    // rapide entre deux personnages). Quand deux scènes s'enchaînent
+    // plus vite que la durée du fondu, l'ancien correctif pouvait
+    // laisser un fondu "en retard" (programmé via setTimeout) se
+    // déclencher APRÈS qu'une mise à jour plus récente a déjà eu
+    // lieu, et écraser la bonne image par l'ancienne. Chaque appel
+    // reçoit maintenant un jeton de version stocké sur l'élément :
+    // si, au moment où le fondu programmé se déclenche enfin, un
+    // appel plus récent a entre-temps changé ce jeton, on ignore
+    // purement et simplement l'ancien affichage au lieu de l'appliquer.
+    const myToken = (imgEl._portraitToken = (imgEl._portraitToken || 0) + 1);
+
     const wasVisible = imgEl.classList.contains("visible");
     const isSameImage = imgEl.dataset.sourceSrc === (src || "");
 
@@ -133,6 +151,7 @@ const VNEngine = (() => {
     }
 
     function showWithImage(finalSrc) {
+      if (imgEl._portraitToken !== myToken) return; // une mise à jour plus récente a pris le relais
       imgEl.src = finalSrc;
       imgEl.style.scale = flipped ? "-1 1" : "";
       imgEl.classList.add("visible");
@@ -142,6 +161,7 @@ const VNEngine = (() => {
 
     ChromaKey.load(src)
       .then(canvas => {
+        if (imgEl._portraitToken !== myToken) return; // annulé par un appel plus récent
         const dataUrl = canvas.toDataURL();
         if (wasVisible && !isSameImage) {
           imgEl.classList.remove("visible");
@@ -153,6 +173,7 @@ const VNEngine = (() => {
         imgEl.dataset.sourceSrc = src;
       })
       .catch(err => {
+        if (imgEl._portraitToken !== myToken) return;
         console.error(`Détourage impossible pour "${src}" — affichage du fichier original (avec son fond bleu).`, err);
         showWithImage(src);
         imgEl.dataset.sourceSrc = src;
