@@ -32,7 +32,7 @@
           "speakerSide": "left",
           "portraitLeft": "/assets/characters/gavroche-reflexion.png",
           "portraitRight": "/assets/characters/esprit-reflexion.png",
-          "text": "Hugo, c'est ça ? Je connais l'histoire : une clé se cache ici, et celui qui la trouve doit nous aider à nous libérer. Tu vois cette barricade ? On ne se bat pas pour du pain, cette fois : l'Empereur Noir a volé toute la ponctuation de Paris. Plus un point, plus une virgule nulle part. Alors on s'est soulevés pour la reprendre."
+          "text": "Je connais l'histoire : une clé se cache ici, et celui qui la trouve doit nous aider à nous libérer. Tu vois cette barricade ? On ne se bat pas pour du pain, cette fois : le Grand Barbarisme a jeté son sort, le Mal-Dit, sur toute la ponctuation de Paris. Plus un point, plus une virgule nulle part. Alors on s'est soulevés pour la reprendre."
         },
         {
           "background": "/assets/backgrounds/decors_Hugo_baricades.png",
@@ -64,7 +64,7 @@
           "speakerSide": "left",
           "portraitLeft": "/assets/characters/gavroche-reflexion.png",
           "portraitRight": "/assets/characters/esprit-reflexion.png",
-          "text": "Thénardier... Écoute-moi bien : c'est un personnage du livre de Victor Hugo, comme moi, sauf que l'Empereur Noir l'a retourné — il est à leur solde, maintenant. Méfie-toi de ce qu'il te propose. Mais il connaît quand même ses leçons : autant s'en servir contre lui."
+          "text": "Thénardier... Écoute-moi bien : c'est un personnage du livre de Victor Hugo, comme moi, sauf que le Grand Barbarisme l'a retourné — il est à son service, maintenant. Méfie-toi de ce qu'il te propose. Mais il connaît quand même ses leçons : autant s'en servir contre lui."
         }
       ],
       "qcm": [
@@ -210,17 +210,17 @@
           "background": "/assets/backgrounds/decors_Hugo_baricades.png",
           "speakerName": "Gavroche",
           "speakerSide": "left",
-          "portraitLeft": "/assets/characters/gavroche-enthousiaste.png",
-          "portraitRight": "/assets/characters/esprit-content.png",
-          "text": "Suis-moi ! Je connais un raccourci par les égouts. Personne ne nous trouvera là-dessous."
+          "portraitLeft": "/assets/characters/gavroche-surpris.png",
+          "portraitRight": "/assets/characters/esprit-neutre.png",
+          "text": "Gavroche se figea net, le regard rivé par-dessus l'épaule de l'Esprit. Frollo... Il nous a repérés. Vite, par ici, avant qu'il n'arrive !"
         },
         {
           "background": "/assets/backgrounds/decors_Hugo_egouts.png",
           "speakerName": "Gavroche",
           "speakerSide": "left",
-          "portraitLeft": "/assets/characters/gavroche-neutre.png",
+          "portraitLeft": "/assets/characters/gavroche-malicieux.png",
           "portraitRight": "/assets/characters/esprit-surpris.png",
-          "text": "Gavroche se faufila entre les pierres humides. Au loin, des voix résonnaient, déformées par l'écho des galeries."
+          "text": "Ça devrait le ralentir un peu... Frollo a horreur de se salir les bottes ici."
         },
         {
           "background": "/assets/backgrounds/decors_Hugo_egouts.png",
@@ -228,7 +228,7 @@
           "speakerSide": "left",
           "portraitLeft": "/assets/characters/gavroche-reflexion.png",
           "portraitRight": "/assets/characters/esprit-neutre.png",
-          "text": "Attends... Ces galeries n'ont pas toujours été comme ça. Les mots, ici, ont une place précise. Si tu marches sur le mauvais, le sol se dérobe sous tes pieds !"
+          "text": "Attends... Ce n'est pas normal. Je connais ces galeries comme ma poche, d'habitude. Les mots eux-mêmes ont changé de place : encore un coup du Mal-Dit. Frollo a dû en lâcher un peu en fuyant, pour brouiller le chemin derrière lui. Si tu marches sur le mauvais mot, le sol se dérobe sous tes pieds !"
         },
         {
           "background": "/assets/backgrounds/decors_Hugo_egouts.png",
@@ -236,7 +236,7 @@
           "speakerSide": "left",
           "portraitLeft": "/assets/characters/gavroche-malicieux.png",
           "portraitRight": "/assets/characters/esprit-neutre.png",
-          "text": "En français, on dit d'abord QUI fait l'action, ensuite l'action elle-même, puis sur QUOI ou COMMENT. Sujet, verbe, complément. Retiens bien ça avant de sauter !"
+          "text": "En français, on dit d'abord QUI fait l'action, ensuite l'action elle-même, puis sur QUOI ou COMMENT. Sujet, verbe, complément. C'est notre seule chance de stabiliser le passage : remets ça dans l'ordre, et le sort perdra prise."
         }
       ],
       "qcm": {
@@ -324,19 +324,37 @@
         },
         {
           "background": "/assets/backgrounds/decors_Hugo_parvis_Notre_Dame.png",
-          "speakerName": "L'Esprit de la Littérature",
+          "speakerName": "Gavroche",
           "speakerSide": "right",
           "portraitLeft": null,
-          "portraitRight": "/assets/characters/esprit-surpris.png",
-          "text": "Ils émergèrent sur le parvis de Notre-Dame. Les tours immenses se dressaient devant eux, silencieuses, comme si elles attendaient quelque chose."
+          "portraitRight": "/assets/characters/gavroche-content.png",
+          "portraitRightFlipped": true,
+          "text": "Gavroche grimpa sur le parvis le premier, encore couvert de poussière. Esméralda ! T'es encore là, à danser comme si de rien n'était !"
         },
         {
           "background": "/assets/backgrounds/decors_Hugo_parvis_Notre_Dame.png",
           "speakerName": "Esmeralda",
           "speakerSide": "left",
           "portraitLeft": "/assets/characters/Esmeralda_sourire.png",
+          "portraitRight": "/assets/characters/gavroche-content.png",
+          "portraitRightFlipped": true,
+          "text": "Gavroche ! Ça faisait longtemps. Et tu ramènes de la compagnie, on dirait..."
+        },
+        {
+          "background": "/assets/backgrounds/decors_Hugo_parvis_Notre_Dame.png",
+          "speakerName": "L'Esprit de la Littérature",
+          "speakerSide": "right",
+          "portraitLeft": "/assets/characters/Esmeralda_sourire.png",
           "portraitRight": "/assets/characters/esprit-surpris.png",
-          "text": "Une jeune femme dansait au centre du parvis. Quand elle vit Gavroche, elle s'arrêta et sourit."
+          "text": "L'Esprit émergea à son tour derrière lui, encore un peu ébloui par la lumière du jour."
+        },
+        {
+          "background": "/assets/backgrounds/decors_Hugo_parvis_Notre_Dame.png",
+          "speakerName": "Gavroche",
+          "speakerSide": "left",
+          "portraitLeft": "/assets/characters/gavroche-content.png",
+          "portraitRight": "/assets/characters/esprit-neutre.png",
+          "text": "Je te présente l'Esprit. Il cherche les clés pour libérer les auteurs — Casimodo doit savoir où se cache la nôtre."
         },
         {
           "background": "/assets/backgrounds/decors_Hugo_parvis_Notre_Dame.png",
@@ -344,7 +362,7 @@
           "speakerSide": "left",
           "portraitLeft": "/assets/characters/Esmeralda_sourire.png",
           "portraitRight": "/assets/characters/esprit-content.png",
-          "text": "Vous venez délivrer les auteurs, n'est-ce pas ? Casimodo, là-haut, surveille les cloches. Quand elles sonnent ensemble, c'est qu'une idée principale et son explication se sont enfin retrouvées."
+          "text": "Alors c'est vous, dont on parle... Casimodo, là-haut, surveille les cloches. Quand elles sonnent ensemble, c'est qu'une idée principale et son explication se sont enfin retrouvées."
         }
       ],
       "qcm": {
