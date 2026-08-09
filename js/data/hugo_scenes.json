@@ -145,7 +145,7 @@
           "portraitLeft": "/assets/characters/Thenardier_neutre.png",
           "portraitCenter": "/assets/characters/gavroche-reflexion.png",
           "portraitRight": "/assets/characters/esprit-reflexion.png",
-          "question": "Avant de poursuivre... Sais-tu ce qu'il faut placer à la fin d'une phrase qui pose une question : « As-tu vu mon chat ___ »",
+          "question": "Thénardier referma le poing, et un éclat noir crépita entre ses doigts — un fragment du Mal-Dit, prêt à mordre. Voyons si tu sais encore ce qu'il faut placer à la fin d'une phrase qui pose une question : « As-tu vu mon chat ___ »",
           "options": [
             {
               "text": "Un point",
@@ -160,8 +160,8 @@
               "correct": false
             }
           ],
-          "feedbackCorrect": "Hé... pas bête pour une lumière errante.",
-          "feedbackIncorrect": "Ha ! Je le savais. Tu n'es pas prêt."
+          "feedbackCorrect": "Le sort se brise avant de vous atteindre. Hé... pas bête pour une lumière errante.",
+          "feedbackIncorrect": "Le Mal-Dit vous mord la langue une seconde. Ha ! Je le savais. Tu n'es pas prêt."
         },
         {
           "background": "/assets/backgrounds/decors_Hugo_baricades.png",
@@ -170,7 +170,7 @@
           "portraitLeft": "/assets/characters/Thenardier_neutre.png",
           "portraitCenter": "/assets/characters/gavroche-reflexion.png",
           "portraitRight": "/assets/characters/esprit-reflexion.png",
-          "question": "Une phrase qui exprime un ordre pressant ou une grande émotion — comme « Attention, la barricade va céder ___ » — se termine par :",
+          "question": "Le sort se reforme, plus vif. Une phrase qui exprime un ordre pressant ou une grande émotion — comme « Attention, la barricade va céder ___ » — se termine par :",
           "options": [
             {
               "text": "Un point d'exclamation",
@@ -185,8 +185,8 @@
               "correct": false
             }
           ],
-          "feedbackCorrect": "Tiens, tiens... tu sais lire l'urgence, on dirait.",
-          "feedbackIncorrect": "Pfft. Avec une réponse pareille, tu te ferais écraser par la première charrette venue."
+          "feedbackCorrect": "L'éclat se dissipe en grésillant. Tiens, tiens... tu sais lire l'urgence, on dirait.",
+          "feedbackIncorrect": "Le Mal-Dit s'accroche un peu plus. Pfft. Avec une réponse pareille, tu te ferais écraser par la première charrette venue."
         },
         {
           "background": "/assets/backgrounds/decors_Hugo_baricades.png",
@@ -195,7 +195,7 @@
           "portraitLeft": "/assets/characters/Thenardier_neutre.png",
           "portraitCenter": "/assets/characters/gavroche-reflexion.png",
           "portraitRight": "/assets/characters/esprit-reflexion.png",
-          "question": "Quand une phrase commence par un complément placé devant, comme « Dans les rues de Paris ___ les gardes patrouillaient », qu'est-ce qu'on met avant de continuer ?",
+          "question": "Un dernier éclat crépite entre ses mains. Quand une phrase commence par un complément placé devant, comme « Dans les rues de Paris ___ les gardes patrouillaient », qu'est-ce qu'on met avant de continuer ?",
           "options": [
             {
               "text": "Une virgule",
@@ -210,8 +210,8 @@
               "correct": false
             }
           ],
-          "feedbackCorrect": "Exact. Dommage pour moi, tu n'es pas totalement inutile.",
-          "feedbackIncorrect": "Une virgule, évidemment ! Même les gamins des barricades savent ça."
+          "feedbackCorrect": "Le sort s'éteint tout à fait. Exact. Dommage pour moi, tu n'es pas totalement inutile.",
+          "feedbackIncorrect": "Le Mal-Dit reprend de la force. Une virgule, évidemment ! Même les gamins des barricades savent ça."
         }
       ],
       "qcmOutro": [
@@ -222,7 +222,7 @@
           "portraitLeft": "/assets/characters/Thenardier_vaincu.png",
           "portraitCenter": "/assets/characters/gavroche-content.png",
           "portraitRight": "/assets/characters/esprit-content.png",
-          "text": "Thénardier grommela, incapable de trouver une réplique — lui qui venait justement de prouver, sans le vouloir, à quel point sa propre phrase s'était effondrée. Il recula dans l'ombre des gravats. Bah... Amusez-vous bien avec vos leçons de grammaire. On se recroisera, comptez sur moi."
+          "text": "Thénardier grommela, incapable de trouver une réplique — lui qui venait justement de prouver, sans le vouloir, à quel point sa propre phrase s'était effondrée. Le dernier éclat du Mal-Dit s'éteignit entre ses doigts. Il recula dans l'ombre des gravats. Bah... Amusez-vous bien avec vos leçons de grammaire. On se recroisera, comptez sur moi."
         },
         {
           "background": "/assets/backgrounds/decors_Hugo_baricades.png",
@@ -264,7 +264,8 @@
             "correct": "!"
           }
         ],
-        "successThreshold": 1.0
+        "successThreshold": 1.0,
+        "instructions": "Unis tes forces à celles de Gavroche pour redonner à cette phrase le sens que le Mal-Dit lui a arraché."
       },
       "transfer": {
         "background": "/assets/backgrounds/decors_Hugo_baricades.png",
@@ -299,7 +300,8 @@
             ]
           }
         ],
-        "successThreshold": 1.0
+        "successThreshold": 1.0,
+        "instructions": "Encore un effort à deux : ferme la brèche laissée par le Mal-Dit dans cette phrase."
       },
       "minigame_notion": "ponctuation"
     },
@@ -345,7 +347,7 @@
         "portraitLeft": "/assets/characters/gavroche-reflexion.png",
         "portraitCenter": null,
         "portraitRight": "/assets/characters/esprit-surpris.png",
-        "question": "Une voix sifflante s'éleva des ténèbres, sans qu'on voie personne. Quel est l'ordre correct pour : « ___ » ?",
+        "question": "Une voix sifflante s'éleva des ténèbres, sans qu'on voie personne — un fragment du Mal-Dit lancé à l'aveugle dans le noir. Quel est l'ordre correct pour : « ___ » ?",
         "options": [
           {
             "text": "Mangea la pomme Gavroche rouge",
@@ -360,8 +362,8 @@
             "correct": false
           }
         ],
-        "feedbackCorrect": "Tiens, tiens... Tu sais lire l'ordre des choses. Intéressant.",
-        "feedbackIncorrect": "L'ordre, petit, l'ordre ! Sans lui, le monde s'effondre..."
+        "feedbackCorrect": "Le sort se perd dans l'écho des galeries, inoffensif. Tiens, tiens... Tu sais lire l'ordre des choses. Intéressant.",
+        "feedbackIncorrect": "Le Mal-Dit trouve une prise. L'ordre, petit, l'ordre ! Sans lui, le monde s'effondre..."
       },
       "qcmOutro": [
         {
@@ -370,7 +372,7 @@
           "speakerSide": "left",
           "portraitLeft": "/assets/characters/gavroche-content.png",
           "portraitRight": "/assets/characters/esprit-content.png",
-          "text": "La voix sifflante s'éloigna, hésitante, comme si Frollo répugnait à s'enfoncer plus loin sous terre. Bien joué. Il ne s'aventurera pas plus bas — le vieux hibou a horreur du noir."
+          "text": "La voix sifflante s'éloigna, hésitante, le sort qu'elle portait retombant sans avoir mordu — comme si Frollo répugnait à s'enfoncer plus loin sous terre. Bien joué. Il ne s'aventurera pas plus bas — le vieux hibou a horreur du noir."
         }
       ],
       "formative": {
@@ -379,7 +381,7 @@
         "speakerSide": "left",
         "portraitLeft": "/assets/characters/gavroche-reflexion.png",
         "portraitRight": "/assets/characters/esprit-neutre.png",
-        "instructions": "Replace les groupes de mots dans le bon ordre (sujet → verbe → complément).",
+        "instructions": "À deux avec Gavroche, redonnez sa forme à cette phrase pour repousser le Mal-Dit. Replace les groupes de mots dans le bon ordre (sujet → verbe → complément).",
         "segments": [
           {
             "type": "reorder",
@@ -403,7 +405,7 @@
         "speakerSide": "left",
         "portraitLeft": "/assets/characters/gavroche-content.png",
         "portraitRight": "/assets/characters/esprit-content.png",
-        "instructions": "Remets cette phrase dans l'ordre pour continuer le récit.",
+        "instructions": "Encore un effort à deux avec Gavroche pour repousser le Mal-Dit. Remets cette phrase dans l'ordre pour continuer le récit.",
         "segments": [
           {
             "type": "reorder",
@@ -491,7 +493,7 @@
         "portraitLeft": "/assets/characters/Esmeralda_sourire.png",
         "portraitCenter": "/assets/characters/Frolo_colere.png",
         "portraitRight": "/assets/characters/esprit-reflexion.png",
-        "question": "Frollo apparut sur les marches. Laquelle de ces phrases contient une proposition subordonnée ?",
+        "question": "Frollo apparut sur les marches, un fragment du Mal-Dit tourbillonnant déjà entre ses mains. Laquelle de ces phrases contient une proposition subordonnée ?",
         "options": [
           {
             "text": "Gavroche courut vite.",
@@ -506,8 +508,8 @@
             "correct": false
           }
         ],
-        "feedbackCorrect": "Hmpf. Tu commences à comprendre les liens entre les idées...",
-        "feedbackIncorrect": "Une subordonnée explique, complète, justifie. Cherche le lien !"
+        "feedbackCorrect": "Le sort vacille et se dissipe. Hmpf. Tu commences à comprendre les liens entre les idées...",
+        "feedbackIncorrect": "Le Mal-Dit se referme un peu plus sur vous. Une subordonnée explique, complète, justifie. Cherche le lien !"
       },
       "qcmOutro": [
         {
@@ -517,7 +519,7 @@
           "portraitLeft": "/assets/characters/Esmeralda_sourire.png",
           "portraitCenter": "/assets/characters/Frolo_colere.png",
           "portraitRight": "/assets/characters/esprit-content.png",
-          "text": "Frollo recula d'un pas, vaincu par tant de bon sens, et s'évanouit dans l'ombre des porches sans un mot de plus."
+          "text": "Frollo recula d'un pas, vaincu par tant de bon sens — le fragment du Mal-Dit qu'il portait se dissipa en fumée noire. Il s'évanouit dans l'ombre des porches sans un mot de plus."
         },
         {
           "background": "/assets/backgrounds/decors_Hugo_parvis_Notre_Dame.png",
@@ -538,7 +540,7 @@
         "portraitCenter": "/assets/characters/esprit-neutre.png",
         "portraitRight": "/assets/characters/gavroche-content.png",
         "portraitRightFlipped": true,
-        "instructions": "Associe chaque proposition principale (cloche de gauche) à la subordonnée qui lui correspond (cloche de droite).",
+        "instructions": "Avec Esméralda, reconstitue le lien entre ces idées pour affaiblir un peu plus le Mal-Dit. Associe chaque proposition principale (cloche de gauche) à la subordonnée qui lui correspond (cloche de droite).",
         "segments": [
           {
             "type": "match",
@@ -564,7 +566,7 @@
         "portraitCenter": "/assets/characters/esprit-content.png",
         "portraitRight": "/assets/characters/gavroche-content.png",
         "portraitRightFlipped": true,
-        "instructions": "Associe les propositions pour continuer le récit.",
+        "instructions": "Encore un lien à retisser avec Esméralda pour continuer à repousser le Mal-Dit. Associe les propositions pour continuer le récit.",
         "segments": [
           {
             "type": "match",
@@ -617,14 +619,21 @@
           "portraitLeft": "/assets/characters/Casimodo_neutre.png",
           "portraitRight": "/assets/characters/esprit-neutre.png",
           "text": "Chaque vitrail raconte un morceau d'une histoire. Mais ils sont rangés dans le désordre, et un paragraphe désordonné... ne raconte plus rien."
+        },
+        {
+          "background": "/assets/backgrounds/decors_Hugo_interieur_Notre_Dame.png",
+          "speakerName": "Casimodo",
+          "speakerSide": "left",
+          "portraitLeft": "/assets/characters/Casimodo_surpris.png",
+          "portraitRight": "/assets/characters/esprit-surpris.png",
+          "text": "Casimodo s'arrêta net devant un vitrail plus sombre que les autres, où une silhouette semblait se débattre. Cette forme... je la reconnais. Le Mal-Dit l'a prise au piège ici, faute d'avoir pu s'enfuir plus loin."
         }
       ],
       "qcm": {
         "background": "/assets/backgrounds/decors_Hugo_interieur_Notre_Dame.png",
         "speakerName": "Frollo",
-        "portraitLeft": "/assets/characters/Frolo_vaincu.png",
-        "portraitRight": null,
-        "question": "Frollo, affaibli, murmura encore : Quel mot sert à enchaîner logiquement deux idées dans un paragraphe ?",
+        "portraitLeft": "/assets/characters/Casimodo_neutre.png",
+        "question": "Frollo, à genoux dans les fragments de verre, leva une main tremblante — un ultime éclat du Mal-Dit crépitant encore entre ses doigts. Quel mot sert à enchaîner logiquement deux idées dans un paragraphe ?",
         "options": [
           {
             "text": "Ensuite",
@@ -639,8 +648,11 @@
             "correct": false
           }
         ],
-        "feedbackCorrect": "Les connecteurs... Oui. Ils tissent le fil du récit.",
-        "feedbackIncorrect": "Sans connecteur, les idées flottent, séparées, sans lien..."
+        "feedbackCorrect": "L'éclat s'éteint pour de bon. Les connecteurs... Oui. Ils tissent le fil du récit.",
+        "feedbackIncorrect": "Le dernier sursaut du Mal-Dit mord encore un peu. Sans connecteur, les idées flottent, séparées, sans lien...",
+        "speakerSide": "center",
+        "portraitCenter": "/assets/characters/Frolo_vaincu.png",
+        "portraitRight": "/assets/characters/esprit-reflexion.png"
       },
       "formative": {
         "background": "/assets/backgrounds/decors_Hugo_interieur_Notre_Dame.png",
@@ -648,7 +660,7 @@
         "speakerSide": "left",
         "portraitLeft": "/assets/characters/Casimodo_neutre.png",
         "portraitRight": "/assets/characters/esprit-neutre.png",
-        "instructions": "Replace ces trois phrases-vitraux dans l'ordre pour former un paragraphe cohérent.",
+        "instructions": "Avec Casimodo, redonne au récit toute sa cohérence pour repousser le Mal-Dit. Replace ces trois phrases-vitraux dans l'ordre pour former un paragraphe cohérent.",
         "segments": [
           {
             "type": "reorder_blocks",
@@ -672,7 +684,7 @@
         "speakerSide": "left",
         "portraitLeft": "/assets/characters/Casimodo_neutre.png",
         "portraitRight": "/assets/characters/esprit-content.png",
-        "instructions": "Remets ce paragraphe dans l'ordre pour continuer le récit.",
+        "instructions": "Encore un vitrail à réparer avec Casimodo pour continuer à repousser le Mal-Dit. Remets ce paragraphe dans l'ordre pour continuer le récit.",
         "segments": [
           {
             "type": "reorder_blocks",
@@ -690,7 +702,18 @@
         ],
         "successThreshold": 1.0
       },
-      "minigame_notion": "coherence_paragraphe"
+      "minigame_notion": "coherence_paragraphe",
+      "qcmOutro": [
+        {
+          "background": "/assets/backgrounds/decors_Hugo_interieur_Notre_Dame.png",
+          "speakerName": "Casimodo",
+          "speakerSide": "left",
+          "portraitLeft": "/assets/characters/Casimodo_neutre.png",
+          "portraitCenter": null,
+          "portraitRight": "/assets/characters/esprit-content.png",
+          "text": "Le vitrail où Frollo était pris se fendit un peu plus, et sa silhouette se dissolut dans la lumière des hautes fenêtres. Casimodo hocha la tête, presque triste. Il ne reviendra pas de sitôt, celui-là. Le Mal-Dit l'a trop affaibli."
+        }
+      ]
     },
     "selection_info": {
       "intro": [
@@ -700,14 +723,30 @@
           "speakerSide": "left",
           "portraitLeft": "/assets/characters/Casimodo_neutre.png",
           "portraitRight": "/assets/characters/esprit-content.png",
-          "text": "Le vitrail que Casimodo tendit à l'Esprit se mit à briller. Une image y apparut : un homme marchant seul sur une route, la nuit."
+          "text": "Casimodo désigna un dernier vitrail, resté intact au milieu de tous les autres. Celui-là, personne n'a jamais réussi à le briser. Il montre toujours quelqu'un qui n'a jamais laissé le Mal-Dit lui voler l'essentiel."
+        },
+        {
+          "background": "/assets/backgrounds/decors_Hugo_interieur_Notre_Dame.png",
+          "speakerName": "Casimodo",
+          "speakerSide": "left",
+          "portraitLeft": "/assets/characters/Casimodo_neutre.png",
+          "portraitRight": "/assets/characters/esprit-reflexion.png",
+          "text": "Un homme qui pèse chaque mot avant de le prononcer, parce que trop en dire pourrait le perdre. Si quelqu'un peut vous apprendre à choisir ce qui compte vraiment, c'est lui. Suivez la lumière du vitrail : elle vous mènera à lui."
+        },
+        {
+          "background": "/assets/backgrounds/decors_Hugo_interieur_Notre_Dame.png",
+          "speakerName": "L'Esprit de la Littérature",
+          "speakerSide": "right",
+          "portraitLeft": null,
+          "portraitRight": "/assets/characters/esprit-surpris.png",
+          "text": "Le vitrail se mit à briller de plus en plus fort, jusqu'à ce que sa lumière avale tout le reste."
         },
         {
           "background": "/assets/backgrounds/decors_Hugo_Paris_Nuit.png",
           "speakerName": "L'Esprit de la Littérature",
           "speakerSide": "right",
           "portraitLeft": null,
-          "portraitRight": "/assets/characters/esprit-reflexion.png",
+          "portraitRight": "/assets/characters/esprit-surpris.png",
           "text": "L'image les transporta sur une route, en dehors de Paris. Un homme marchait, courbé, portant un sac trop lourd pour lui."
         },
         {
