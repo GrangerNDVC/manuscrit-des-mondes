@@ -1,46 +1,51 @@
 /* ============================================================
-   LE MANUSCRIT DES MONDES — devPanel.js
+   LE MANUSCRIT DES MONDES — devPanel.js (v2)
    ============================================================
-   Panneau de TEST UNIQUEMENT — à retirer avant une mise en
-   production finale (ou à garder caché derrière un mot de
-   passe, à décider plus tard).
+   Outil de TEST/DEBUG uniquement.
 
-   Rôle : permettre de marquer une étape (acte) d'un monde comme
-   terminée en un clic, SANS jouer le QCM / VN / mini-jeu en
-   entier. Utile pour tester la sauvegarde et la synchronisation
-   Supabase sans refaire tout le jeu à chaque fois.
+   ---- REFONTE (session en cours) ----
+   L'ancienne version n'était accessible QUE depuis le hub
+   (bouton "🛠️ Mode Test" visible sur l'écran menu), ce qui obligeait
+   à quitter le monde en cours pour tester/sauter une étape, puis à y
+   retourner manuellement — signalé comme très pénible par Julie.
 
-   ---- CORRECTION (session du 2 août 2026) ----
-   Bug trouvé suite à un retour de Julie : "même en mode test, je
-   n'ai pas accès à l'étape 2". Cause : le bouton marquait bien les
-   4 sous-étapes de l'acte comme réussies (via GameState.setActStep),
-   mais ne touchait JAMAIS à world.currentAct — la donnée que
-   SceneManager.startWorld() regarde pour savoir quel acte lancer.
-   Seul un vrai parcours de jeu (sceneManager.js/advanceAct(), appelé
-   en fin d'acte réussi) faisait avancer currentAct. Résultat : marquer
-   un acte "terminé" cochait des cases en interne, mais ne débloquait
-   jamais l'accès à l'acte suivant en relançant le monde depuis la
-   carte — currentAct restait bloqué sur l'acte en cours.
+   Nouvelle version : un petit repère quasiment invisible, injecté en
+   bas à gauche de N'IMPORTE QUELLE page (hub ET pages de monde), sur
+   lequel cliquer demande un code. Une fois le bon code entré, un
+   panneau de débogage s'ouvre avec deux actions :
+     - "Aller directement à cet acte" : modifie l'état ET navigue
+       tout de suite vers la page du monde choisi, à l'acte choisi —
+       fonctionne depuis le hub OU depuis un autre monde, sans étape
+       intermédiaire.
+     - "Marquer cette étape terminée" (comportement de l'ancienne
+       version, conservé) : coche les 4 sous-étapes d'un acte sans
+       y jouer, utile pour tester la sauvegarde/Supabase.
 
-   Corrigé : le bouton fait maintenant explicitement avancer
-   world.currentAct vers l'acte suivant (ou termine le monde et
-   libère le compagnon si c'est le dernier acte), en reproduisant
-   ce que sceneManager.js fait normalement en fin d'acte.
-
-   Utilise GameState.setActStep(...) — exactement la même
-   fonction que le vrai jeu utiliserait. Donc tout ce qui est
-   branché dessus (sauvegarde locale, envoi Supabase) se
-   déclenche normalement, comme si c'était un vrai élève qui
-   avait terminé l'étape.
+   Ce script doit être chargé sur TOUTES les pages (index.html ET
+   chaque page /mondes/<id>.html) pour fonctionner partout. La table
+   WORLD_PAGES est dupliquée ici volontairement (comme dans
+   hubManager.js) : ce fichier ne doit dépendre de rien d'autre que
+   gameState.js, qui lui est déjà chargé partout.
    ============================================================ */
 
 const DevPanel = (() => {
 
+  // Code de déverrouillage — insensible à la casse et aux espaces
+  // superflus. Change-le ici si besoin.
+  const UNLOCK_CODE = "granger-debug";
+
+  let unlocked = false;
   let panelBuilt = false;
 
-  // Même correspondance que sceneManager.js/companionByWorld — dupliquée
-  // ici car sceneManager.js ne vit que dans les pages /mondes/*.html,
-  // jamais dans le hub (où vit devPanel.js).
+  // Même table que WORLD_PAGES dans hubManager.js — à tenir à jour au
+  // fur et à mesure que de nouveaux mondes sont développés.
+  const WORLD_PAGES = {
+    hugo: "/mondes/hugo.html"
+    // dumas: "/mondes/dumas.html",
+    // galland: "/mondes/galland.html",
+    // ...
+  };
+
   const COMPANION_BY_WORLD = {
     hugo: "gavroche",
     dumas: "dartagnan",
@@ -53,9 +58,43 @@ const DevPanel = (() => {
   };
 
   function nomLisible(id) {
-    // Transforme "ordre_des_mots" en "Ordre des mots", juste pour
-    // que ce soit plus facile à lire dans le menu déroulant.
     return id.replace(/_/g, " ").replace(/^./, c => c.toUpperCase());
+  }
+
+  /**
+   * Petit repère discret, présent sur toutes les pages. Très faible
+   * opacité au repos (quasi invisible), un peu plus visible au survol
+   * (pratique en développement sur ordinateur ; sur tablette/mobile,
+   * il reste cliquable même sans "survol" visible au préalable).
+   */
+  function buildTrigger() {
+    if (document.getElementById("dev-trigger")) return;
+    const icon = document.createElement("div");
+    icon.id = "dev-trigger";
+    icon.textContent = "✶";
+    icon.style.cssText = `
+      position: fixed; bottom: 6px; left: 6px; z-index: 9998;
+      width: 26px; height: 26px; line-height: 26px; text-align: center;
+      font-size: 15px; color: rgba(255,255,255,0.10);
+      cursor: pointer; user-select: none; font-family: sans-serif;
+      transition: color 0.2s;
+    `;
+    icon.addEventListener("mouseenter", () => { icon.style.color = "rgba(255,255,255,0.55)"; });
+    icon.addEventListener("mouseleave", () => { icon.style.color = "rgba(255,255,255,0.10)"; });
+    icon.addEventListener("click", onTriggerClick);
+    document.body.appendChild(icon);
+  }
+
+  function onTriggerClick() {
+    if (unlocked) {
+      ouvrirPanel();
+      return;
+    }
+    const entered = window.prompt("Code :");
+    if (entered !== null && entered.trim().toLowerCase() === UNLOCK_CODE) {
+      unlocked = true;
+      ouvrirPanel();
+    }
   }
 
   function construirePanel() {
@@ -65,7 +104,7 @@ const DevPanel = (() => {
     const panel = document.createElement("div");
     panel.id = "dev-panel";
     panel.style.cssText = `
-      position: fixed; bottom: 16px; right: 16px; z-index: 9999;
+      position: fixed; bottom: 40px; left: 6px; z-index: 9999;
       background: #1a1a1a; color: #fff; padding: 16px;
       border: 2px solid #ffb400; border-radius: 8px;
       font-family: sans-serif; font-size: 14px; width: 280px;
@@ -73,20 +112,25 @@ const DevPanel = (() => {
     `;
 
     panel.innerHTML = `
-      <div style="font-weight:bold; margin-bottom:8px;">
-        🛠️ Mode Test (à retirer plus tard)
-      </div>
+      <div style="font-weight:bold; margin-bottom:8px;">🛠️ Debug — Le Manuscrit des Mondes</div>
+
       <label style="display:block; margin-bottom:4px;">Monde :</label>
       <select id="dev-world" style="width:100%; margin-bottom:8px;"></select>
 
-      <label style="display:block; margin-bottom:4px;">Étape :</label>
-      <select id="dev-act" style="width:100%; margin-bottom:8px;"></select>
+      <label style="display:block; margin-bottom:4px;">Acte :</label>
+      <select id="dev-act" style="width:100%; margin-bottom:10px;"></select>
 
-      <button id="dev-complete-btn" style="width:100%; padding:8px; margin-bottom:6px;">
-        ✅ Marquer cette étape comme terminée
+      <button id="dev-goto-btn" style="width:100%; padding:8px; margin-bottom:6px; cursor:pointer;">
+        ▶ Aller directement à cet acte
+      </button>
+      <button id="dev-complete-btn" style="width:100%; padding:8px; margin-bottom:6px; cursor:pointer;">
+        ✅ Marquer cette étape terminée (sans y jouer)
+      </button>
+      <button id="dev-close-btn" style="width:100%; padding:6px; background:#333; color:#fff; cursor:pointer;">
+        Fermer
       </button>
 
-      <div id="dev-status" style="font-size:12px; color:#aaa; min-height:16px;"></div>
+      <div id="dev-status" style="font-size:12px; color:#aaa; min-height:16px; margin-top:8px;"></div>
     `;
 
     document.body.appendChild(panel);
@@ -98,7 +142,7 @@ const DevPanel = (() => {
     GameState.WORLD_IDS.forEach(worldId => {
       const opt = document.createElement("option");
       opt.value = worldId;
-      opt.textContent = nomLisible(worldId);
+      opt.textContent = nomLisible(worldId) + (WORLD_PAGES[worldId] ? "" : " (pas encore de page)");
       worldSelect.appendChild(opt);
     });
 
@@ -109,60 +153,71 @@ const DevPanel = (() => {
       actSelect.appendChild(opt);
     });
 
-    panel.querySelector("#dev-complete-btn").addEventListener("click", async () => {
+    panel.querySelector("#dev-goto-btn").addEventListener("click", () => {
+      const worldId = worldSelect.value;
+      const actId = actSelect.value;
+      const actIdx = GameState.ACT_IDS.indexOf(actId);
+
+      const page = WORLD_PAGES[worldId];
+      if (!page) {
+        status.textContent = `Pas encore de page pour "${nomLisible(worldId)}" — rien à faire.`;
+        return;
+      }
+
+      GameState.load();
+      const w = GameState.get().worlds[worldId];
+      w.currentAct = actIdx;
+      GameState.save();
+
+      // Navigation immédiate — fonctionne aussi bien depuis le hub
+      // que depuis un autre monde, sans étape intermédiaire.
+      window.location.href = page;
+    });
+
+    panel.querySelector("#dev-complete-btn").addEventListener("click", () => {
       const worldId = worldSelect.value;
       const actId = actSelect.value;
 
-      // On force les 4 phases à "réussi" d'un coup, exactement comme
-      // si l'élève avait vraiment terminé les 4, dans l'ordre.
+      GameState.load();
       GameState.setActStep(worldId, actId, "qcm_passed", true);
       GameState.setActStep(worldId, actId, "vn_check_passed", true);
       GameState.setActStep(worldId, actId, "minigame_passed", true);
       GameState.setActStep(worldId, actId, "vn_transfer_passed", true);
-      // ↑ c'est cette dernière ligne qui déclenche l'envoi vers Supabase
 
-      // NOUVEAU (correctif débloquant l'acte suivant) : fait avancer
-      // world.currentAct, exactement ce que sceneManager.js/advanceAct()
-      // fait après un vrai parcours réussi. Sans cette étape, l'acte
-      // suivant restait inaccessible même après avoir "marqué terminé".
       const idx = GameState.ACT_IDS.indexOf(actId);
       const w = GameState.get().worlds[worldId];
       if (idx < GameState.ACT_IDS.length - 1) {
         w.currentAct = idx + 1;
         GameState.save();
       } else {
-        // Dernier acte du monde : simule la fin de monde (libère le
-        // compagnon, obtient la clé), comme sceneManager.js/finishWorld().
         GameState.completeWorld(worldId, COMPANION_BY_WORLD[worldId]);
       }
 
-      status.textContent = `Fait : ${nomLisible(worldId)} / ${nomLisible(actId)} — acte suivant débloqué. Vérifie Supabase.`;
+      status.textContent = `Fait : ${nomLisible(worldId)} / ${nomLisible(actId)} marqué terminé.`;
     });
 
-    document.getElementById("dev-panel").style.display = "block";
+    panel.querySelector("#dev-close-btn").addEventListener("click", () => {
+      panel.style.display = "none";
+    });
   }
 
-  /**
-   * Ouvre (ou construit puis ouvre) le panneau.
-   */
-  function ouvrir() {
+  function ouvrirPanel() {
     construirePanel();
     document.getElementById("dev-panel").style.display = "block";
   }
 
   function init() {
-    // Le bouton "Mode Test" doit déjà exister dans index.html
-    // (voir instructions), avec l'id "btn-dev-mode".
-    const bouton = document.getElementById("btn-dev-mode");
-    if (bouton) {
-      bouton.addEventListener("click", ouvrir);
-    }
+    buildTrigger();
   }
 
-  return { init, ouvrir };
+  return { init };
 
 })();
 
 document.addEventListener("DOMContentLoaded", () => {
-  DevPanel.init();
+  try {
+    DevPanel.init();
+  } catch (err) {
+    console.error("Erreur au démarrage de DevPanel :", err);
+  }
 });
