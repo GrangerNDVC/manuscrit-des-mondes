@@ -8,24 +8,12 @@
 <link rel="stylesheet" href="/css/vn.css">
 <link rel="stylesheet" href="/css/minigames.css">
 <style>
-  /* ============================================================
-     Positionnement du 3e portrait (centre) — cohérent avec les
+  /* Positionnement du 3e portrait (centre) — cohérent avec les
      règles RÉELLES de vn.css (fournies par Julie).
-     ------------------------------------------------------------
      IMPORTANT : ne surtout PAS utiliser `transform` ici pour le
-     centrage horizontal. vn.css anime déjà `transform` sur
-     .vn-portrait / .vn-portrait.visible (glissement translateY à
-     l'apparition) ; une règle `transform: translateX(-50%)` sur ce
-     sélecteur serait écrasée par cette règle plus spécifique et
-     perdrait le centrage dès que le portrait devient visible. Le
-     centrage se fait donc uniquement via left + largeur fixe +
-     marge négative, qui n'entrent jamais en conflit avec `transform`.
-
-     Largeur (26vw) et hauteur (65%, un peu moins que les 75% des
-     portraits latéraux pour suggérer une position légèrement en
-     retrait) choisies de façon empirique — à ajuster si besoin une
-     fois vu en conditions réelles.
-     ============================================================ */
+     centrage horizontal (vn.css anime déjà `transform` sur
+     .vn-portrait / .vn-portrait.visible). Le centrage se fait donc
+     uniquement via left + largeur fixe + marge négative. */
   .portrait-center {
     left: 50%;
     width: 26vw;
@@ -83,6 +71,7 @@
   <!-- ============ SCRIPTS ============ -->
   <!-- Cœur, commun à tous les mondes -->
   <script src="/js/core/gameState.js"></script>
+  <script src="/js/core/devPanel.js"></script>
   <script src="/js/vn/chromaKeyFilter.js"></script>
   <script src="/js/vn/vnEngine.js"></script>
   <script src="/js/vn/vnParser.js"></script>
