@@ -1,146 +1,108 @@
 /* ============================================================
-   LE MANUSCRIT DES MONDES — mg-coherence-paragraphe.js (v2)
+   LE MANUSCRIT DES MONDES — mg-coherence-paragraphe.js (v3)
    ============================================================
    Mini-jeu "Les Vitraux Retrouvés" (Monde 1 — Hugo, acte cohérence
-   du paragraphe). REMPLACE ENTIÈREMENT l'ancien "Rangement de
-   Quasimodo" (glisser-déposer vers des cases étiquetées, jugé trop
-   facile et pas assez "arcade").
+   du paragraphe). REFONTE COMPLÈTE de la v2 suite aux retours de
+   Julie ("pas jouable en l'état").
 
-   ---- PRINCIPE (v2) ----
-   1. PHASE DE COLLECTE : l'Esprit (joueur, déplacement libre 4
-      directions façon Zelda/Mario, comme "Le Pont de Gavroche") se
-      déplace dans la cathédrale et ramasse 11 éclats de vitrail
-      dispersés au sol (3 + 5 + 3, un jeu de phrases par vitrail).
-   2. PHASE DE PLACEMENT : une fois tous les éclats ramassés, le
-      joueur les fait glisser vers des emplacements numérotés sous
-      chacun des 3 vitraux (gauche/centre/droite), dans l'ordre qui
-      lui semble correct. Il peut replacer autant de fois qu'il veut
-      avant de valider.
-   3. VALIDATION (un seul bouton, vérifie les 3 vitraux séparément) :
-        - Vitrail correct → le compagnon associé grimpe à l'échelle
-          (de dos), se tourne sur le côté pour installer chaque
-          éclat (qui s'illumine), puis redescend se placer devant,
-          vitrail acquis définitivement.
-        - Vitrail faux (ou incomplet) → le compagnon tombe de
-          l'échelle (sprite KO), les éclats de CE vitrail
-          retournent dans la réserve du bas pour être replacés —
-          les vitraux déjà réussis, eux, restent acquis.
-   4. Les 3 vitraux réussis → le décor bascule sur sa version
-      restaurée, victoire.
+   ---- CHANGEMENTS v3 ----
+   1. CURSEUR-ESPRIT : l'Esprit passe en "mode fée" (rétréci) et
+      DEVIENT le curseur de la souris — plus de phase de collecte au
+      clavier séparée, plus de disparition bizarre. On ramasse et on
+      pose dans le même geste, à la souris/au doigt.
+   2. Les 11 éclats sont visibles dès le départ dans une réserve en
+      bas de l'écran (plus de "ramassage" préalable).
+   3. Glisser-déposer LIBRE à tout moment : un éclat déjà posé peut
+      être ressorti et remis ailleurs autant de fois que voulu, avant
+      ET après avoir rempli un vitrail.
+   4. UN bouton "Valider" PAR vitrail (visible dès que ce vitrail est
+      complet), pas un bouton unique global.
+   5. Les compagnons (Esméralda/Casimodo/Gavroche) se tiennent EN HAUT
+      de leur échelle pendant le jeu. À la validation d'un vitrail :
+        - correct → il descend en confirmant chaque morceau un par un
+          (léger halo à chaque étape), puis sursaute sur place, bras
+          levés (sprite `<nom>-face-porte2`, réutilisé pour cette
+          pose) avec une bulle souriante dessinée en canevas.
+        - faux → il tombe (sprite `<nom>-ko`) avec un "!" ; les éclats
+          de CE vitrail SEULEMENT retournent en réserve. Les vitraux
+          déjà réussis restent acquis.
+   6. Cliquer (sans glisser) sur un éclat affiche sa phrase en grand
+      en haut de l'écran, pour les élèves qui lisent moins bien.
+   7. Réserve du bas minimisée, avec un bouton "?" qui déplie/replie
+      les instructions au lieu de tout étaler en permanence.
+   8. Correctifs techniques : taille de l'Esprit alignée sur celle
+      des compagnons (bug de la v2) ; canevas en haute résolution
+      (mise à l'échelle sur window.devicePixelRatio) pour un texte
+      net, plus de flou.
+   9. Contenu : 3 mini-textes INDÉPENDANTS (pas un grand texte
+      découpé) — un pour le vitrail central (Casimodo, 5 phrases,
+      toujours le même), et 2 tirés au hasard parmi une banque de 4
+      pour les vitraux latéraux (3 phrases chacun, répartis
+      aléatoirement entre gauche et droite à chaque partie).
+   10. Tableau final (les 3 vitraux réussis) : décor remplacé par la
+       version restaurée, chaque compagnon se place devant SON
+       vitrail en pose `<nom>-marche-porte2` (bras tendu, comme s'il
+       le présentait), l'Esprit reprend sa taille normale et sursaute
+       en pose `esprit-face-porte2` avec sa bulle souriante.
 
-   Attribution des personnages (à confirmer avec Julie) :
-     Esméralda = vitrail de GAUCHE (3 éclats)
-     Casimodo  = vitrail CENTRAL  (5 éclats)
-     Gavroche  = vitrail de DROITE (3 éclats)
-
-   ⚠️ Pas de sprite Esprit "de profil en train de porter" fourni —
-   on réutilise le sprite de marche normal pour les déplacements
-   latéraux pendant la collecte (l'éclat porté n'est simplement pas
-   dessiné sur ces frames-là). Non bloquant, juste moins joli.
-
-   `gavroche-ko.png` : demandé à Julie, en cours de création (le
-   sprite `frolo-ko.png` utilisé temporairement a été remplacé).
-
-   ⚠️ Nom de fichier sans accent utilisé pour le décor restauré
-   (voir BG_RESTORED ci-dessous) — le fichier doit être uploadé sous
-   ce nom exact (sans accent) dans le dépôt, pour éviter le même 404
-   que Frolo_colère.png plus tôt dans le projet.
+   ⚠️ Éclats de vitrail : en attendant les images `vitrail-eclat-1.png`
+   à `vitrail-eclat-4.png` (320×112px attendues, texte ajouté par le
+   code), le jeu utilise des rectangles colorés de repli — remplacer
+   juste les fichiers dans /assets/sprites/props/, rien à changer
+   dans le code.
 
    Enregistré sous la même notion/variante qu'avant
    ("coherence_paragraphe" / "vitraux_hugo") pour remplacer
-   entièrement l'ancienne version — jamais les deux à la fois.
+   entièrement la version précédente.
    ============================================================ */
 
-(function registerCoherenceParagrapheHugoV2() {
+(function registerCoherenceParagrapheHugoV3() {
 
   const CANVAS_W = 1024;
   const CANVAS_H = 576;
 
   const BG_BROKEN = "/assets/backgrounds/decors_minijeu_cathedrale.png";
-  // Sans accent volontairement — voir avertissement en en-tête.
   const BG_RESTORED = "/assets/backgrounds/decors_minijeu_cathedrale_restauree.png";
 
-  const GRAVITY_ICON_COLOR = "#e8c468";
+  const CHAR_DIR = "/assets/sprites/characters/";
+  const PROPS_DIR = "/assets/sprites/props/";
 
-  /**
-   * Zones des 3 vitraux (en fraction du canevas), mesurées sur le
-   * décor fourni par Julie. xCenter = centre horizontal de la
-   * colonne d'emplacements ; yTop/yBottom = étendue verticale de la
-   * zone de vitrail où empiler les emplacements ; standY = position
-   * au sol du personnage devant son échelle.
-   */
-  const WINDOWS = [
-    {
-      id: "esmeralda",
-      name: "Esméralda",
-      pieceCount: 3,
-      xCenter: 0.245,
-      yTop: 0.44,
-      yBottom: 0.62,
-      standY: 0.84,
-      sentences: [
-        "Esméralda tourna sur elle-même, ses foulards colorés virevoltant dans la lumière du parvis.",
-        "Les passants s'arrêtaient un instant, oubliant leurs soucis pour la regarder danser.",
-        "Elle salua la foule d'une révérence, un sourire malicieux aux lèvres."
-      ],
-      sprites: {
-        dos: ["esmeralda-dos1.png", "esmeralda-dos2.png", "esmeralda-dos3.png"],
-        dosPorte: ["esmeralda-dos-porte1.png", "esmeralda-dos-porte2.png", "esmeralda-dos-porte3.png"],
-        face: ["esmeralda-face1.png", "esmeralda-face2.png", "esmeralda-face3.png"],
-        marchePorte: ["esmeralda-marche-porte1.png", "esmeralda-marche-porte2.png", "esmeralda-marche-porte3.png"],
-        ko: "esmeralda-ko.png"
-      }
-    },
-    {
-      id: "casimodo",
-      name: "Casimodo",
-      pieceCount: 5,
-      xCenter: 0.5,
-      yTop: 0.30,
-      yBottom: 0.62,
-      standY: 0.84,
-      sentences: [
-        "Casimodo grimpa lentement l'escalier de pierre qui menait au sommet du beffroi.",
-        "Ses mains calleuses se posèrent sur la plus grande des cloches, encore tiède du soleil couchant.",
-        "Il sentit sous ses doigts les fêlures laissées par le passage du Mal-Dit.",
-        "Avec précaution, il fit sonner la cloche une première fois, pour vérifier qu'elle tenait encore debout.",
-        "Le son grave résonna dans toute la cathédrale, chassant un peu de l'obscurité qui rongeait les murs."
-      ],
-      sprites: {
-        dos: ["casimodo-dos1.png", "casimodo-dos2.png", "casimodo-dos3.png"],
-        dosPorte: ["casimodo-dos-porte1.png", "casimodo-dos-porte2.png", "casimodo-dos-porte3.png"],
-        face: ["casimodo-face1.png", "casimodo-face2.png", "casimodo-face3.png"],
-        marchePorte: ["casimodo-marche-porte1.png", "casimodo-marche-porte2.png", "casimodo-marche-porte3.png"],
-        ko: "casimodo-ko.png"
-      }
-    },
-    {
-      id: "gavroche",
-      name: "Gavroche",
-      pieceCount: 3,
-      xCenter: 0.755,
-      yTop: 0.44,
-      yBottom: 0.62,
-      standY: 0.84,
-      sentences: [
-        "Gavroche se hissa sur la corniche, agrippant la pierre du bout des doigts.",
-        "De là, il apercevait tout Paris qui s'étendait, gris et endormi, sous un ciel bas.",
-        "Il redescendit d'un bond, fier d'avoir trouvé le meilleur poste de guet de la ville."
-      ],
-      sprites: {
-        // Sprites "dos"/"face" non-porte déjà existants depuis Le Pont
-        // de Gavroche (nommage avec tiret avant le chiffre, différent
-        // des nouveaux sprites "porte" — attention à la distinction).
-        dos: ["gavroche-dos-1.png", "gavroche-dos-2.png", "gavroche-dos-3.png"],
-        dosPorte: ["gavroche-dos-porte1.png", "gavroche-dos-porte2.png", "gavroche-dos-porte3.png"],
-        face: ["gavroche-face-1.png", "gavroche-face-2.png", "gavroche-face-3.png"],
-        marchePorte: ["gavroche-marche-porte1.png", "gavroche-marche-porte2.png", "gavroche-marche-porte3.png"],
-        ko: "gavroche-ko.png"
-      }
-    }
+  const SHARD_IMAGE_COUNT = 4; // vitrail-eclat-1.png à vitrail-eclat-4.png
+  const SHARD_W = 160, SHARD_H = 56; // taille affichée (images sources en 320x112, 2x, pour la netteté)
+
+  // --- Texte central, toujours le même (vitrail de Casimodo) ---
+  const CENTER_TEXT = [
+    "Casimodo grimpa lentement l'escalier de pierre qui menait au sommet du beffroi.",
+    "Ses mains calleuses se posèrent sur la plus grande des cloches, encore tiède du soleil couchant.",
+    "Il sentit sous ses doigts les fêlures laissées par le passage du Mal-Dit.",
+    "Avec précaution, il fit sonner la cloche une première fois, pour vérifier qu'elle tenait encore debout.",
+    "Le son grave résonna dans toute la cathédrale, chassant un peu de l'obscurité qui rongeait les murs."
   ];
 
-  const TOTAL_PIECES = WINDOWS.reduce((s, w) => s + w.pieceCount, 0); // 11
+  // --- Banque de mini-textes à 3 phrases (2 tirés au hasard à chaque
+  //     partie, répartis aléatoirement entre gauche et droite) ---
+  const SIDE_TEXT_BANK = [
+    [
+      "Gavroche se hissa sur la corniche, agrippant la pierre du bout des doigts.",
+      "De là, il apercevait tout Paris qui s'étendait, gris et endormi, sous un ciel bas.",
+      "Il redescendit d'un bond, fier d'avoir trouvé le meilleur poste de guet de la ville."
+    ],
+    [
+      "Esméralda tourna sur elle-même, ses foulards colorés virevoltant dans la lumière du parvis.",
+      "Les passants s'arrêtaient un instant, oubliant leurs soucis pour la regarder danser.",
+      "Elle salua la foule d'une révérence, un sourire malicieux aux lèvres."
+    ],
+    [
+      "Un pigeon se posa sur le rebord d'une gargouille, indifférent au vacarme de la ville.",
+      "Il observa un moment les toits de Paris qui s'étendaient à perte de vue.",
+      "Puis il s'envola, disparaissant derrière les tours de Notre-Dame."
+    ],
+    [
+      "La pluie se mit à tomber sur les pavés, d'abord fine, puis de plus en plus forte.",
+      "Les marchands se hâtèrent de couvrir leurs étals avant que tout ne soit trempé.",
+      "En quelques minutes, le parvis se vida presque entièrement."
+    ]
+  ];
 
   function shuffle(arr) {
     const a = arr.slice();
@@ -151,58 +113,104 @@
     return a;
   }
 
-  function loadImg(src) {
-    const img = new Image();
-    img.src = "/assets/sprites/characters/" + src;
-    return img;
-  }
-  function loadImgs(list) { return list.map(loadImg); }
+  function loadChar(name) { const img = new Image(); img.src = CHAR_DIR + name; return img; }
+  function loadProp(name) { const img = new Image(); img.src = PROPS_DIR + name; return img; }
 
   async function run({ canvas, uiContainer, isRemediation }) {
 
     await MinigameUI.showInstructions({
       title: "Les Vitraux Retrouvés",
-      objective: "Déplace l'Esprit avec les flèches (ou les boutons tactiles) pour ramasser les 11 éclats de vitrail dispersés au sol. Une fois tous ramassés, fais glisser chaque éclat vers l'emplacement numéroté du bon vitrail, dans l'ordre qui te semble logique — tu peux les replacer autant de fois que tu veux. Clique sur « Valider » quand tu penses avoir fini : chaque vitrail est vérifié séparément. S'il est juste, Esméralda, Casimodo ou Gavroche grimpe l'installer. S'il est faux, le personnage tombe et les éclats de ce vitrail-là repartent dans la réserve — mais les vitraux déjà réussis restent acquis."
+      objective: "L'Esprit rétrécit et devient ton curseur : fais glisser les éclats de vitrail vers les emplacements du bon vitrail, dans l'ordre qui te semble logique. Tu peux les déplacer et les intervertir autant de fois que tu veux. Clique (sans glisser) sur un éclat pour lire sa phrase en grand. Quand un vitrail est complet, un bouton « Valider » apparaît sous son échelle : le compagnon descend vérifier. Si c'est bon, il célèbre ; sinon il tombe et il faut recommencer CE vitrail-là seulement."
     });
 
     return new Promise(resolve => {
 
-      canvas.width = CANVAS_W;
-      canvas.height = CANVAS_H;
+      // --- Canevas en haute résolution (corrige le flou du texte) ---
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = CANVAS_W * dpr;
+      canvas.height = CANVAS_H * dpr;
       const ctx = canvas.getContext("2d");
+      ctx.scale(dpr, dpr);
 
       const bgBrokenImg = new Image(); bgBrokenImg.src = BG_BROKEN;
       const bgRestoredImg = new Image(); bgRestoredImg.src = BG_RESTORED;
 
-      // --- Prépare chaque fenêtre : sprites chargés, pièces mélangées,
-      //     slots calculés en coordonnées canevas ---
+      const shardImgs = [];
+      for (let i = 1; i <= SHARD_IMAGE_COUNT; i++) shardImgs.push(loadProp(`vitrail-eclat-${i}.png`));
+
+      // --- Choix des textes latéraux (2 parmi la banque, répartis au
+      //     hasard entre gauche et droite) ---
+      const [textLeft, textRight] = shuffle(SIDE_TEXT_BANK).slice(0, 2);
+
+      const WINDOWS = [
+        {
+          id: "esmeralda", name: "Esméralda",
+          sentences: textLeft,
+          xCenter: 0.245, yTop: 0.40, yBottom: 0.60, standY: 0.86,
+          sprites: {
+            face: "esmeralda-face1.png",
+            facePorte2: "esmeralda-face-porte2.png",
+            dosPorte: ["esmeralda-dos-porte1.png", "esmeralda-dos-porte2.png", "esmeralda-dos-porte3.png"],
+            marchePorte2: "esmeralda-marche-porte2.png",
+            ko: "esmeralda-ko.png"
+          }
+        },
+        {
+          id: "casimodo", name: "Casimodo",
+          sentences: CENTER_TEXT,
+          xCenter: 0.5, yTop: 0.27, yBottom: 0.60, standY: 0.86,
+          sprites: {
+            face: "casimodo-face1.png",
+            facePorte2: "casimodo-face-porte2.png",
+            dosPorte: ["casimodo-dos-porte1.png", "casimodo-dos-porte2.png", "casimodo-dos-porte3.png"],
+            marchePorte2: "casimodo-marche-porte2.png",
+            ko: "casimodo-ko.png"
+          }
+        },
+        {
+          id: "gavroche", name: "Gavroche",
+          sentences: textRight,
+          xCenter: 0.755, yTop: 0.40, yBottom: 0.60, standY: 0.86,
+          sprites: {
+            face: "gavroche-face-1.png",
+            facePorte2: "gavroche-face-porte2.png",
+            dosPorte: ["gavroche-dos-porte1.png", "gavroche-dos-porte2.png", "gavroche-dos-porte3.png"],
+            marchePorte2: "gavroche-marche-porte2.png",
+            ko: "gavroche-ko.png"
+          }
+        }
+      ];
+
       WINDOWS.forEach(win => {
-        win.img = {
-          dos: loadImgs(win.sprites.dos),
-          dosPorte: loadImgs(win.sprites.dosPorte),
-          face: loadImgs(win.sprites.face),
-          marchePorte: loadImgs(win.sprites.marchePorte),
-          ko: loadImg(win.sprites.ko)
-        };
+        win.pieceCount = win.sentences.length;
         win.correctOrder = win.sentences.map((_, i) => i);
         win.slots = win.sentences.map((_, i) => {
           const t = win.pieceCount > 1 ? i / (win.pieceCount - 1) : 0.5;
           return {
             x: win.xCenter * CANVAS_W,
             y: (win.yTop + t * (win.yBottom - win.yTop)) * CANVAS_H,
-            filled: null,   // index de pièce (globale) posée ici
-            lit: false       // définitivement acquis
+            filled: null,
+            lit: false
           };
         });
         win.standX = win.xCenter * CANVAS_W;
-        win.standY = win.standY * CANVAS_H;
-        win.state = "idle"; // idle | climbing | installing | descending | falling | done
-        win.animTimer = 0;
-        win.animFrame = 0;
+        win.standYpx = win.standY * CANVAS_H;
+        win.topYpx = win.yTop * CANVAS_H - 30;
+        win.img = {
+          face: loadChar(win.sprites.face),
+          facePorte2: loadChar(win.sprites.facePorte2),
+          dosPorte: win.sprites.dosPorte.map(loadChar),
+          marchePorte2: loadChar(win.sprites.marchePorte2),
+          ko: loadChar(win.sprites.ko)
+        };
         win.solved = false;
+        win.state = "top"; // top | descending | celebrating | falling | done
+        win.animTimer = 0;
+        win.descendStep = -1;
+        win.progress = 0;
       });
 
-      // --- Construction des 11 pièces globales (fragments au sol) ---
+      // --- Construction des 11 pièces globales ---
       let pieceId = 0;
       const pieces = [];
       WINDOWS.forEach((win, wIdx) => {
@@ -212,132 +220,52 @@
             windowIndex: wIdx,
             sentenceIndex: sIdx,
             text,
-            state: "floor", // floor | carried | pool | placed
-            x: 0, y: 0,
-            floorX: 0, floorY: 0
+            shardVariant: Math.floor(Math.random() * SHARD_IMAGE_COUNT),
+            state: "pool", // pool | placed
+            x: 0, y: 0
           });
         });
       });
 
-      // Positions au sol, réparties aléatoirement mais à bonne
-      // distance les unes des autres, sur la moitié basse du canevas
-      // (loin des vitraux, comme des débris tombés au fil du temps).
-      const FLOOR_MIN_Y = 0.68 * CANVAS_H;
-      const FLOOR_MAX_Y = 0.92 * CANVAS_H;
-      shuffle(pieces).forEach((p, i) => {
-        const cols = 4;
-        const col = i % cols;
-        const row = Math.floor(i / cols);
-        p.floorX = 60 + col * ((CANVAS_W - 120) / (cols - 1)) + (Math.random() - 0.5) * 30;
-        p.floorY = FLOOR_MIN_Y + row * 46 + (Math.random() - 0.5) * 14;
-        p.x = p.floorX;
-        p.y = p.floorY;
-      });
-
-      // --- Joueur (Esprit) ---
-      const espritSide = [0, 1, 2, 3, 4, 5].map(n => loadImg(`esprit-marche-${n}.png`));
-      const espritFace = [1, 2, 3].map(n => loadImg(`esprit-face-${n}.png`));
-      const espritDos = [1, 2, 3].map(n => loadImg(`esprit-dos-${n}.png`));
-      const espritFacePorte = [loadImg("esprit-face-porte1.png")];
-      const espritDosPorte = [1, 2, 3].map(n => loadImg(`esprit-dos-porte${n}.png`));
-
-      const player = { x: CANVAS_W / 2, y: FLOOR_MIN_Y - 40, w: 36, h: 48, facing: "down", speed: 3.2 };
-      let carrying = null; // pièce actuellement transportée (une à la fois)
-      let animFrame = 0, animTimer = 0, moving = false;
-
-      let phase = "collect"; // collect | place
-      let resultGiven = false;
-
-      // --- Réserve du bas (phase de placement) : pièces ramassées pas
-      //     encore posées dans un vitrail ---
-      function poolPieces() {
-        return pieces.filter(p => p.state === "pool");
-      }
-
-      uiContainer.innerHTML = `
-        <div class="hud-item" id="mg-phase-label">${isRemediation ? "Entraînement" : "Évaluation"} — Ramasse les éclats (<span id="mg-collected">0</span>/${TOTAL_PIECES})</div>
-        <div class="hud-item"><button id="mg-validate" class="touch-btn" style="width:auto;height:auto;border-radius:8px;padding:8px 16px; display:none;">Valider</button></div>
-      `;
-      uiContainer.insertAdjacentHTML("beforeend", `
-        <div class="touch-controls" style="display:grid; grid-template-columns:repeat(3,44px); grid-template-rows:repeat(2,44px); gap:4px; justify-content:center;">
-          <div></div><button class="touch-btn" data-dir="up">▲</button><div></div>
-          <button class="touch-btn" data-dir="left">◀</button><div></div><button class="touch-btn" data-dir="right">▶</button>
-          <div></div><button class="touch-btn" data-dir="down">▼</button><div></div>
-        </div>
-      `);
-      const collectedEl = document.getElementById("mg-collected");
-      const phaseLabelEl = document.getElementById("mg-phase-label");
-      const validateBtn = document.getElementById("mg-validate");
-
-      function updateCollectedHud() {
-        const n = pieces.filter(p => p.state !== "floor").length;
-        collectedEl.textContent = n;
-        if (n >= TOTAL_PIECES && phase === "collect") {
-          startPlacementPhase();
-        }
-      }
-
-      function startPlacementPhase() {
-        phase = "place";
-        phaseLabelEl.textContent = `${isRemediation ? "Entraînement" : "Évaluation"} — Place les éclats dans les vitraux`;
-        validateBtn.style.display = "inline-block";
-        pieces.forEach(p => { if (p.state === "carried" || p.state === "floor") p.state = "pool"; });
-        layoutPool();
-      }
+      function poolPieces() { return pieces.filter(p => p.state === "pool"); }
 
       function layoutPool() {
         const pool = poolPieces();
         const cols = 6;
+        const startX = (CANVAS_W - Math.min(cols, pool.length || 1) * (SHARD_W + 10)) / 2 + SHARD_W / 2;
         pool.forEach((p, i) => {
           const col = i % cols;
           const row = Math.floor(i / cols);
-          p.x = 90 + col * 150;
-          p.y = CANVAS_H - 40 - row * 34;
+          p.x = startX + col * (SHARD_W + 10);
+          p.y = CANVAS_H - 30 - row * (SHARD_H + 8);
         });
       }
+      layoutPool();
 
-      // --- Déplacement du joueur (phase de collecte uniquement) ---
-      const keys = {};
-      function onKeyDown(e) {
-        const map = { ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right",
-          w: "up", s: "down", a: "left", d: "right", z: "up", q: "left" };
-        if (map[e.key]) { keys[map[e.key]] = true; e.preventDefault(); }
-      }
-      function onKeyUp(e) {
-        const map = { ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right",
-          w: "up", s: "down", a: "left", d: "right", z: "up", q: "left" };
-        if (map[e.key]) keys[map[e.key]] = false;
-      }
-      window.addEventListener("keydown", onKeyDown);
-      window.addEventListener("keyup", onKeyUp);
+      // --- Curseur-Esprit ("mode fée") ---
+      const espritCursor = loadChar("esprit-face-1.png");
+      const espritFinal = loadChar("esprit-face-porte2.png");
+      const CURSOR_SIZE = 34; // taille réduite du "mode fée" — volontairement plus petit que sa taille normale
+      let cursorX = CANVAS_W / 2, cursorY = CANVAS_H / 2;
+      let cursorInsideCanvas = false;
 
-      uiContainer.querySelectorAll(".touch-btn[data-dir]").forEach(btn => {
-        const dir = btn.dataset.dir;
-        const set = v => () => keys[dir] = v;
-        btn.addEventListener("touchstart", set(true));
-        btn.addEventListener("touchend", set(false));
-        btn.addEventListener("mousedown", set(true));
-        btn.addEventListener("mouseup", set(false));
-      });
-
-      // --- Glisser-déposer (phase de placement uniquement) ---
-      let dragPiece = null, dragOffX = 0, dragOffY = 0;
+      canvas.style.cursor = "none";
 
       function getCanvasCoords(clientX, clientY) {
         const rect = canvas.getBoundingClientRect();
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
+        const scaleX = CANVAS_W / rect.width;
+        const scaleY = CANVAS_H / rect.height;
         return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
       }
 
-      const PIECE_W = 130, PIECE_H = 30;
-      const SLOT_W = 130, SLOT_H = 30;
+      let dragPiece = null, dragFromSlot = null, dragStartX = 0, dragStartY = 0, dragMoved = false;
+      let enlargedText = null, enlargedTimer = 0;
 
       function pieceAt(x, y) {
         for (let i = pieces.length - 1; i >= 0; i--) {
           const p = pieces[i];
           if (p.state !== "pool") continue;
-          if (x >= p.x - PIECE_W / 2 && x <= p.x + PIECE_W / 2 && y >= p.y - PIECE_H / 2 && y <= p.y + PIECE_H / 2) return p;
+          if (x >= p.x - SHARD_W / 2 && x <= p.x + SHARD_W / 2 && y >= p.y - SHARD_H / 2 && y <= p.y + SHARD_H / 2) return p;
         }
         return null;
       }
@@ -346,7 +274,7 @@
         for (const win of WINDOWS) {
           for (const slot of win.slots) {
             if (slot.lit) continue;
-            if (x >= slot.x - SLOT_W / 2 && x <= slot.x + SLOT_W / 2 && y >= slot.y - SLOT_H / 2 && y <= slot.y + SLOT_H / 2) {
+            if (x >= slot.x - SHARD_W / 2 && x <= slot.x + SHARD_W / 2 && y >= slot.y - SHARD_H / 2 && y <= slot.y + SHARD_H / 2) {
               return { win, slot };
             }
           }
@@ -354,180 +282,249 @@
         return null;
       }
 
-      function onPointerDown(e) {
-        if (phase !== "place") return;
-        const { x, y } = getCanvasCoords(e.clientX ?? e.touches[0].clientX, e.clientY ?? e.touches[0].clientY);
-        const p = pieceAt(x, y);
-        if (p) { dragPiece = p; dragOffX = x - p.x; dragOffY = y - p.y; }
+      function validateButtonAt(x, y) {
+        for (const win of WINDOWS) {
+          if (win.state !== "top") continue;
+          const full = win.slots.every(s => s.filled !== null || s.lit);
+          if (!full) continue;
+          const btn = win.validateBtnRect;
+          if (btn && x >= btn.x && x <= btn.x + btn.w && y >= btn.y && y <= btn.y + btn.h) return win;
+        }
+        return null;
       }
-      function onPointerMove(e) {
-        if (!dragPiece) return;
-        const clientX = e.clientX ?? (e.touches && e.touches[0].clientX);
-        const clientY = e.clientY ?? (e.touches && e.touches[0].clientY);
-        if (clientX === undefined) return;
-        const { x, y } = getCanvasCoords(clientX, clientY);
-        dragPiece.x = x - dragOffX;
-        dragPiece.y = y - dragOffY;
-      }
-      function onPointerUp(e) {
-        if (!dragPiece) return;
-        const target = slotAt(dragPiece.x, dragPiece.y);
-        // Libère la case qu'elle occupait déjà, le cas échéant
-        WINDOWS.forEach(w => w.slots.forEach(s => { if (s.filled === dragPiece.id) s.filled = null; }));
 
-        if (target) {
-          if (target.slot.filled !== null) {
-            // Une autre pièce était là : elle retourne en réserve
-            const occupant = pieces.find(p => p.id === target.slot.filled);
-            if (occupant) occupant.state = "pool";
+      /**
+       * v3 (correctif) : un simple CLIC sur un éclat déjà posé dans un
+       * vitrail ne doit RIEN déplacer — seulement afficher sa phrase en
+       * grand. On ne retire donc la pièce de son emplacement qu'au
+       * moment où un VRAI glissement est détecté (voir onMove), jamais
+       * dès le mousedown/touchstart.
+       */
+      function onDown(clientX, clientY) {
+        const { x, y } = getCanvasCoords(clientX, clientY);
+        cursorX = x; cursorY = y;
+
+        const btnWin = validateButtonAt(x, y);
+        if (btnWin) { startValidation(btnWin); return; }
+
+        let p = pieceAt(x, y); // éclats en réserve uniquement
+        let fromSlot = null;
+
+        if (!p) {
+          outer:
+          for (const win of WINDOWS) {
+            if (win.state !== "top") continue;
+            for (const slot of win.slots) {
+              if (slot.lit || slot.filled === null) continue;
+              if (x >= slot.x - SHARD_W / 2 && x <= slot.x + SHARD_W / 2 && y >= slot.y - SHARD_H / 2 && y <= slot.y + SHARD_H / 2) {
+                const piece = pieces.find(pp => pp.id === slot.filled);
+                if (piece) { p = piece; fromSlot = { win, slot }; }
+                break outer;
+              }
+            }
           }
-          target.slot.filled = dragPiece.id;
-          dragPiece.state = "placed";
-          dragPiece.x = target.slot.x;
-          dragPiece.y = target.slot.y;
-        } else {
-          dragPiece.state = "pool";
+        }
+
+        if (p) {
+          dragPiece = p;
+          dragFromSlot = fromSlot;
+          dragStartX = x; dragStartY = y;
+          dragMoved = false;
+        }
+      }
+
+      function onMove(clientX, clientY) {
+        const { x, y } = getCanvasCoords(clientX, clientY);
+        cursorX = x; cursorY = y;
+        cursorInsideCanvas = true;
+        if (dragPiece) {
+          if (!dragMoved && (Math.abs(x - dragStartX) > 4 || Math.abs(y - dragStartY) > 4)) {
+            dragMoved = true;
+            // Le glissement ne fait vraiment "sortir" la pièce de son
+            // emplacement qu'à cet instant précis — jamais avant.
+            if (dragFromSlot) {
+              dragFromSlot.slot.filled = null;
+              dragPiece.state = "pool";
+              layoutPool();
+            }
+          }
+          if (dragMoved) {
+            dragPiece.x = x; dragPiece.y = y;
+          }
+        }
+      }
+
+      function onUp() {
+        if (dragPiece) {
+          if (!dragMoved) {
+            // Clic simple, sans glissement : on affiche juste la
+            // phrase en grand, rien d'autre ne bouge.
+            enlargedText = dragPiece.text;
+            enlargedTimer = 210;
+          } else {
+            const target = slotAt(dragPiece.x, dragPiece.y);
+            if (target) {
+              if (target.slot.filled !== null) {
+                const occupant = pieces.find(pp => pp.id === target.slot.filled);
+                if (occupant) occupant.state = "pool";
+              }
+              target.slot.filled = dragPiece.id;
+              dragPiece.state = "placed";
+              dragPiece.x = target.slot.x;
+              dragPiece.y = target.slot.y;
+            } else {
+              dragPiece.state = "pool";
+            }
+            layoutPool();
+          }
         }
         dragPiece = null;
-        layoutPool();
+        dragFromSlot = null;
       }
 
-      canvas.addEventListener("mousedown", onPointerDown);
-      canvas.addEventListener("mousemove", onPointerMove);
-      window.addEventListener("mouseup", onPointerUp);
-      canvas.addEventListener("touchstart", onPointerDown, { passive: true });
-      canvas.addEventListener("touchmove", onPointerMove, { passive: true });
-      canvas.addEventListener("touchend", onPointerUp);
+      const onMouseDown = e => onDown(e.clientX, e.clientY);
+      const onMouseMove = e => onMove(e.clientX, e.clientY);
+      const onMouseUp = () => onUp();
+      const onTouchStart = e => { onDown(e.touches[0].clientX, e.touches[0].clientY); e.preventDefault(); };
+      const onTouchMove = e => { onMove(e.touches[0].clientX, e.touches[0].clientY); e.preventDefault(); };
+      const onTouchEnd = () => onUp();
 
-      // --- Validation ---
-      validateBtn.addEventListener("click", () => {
-        WINDOWS.forEach(win => {
-          if (win.solved) return;
-          const filledSlots = win.slots.filter(s => s.filled !== null);
-          if (filledSlots.length < win.pieceCount) return; // incomplet : ignoré, pas de pénalité
+      canvas.addEventListener("mousedown", onMouseDown);
+      canvas.addEventListener("mousemove", onMouseMove);
+      window.addEventListener("mouseup", onMouseUp);
+      canvas.addEventListener("touchstart", onTouchStart, { passive: false });
+      canvas.addEventListener("touchmove", onTouchMove, { passive: false });
+      canvas.addEventListener("touchend", onTouchEnd);
 
-          const placedOrder = win.slots.map(s => {
-            const p = pieces.find(pp => pp.id === s.filled);
-            return p ? p.sentenceIndex : -1;
-          });
-          const correct = placedOrder.join(",") === win.correctOrder.join(",");
-
-          if (correct) {
-            win.state = "climbing";
-            win.animTimer = 0;
-          } else {
-            win.state = "falling";
-            win.animTimer = 0;
-          }
-        });
+      // --- Panneau "?" (instructions dépliables) — remplace le
+      //     panneau du bas surdimensionné de la v2. ---
+      let instructionsOpen = false;
+      uiContainer.innerHTML = `
+        <div class="hud-item">${isRemediation ? "Entraînement" : "Évaluation"} — Les Vitraux Retrouvés</div>
+        <div class="hud-item">
+          <button id="mg-help-btn" class="touch-btn" style="width:32px;height:32px;border-radius:50%;">?</button>
+        </div>
+        <div id="mg-help-text" style="display:none; max-width:520px; font-size:0.85rem; color:#c9c2e0; background:rgba(26,21,48,0.85); border:1px solid #9d8cff; border-radius:8px; padding:8px 12px; margin-top:4px;">
+          Glisse les éclats vers les emplacements du vitrail qui te semble correct. Tu peux les changer de place autant de fois que tu veux. Clique sans glisser pour lire une phrase en grand. Un bouton « Valider » apparaît sous chaque vitrail une fois rempli.
+        </div>
+      `;
+      document.getElementById("mg-help-btn").addEventListener("click", () => {
+        instructionsOpen = !instructionsOpen;
+        document.getElementById("mg-help-text").style.display = instructionsOpen ? "block" : "none";
       });
 
-      function finalizeWindowSuccess(win) {
-        win.solved = true;
-        win.slots.forEach(s => { s.lit = true; });
-        win.state = "done";
+      // --- Validation d'un vitrail ---
+      function startValidation(win) {
+        const placedOrder = win.slots.map(s => {
+          const p = pieces.find(pp => pp.id === s.filled);
+          return p ? p.sentenceIndex : -1;
+        });
+        win.pendingCorrect = placedOrder.join(",") === win.correctOrder.join(",");
+        win.state = "descending";
+        win.descendStep = 0;
+        win.animTimer = 0;
+        win.progress = 0;
       }
 
       function finalizeWindowFailure(win) {
         win.slots.forEach(s => {
-          if (!s.lit) {
-            const p = pieces.find(pp => pp.id === s.filled);
-            if (p) p.state = "pool";
-            s.filled = null;
-          }
+          const p = pieces.find(pp => pp.id === s.filled);
+          if (p) p.state = "pool";
+          s.filled = null;
         });
-        win.state = "idle";
+        win.state = "top";
+        win.descendStep = -1;
         layoutPool();
       }
 
-      async function checkVictory() {
-        if (WINDOWS.every(w => w.solved) && !resultGiven) {
-          resultGiven = true;
-          cleanup();
-          await MinigameUI.showResult({
-            passed: true,
-            message: "Les trois vitraux retrouvent enfin leurs couleurs. Esméralda, Casimodo et Gavroche contemplent, côte à côte, la lumière revenue dans la cathédrale."
-          });
-          resolve({ passed: true, score: 1, total: 1 });
+      function finalizeWindowSuccess(win) {
+        win.solved = true;
+        win.slots.forEach(s => { s.lit = true; });
+        win.state = "celebrating";
+        win.animTimer = 0;
+        checkGlobalVictory();
+      }
+
+      let victoryStarted = false;
+      let resultGiven = false;
+
+      function checkGlobalVictory() {
+        if (WINDOWS.every(w => w.solved) && !victoryStarted) {
+          victoryStarted = true;
+          setTimeout(() => startVictoryTableau(), 1400);
         }
+      }
+
+      let tableau = false;
+      function startVictoryTableau() {
+        tableau = true;
+        WINDOWS.forEach(w => { w.state = "done"; });
       }
 
       function cleanup() {
-        window.removeEventListener("keydown", onKeyDown);
-        window.removeEventListener("keyup", onKeyUp);
-        window.removeEventListener("mouseup", onPointerUp);
+        canvas.removeEventListener("mousedown", onMouseDown);
+        canvas.removeEventListener("mousemove", onMouseMove);
+        window.removeEventListener("mouseup", onMouseUp);
+        canvas.removeEventListener("touchstart", onTouchStart);
+        canvas.removeEventListener("touchmove", onTouchMove);
+        canvas.removeEventListener("touchend", onTouchEnd);
+        canvas.style.cursor = "auto";
         cancelAnimationFrame(rafId);
       }
 
+      async function endGame() {
+        if (resultGiven) return;
+        resultGiven = true;
+        cleanup();
+        await MinigameUI.showResult({
+          passed: true,
+          message: "Les trois vitraux retrouvent enfin leurs couleurs. Esméralda, Casimodo et Gavroche contemplent, côte à côte, la lumière revenue dans la cathédrale."
+        });
+        resolve({ passed: true, score: 1, total: 1 });
+      }
+
       let rafId;
+      let tableauTimer = 0;
+
       function loop() {
-        // --- Déplacement du joueur (collecte uniquement) ---
-        if (phase === "collect") {
-          moving = false;
-          if (keys.left) { player.x -= player.speed; player.facing = "left"; moving = true; }
-          if (keys.right) { player.x += player.speed; player.facing = "right"; moving = true; }
-          if (keys.up) { player.y -= player.speed; player.facing = "up"; moving = true; }
-          if (keys.down) { player.y += player.speed; player.facing = "down"; moving = true; }
-          player.x = Math.max(20, Math.min(CANVAS_W - 20, player.x));
-          player.y = Math.max(FLOOR_MIN_Y - 60, Math.min(CANVAS_H - 20, player.y));
-
-          if (moving) {
-            animTimer++;
-            if (animTimer >= 9) { animTimer = 0; animFrame = (animFrame + 1) % 3; }
-          }
-
-          // Ramassage automatique au contact (une seule pièce à la fois)
-          if (!carrying) {
-            const near = pieces.find(p => p.state === "floor" &&
-              Math.abs(p.floorX - player.x) < 26 && Math.abs(p.floorY - player.y) < 26);
-            if (near) {
-              near.state = "carried";
-              carrying = near;
-            }
-          } else {
-            // Dépose immédiate dès qu'on ramasse la suivante (transport
-            // abstrait : la pièce rejoint directement l'inventaire).
-            carrying.state = "pool";
-            carrying = null;
-            updateCollectedHud();
-          }
-        }
-
-        // --- Animations des vitraux (grimpe / installe / tombe) ---
         WINDOWS.forEach(win => {
-          if (win.state === "climbing") {
+          if (win.state === "descending") {
             win.animTimer++;
-            if (win.animTimer >= 12) { win.animTimer = 0; win.animFrame = (win.animFrame + 1) % 3; }
-            if (win.animTimer === 0 && win.progress === undefined) win.progress = 0;
-            win.progress = (win.progress || 0) + 0.02;
-            if (win.progress >= 1) { win.progress = 1; win.state = "installing"; win.installStep = 0; win.animTimer = 0; }
-          } else if (win.state === "installing") {
-            win.animTimer++;
-            if (win.animTimer >= 25) {
+            if (win.animTimer >= 14) {
               win.animTimer = 0;
-              const slot = win.slots[win.installStep];
-              if (slot) slot.lit = true;
-              win.installStep++;
-              if (win.installStep >= win.slots.length) {
-                win.state = "descending";
-                win.progress = 1;
+              win.progress = Math.min(1, win.progress + 1 / win.pieceCount);
+              win.descendStep++;
+              if (win.pendingCorrect) {
+                const slot = win.slots[win.descendStep - 1];
+                if (slot) slot.lit = true;
+              }
+              if (win.descendStep >= win.pieceCount) {
+                if (win.pendingCorrect) finalizeWindowSuccess(win);
+                else win.state = "falling";
+                win.animTimer = 0;
               }
             }
-          } else if (win.state === "descending") {
-            win.progress -= 0.02;
-            if (win.progress <= 0) { win.progress = 0; finalizeWindowSuccess(win); checkVictory(); }
           } else if (win.state === "falling") {
             win.animTimer++;
-            win.progress = Math.max(0, 1 - win.animTimer / 20);
-            if (win.animTimer >= 40) { finalizeWindowFailure(win); }
+            if (win.animTimer >= 30) finalizeWindowFailure(win);
+          } else if (win.state === "celebrating") {
+            win.animTimer++;
+            if (win.animTimer >= 70) win.state = "idleDone";
           }
         });
+
+        if (tableau) {
+          tableauTimer++;
+          if (tableauTimer >= 90 && !resultGiven) endGame();
+        }
+
+        if (enlargedTimer > 0) enlargedTimer--;
 
         render();
         if (!resultGiven) rafId = requestAnimationFrame(loop);
       }
 
-      function drawSprite(img, x, y, w, h, flip) {
+      function drawImgSafe(img, x, y, w, h, flip) {
         if (img && img.complete && img.naturalWidth > 0) {
           if (flip) {
             ctx.save();
@@ -539,7 +536,7 @@
             ctx.drawImage(img, x, y, w, h);
           }
         } else {
-          ctx.fillStyle = "#e8c468";
+          ctx.fillStyle = "#9d8cff";
           ctx.fillRect(x, y, w, h);
         }
       }
@@ -557,130 +554,183 @@
         return lines;
       }
 
-      function drawPiece(p, highlight) {
-        ctx.save();
-        ctx.fillStyle = highlight ? "#6fcf97" : "#2b2347";
-        ctx.strokeStyle = "#9d8cff";
-        ctx.lineWidth = 2;
-        ctx.fillRect(p.x - PIECE_W / 2, p.y - PIECE_H / 2, PIECE_W, PIECE_H);
-        ctx.strokeRect(p.x - PIECE_W / 2, p.y - PIECE_H / 2, PIECE_W, PIECE_H);
+      function drawShard(p) {
+        const img = shardImgs[p.shardVariant];
+        const x = p.x - SHARD_W / 2, y = p.y - SHARD_H / 2;
+        if (img && img.complete && img.naturalWidth > 0) {
+          ctx.drawImage(img, x, y, SHARD_W, SHARD_H);
+        } else {
+          ctx.fillStyle = "#2b2347";
+          ctx.strokeStyle = "#9d8cff";
+          ctx.lineWidth = 2;
+          ctx.fillRect(x, y, SHARD_W, SHARD_H);
+          ctx.strokeRect(x, y, SHARD_W, SHARD_H);
+        }
+        ctx.font = "600 11px sans-serif";
         ctx.fillStyle = "#f4f1ea";
-        ctx.font = "10px sans-serif";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        const short = p.text.length > 46 ? p.text.slice(0, 44) + "…" : p.text;
-        ctx.fillText(short, p.x, p.y);
+        const lines = wrapText(p.text, SHARD_W - 14).slice(0, 2);
+        const lh = 13;
+        let ty = p.y - (lines.length - 1) * lh / 2;
+        lines.forEach((line, i) => {
+          const truncated = (i === 1 && lines.length === 2 && line.length > 26) ? line.slice(0, 24) + "…" : line;
+          ctx.fillText(truncated, p.x, ty);
+          ty += lh;
+        });
+      }
+
+      function drawSmileyBubble(x, y) {
+        ctx.save();
+        ctx.fillStyle = "#f4f1ea";
+        ctx.beginPath();
+        ctx.ellipse(x, y, 16, 13, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#e8c468";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(x - 4, y + 11);
+        ctx.lineTo(x - 8, y + 18);
+        ctx.lineTo(x + 2, y + 12);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = "#1a1530";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.arc(x - 5, y - 2, 1.6, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(x + 5, y - 2, 1.6, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath();
+        ctx.arc(x, y + 2, 6, 0.15 * Math.PI, 0.85 * Math.PI);
+        ctx.stroke();
         ctx.restore();
       }
 
       function render() {
-        const bg = WINDOWS.every(w => w.solved) ? bgRestoredImg : bgBrokenImg;
-        if (bg.complete && bg.naturalWidth > 0) {
-          ctx.drawImage(bg, 0, 0, CANVAS_W, CANVAS_H);
-        } else {
-          ctx.fillStyle = "#1a1530";
-          ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
-        }
+        const bg = tableau ? bgRestoredImg : bgBrokenImg;
+        if (bg.complete && bg.naturalWidth > 0) ctx.drawImage(bg, 0, 0, CANVAS_W, CANVAS_H);
+        else { ctx.fillStyle = "#1a1530"; ctx.fillRect(0, 0, CANVAS_W, CANVAS_H); }
 
-        // --- Échelles (dessinées, pas d'image nécessaire) ---
+        // Échelles
         WINDOWS.forEach(win => {
-          const ladderTop = win.yTop * CANVAS_H + 10;
-          const ladderBottom = win.standY;
+          const top = win.yTop * CANVAS_H + 10, bottom = win.standYpx;
           ctx.strokeStyle = "rgba(200,180,140,0.7)";
           ctx.lineWidth = 3;
           ctx.beginPath();
-          ctx.moveTo(win.xCenter * CANVAS_W - 14, ladderTop);
-          ctx.lineTo(win.xCenter * CANVAS_W - 14, ladderBottom);
-          ctx.moveTo(win.xCenter * CANVAS_W + 14, ladderTop);
-          ctx.lineTo(win.xCenter * CANVAS_W + 14, ladderBottom);
+          ctx.moveTo(win.xCenter * CANVAS_W - 14, top); ctx.lineTo(win.xCenter * CANVAS_W - 14, bottom);
+          ctx.moveTo(win.xCenter * CANVAS_W + 14, top); ctx.lineTo(win.xCenter * CANVAS_W + 14, bottom);
           ctx.stroke();
           ctx.lineWidth = 2;
-          for (let y = ladderTop; y < ladderBottom; y += 16) {
-            ctx.beginPath();
-            ctx.moveTo(win.xCenter * CANVAS_W - 14, y);
-            ctx.lineTo(win.xCenter * CANVAS_W + 14, y);
-            ctx.stroke();
+          for (let y = top; y < bottom; y += 16) {
+            ctx.beginPath(); ctx.moveTo(win.xCenter * CANVAS_W - 14, y); ctx.lineTo(win.xCenter * CANVAS_W + 14, y); ctx.stroke();
           }
         });
 
-        // --- Emplacements sous chaque vitrail ---
+        // Emplacements
         WINDOWS.forEach(win => {
           win.slots.forEach(slot => {
             ctx.fillStyle = slot.lit ? "rgba(232,196,104,0.35)" : "rgba(157,140,255,0.08)";
-            ctx.fillRect(slot.x - SLOT_W / 2, slot.y - SLOT_H / 2, SLOT_W, SLOT_H);
+            ctx.fillRect(slot.x - SHARD_W / 2, slot.y - SHARD_H / 2, SHARD_W, SHARD_H);
             ctx.strokeStyle = slot.lit ? "#e8c468" : "#9d8cff";
             ctx.setLineDash(slot.lit ? [] : [5, 5]);
             ctx.lineWidth = 2;
-            ctx.strokeRect(slot.x - SLOT_W / 2, slot.y - SLOT_H / 2, SLOT_W, SLOT_H);
+            ctx.strokeRect(slot.x - SHARD_W / 2, slot.y - SHARD_H / 2, SHARD_W, SHARD_H);
             ctx.setLineDash([]);
-            if (slot.filled !== null && !slot.lit) {
+            if (slot.filled !== null) {
               const p = pieces.find(pp => pp.id === slot.filled);
-              if (p) drawPiece(p, false);
+              if (p && p !== dragPiece) drawShard(p);
             }
           });
         });
 
-        // --- Personnages compagnons (échelle / installation / chute) ---
+        // Bouton "Valider" par vitrail
         WINDOWS.forEach(win => {
-          const cw = 44, ch = 60;
-          const x = win.standX - cw / 2;
-          if (win.state === "idle" || win.state === "done") {
-            const img = win.img.face[0];
-            drawSprite(img, x, win.standY - ch, cw, ch, false);
-          } else if (win.state === "climbing" || win.state === "descending") {
-            const y = win.standY - ch - (win.progress || 0) * (win.standY - win.yTop * CANVAS_H - ch);
-            const img = win.img.dosPorte[win.animFrame % win.img.dosPorte.length];
-            drawSprite(img, x, y, cw, ch, false);
-          } else if (win.state === "installing") {
-            const y = win.yTop * CANVAS_H;
-            const img = win.img.marchePorte[win.installStep % win.img.marchePorte.length];
-            drawSprite(img, x, y, cw, ch, false);
-          } else if (win.state === "falling") {
-            const fallY = win.standY - ch + (1 - (win.progress || 0)) * 40;
-            ctx.save();
-            ctx.globalAlpha = win.progress || 0;
-            drawSprite(win.img.ko, x, fallY, cw, ch, false);
-            ctx.restore();
+          const full = win.slots.every(s => s.filled !== null || s.lit);
+          if (win.state === "top" && full) {
+            const bw = 90, bh = 26;
+            const bx = win.xCenter * CANVAS_W - bw / 2;
+            const by = win.standYpx + 6;
+            win.validateBtnRect = { x: bx, y: by, w: bw, h: bh };
+            ctx.fillStyle = "#e8c468";
+            ctx.fillRect(bx, by, bw, bh);
+            ctx.strokeStyle = "#1a1530";
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(bx, by, bw, bh);
+            ctx.fillStyle = "#1a1530";
+            ctx.font = "bold 12px sans-serif";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText("Valider", bx + bw / 2, by + bh / 2 + 1);
+          } else {
+            win.validateBtnRect = null;
           }
         });
 
-        // --- Pièces au sol (phase de collecte) ---
-        if (phase === "collect") {
-          pieces.forEach(p => {
-            if (p.state !== "floor") return;
+        // Compagnons
+        const CW = 42, CH = 58;
+        WINDOWS.forEach(win => {
+          const x = win.standX - CW / 2;
+          if (win.state === "top") {
+            drawImgSafe(win.img.face, x, win.topYpx, CW, CH, false);
+          } else if (win.state === "descending") {
+            const y = win.topYpx + win.progress * (win.standYpx - CH - win.topYpx);
+            const frame = win.img.dosPorte[Math.floor(win.animTimer / 5) % win.img.dosPorte.length];
+            drawImgSafe(frame, x, y, CW, CH, false);
+          } else if (win.state === "falling") {
+            const t = win.animTimer / 30;
+            const y = win.topYpx + t * (win.standYpx - CH - win.topYpx);
             ctx.save();
-            ctx.fillStyle = "#9d8cff";
-            ctx.globalAlpha = 0.85;
-            ctx.fillRect(p.floorX - 10, p.floorY - 7, 20, 14);
-            ctx.strokeStyle = "#e8c468";
-            ctx.lineWidth = 1.5;
-            ctx.strokeRect(p.floorX - 10, p.floorY - 7, 20, 14);
+            ctx.globalAlpha = 1 - t * 0.5;
+            drawImgSafe(win.img.ko, x, y, CW, CH, false);
+            ctx.font = "bold 22px sans-serif";
+            ctx.fillStyle = "#d9534f";
+            ctx.textAlign = "center";
+            ctx.fillText("!", win.standX, y - 6);
             ctx.restore();
-          });
-        }
+          } else if (win.state === "celebrating") {
+            const bounce = Math.abs(Math.sin(win.animTimer * 0.35)) * 10;
+            drawImgSafe(win.img.facePorte2, x, win.standYpx - CH - bounce, CW, CH, false);
+            drawSmileyBubble(win.standX + CW / 2 + 6, win.standYpx - CH - bounce - 14);
+          } else if (win.state === "idleDone") {
+            drawImgSafe(win.img.facePorte2, x, win.standYpx - CH, CW, CH, false);
+          } else if (win.state === "done") {
+            // Tableau final : personnage devant son vitrail, bras tendu
+            drawImgSafe(win.img.marchePorte2, x, win.standYpx - CH, CW, CH, false);
+          }
+        });
 
-        // --- Réserve du bas (phase de placement) ---
-        if (phase === "place") {
+        // Éclats en réserve
+        poolPieces().forEach(p => { if (p !== dragPiece) drawShard(p); });
+        if (dragPiece) drawShard(dragPiece);
+
+        // Texte agrandi (clic simple sur un éclat)
+        if (enlargedTimer > 0 && enlargedText) {
           ctx.save();
-          ctx.fillStyle = "rgba(26,21,48,0.55)";
-          ctx.fillRect(0, CANVAS_H - 80, CANVAS_W, 80);
+          ctx.globalAlpha = Math.min(1, enlargedTimer / 30);
+          ctx.fillStyle = "rgba(26,21,48,0.92)";
+          ctx.fillRect(CANVAS_W / 2 - 380, 14, 760, 56);
+          ctx.strokeStyle = "#e8c468";
+          ctx.lineWidth = 2;
+          ctx.strokeRect(CANVAS_W / 2 - 380, 14, 760, 56);
+          ctx.fillStyle = "#f4f1ea";
+          ctx.font = "15px sans-serif";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          const lines = wrapText(enlargedText, 730);
+          const lh = 18;
+          let ty = 42 - (lines.length - 1) * lh / 2;
+          lines.forEach(line => { ctx.fillText(line, CANVAS_W / 2, ty); ty += lh; });
           ctx.restore();
-          poolPieces().forEach(p => { if (p !== dragPiece) drawPiece(p, false); });
-          if (dragPiece) drawPiece(dragPiece, true);
         }
 
-        // --- Joueur (Esprit), uniquement en phase de collecte ---
-        if (phase === "collect") {
-          const PW = 34, PH = 46;
-          const px = player.x - PW / 2, py = player.y - PH;
-          const frameSet = carrying
-            ? (player.facing === "down" ? espritFacePorte : player.facing === "up" ? espritDosPorte : espritSide)
-            : (player.facing === "down" ? espritFace : player.facing === "up" ? espritDos : espritSide);
-          const idx = carrying
-            ? (player.facing === "up" ? animFrame % espritDosPorte.length : 0)
-            : (player.facing === "left" || player.facing === "right" ? (moving ? animFrame + 1 : 1) : animFrame % 3);
-          const img = frameSet[Math.min(idx, frameSet.length - 1)];
-          drawSprite(img, px, py, PW, PH, player.facing === "left");
+        // Tableau final : bulle sur l'Esprit redevenu grand
+        if (tableau) {
+          const ex = CANVAS_W / 2 - 20, ey = CANVAS_H * 0.7;
+          const bounce = Math.abs(Math.sin(tableauTimer * 0.3)) * 8;
+          drawImgSafe(espritFinal, ex, ey - bounce, 40, 54, false);
+          drawSmileyBubble(ex + 40 + 4, ey - bounce - 12);
+        } else {
+          // Curseur-Esprit ("mode fée")
+          drawImgSafe(espritCursor, cursorX - CURSOR_SIZE / 2, cursorY - CURSOR_SIZE / 2, CURSOR_SIZE, CURSOR_SIZE, false);
         }
       }
 
