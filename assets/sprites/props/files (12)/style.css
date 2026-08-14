@@ -1,0 +1,655 @@
+/* ============================================================
+   GODZILLA : PROTOCOLE TITAN — styles (v2)
+   Thème "alerte kaiju" : panneaux HUD métalliques, accents
+   orange-rouge (dos de Godzilla) + cyan (rayon atomique) + rose
+   magenta (mode Burning / Godzilla Évolué)
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@500;600;700&display=swap');
+
+* {
+    box-sizing: border-box;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+    margin: 0;
+    min-height: 100vh;
+    background: radial-gradient(ellipse at 50% 0%, #1a2438 0%, #05070d 70%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Rajdhani', 'Segoe UI', sans-serif;
+    padding: 20px;
+    overflow: hidden;
+}
+/* Le viseur en croix ne remplace le curseur normal QUE pendant le combat
+   actif (classe posée par le JS) — pas sur les menus, où on doit pouvoir
+   viser les boutons normalement comme sur n'importe quel site. */
+body.aiming { cursor: none; }
+
+#game-wrapper {
+    position: relative;
+    border-radius: 28px;
+    box-shadow:
+        0 0 0 2px rgba(255, 140, 60, 0.25),
+        0 25px 60px rgba(0,0,0,0.7),
+        inset 0 1px 2px rgba(255,255,255,0.08);
+    background: #000000aa;
+    padding: 8px;
+    transition: width 0.15s ease, height 0.15s ease;
+}
+
+#game-container {
+    position: relative;
+    width: 1100px;
+    height: 700px;
+    border-radius: 22px;
+    overflow: hidden;
+    box-shadow: inset 0 0 40px rgba(0,0,0,0.75);
+    background: #06080f;
+    transform-origin: top left; /* pour que fitGameToViewport() cale bien le coin haut-gauche */
+}
+
+canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    touch-action: none; /* empêche le défilement/zoom tactile pendant la partie */
+}
+
+/* Le viseur en croix suppose une souris en mouvement continu : sur un
+   écran tactile (pas de survol), on retombe sur un curseur/tap normal. */
+@media (pointer: coarse) {
+    #custom-cursor { display: none !important; }
+    body.aiming { cursor: auto; }
+}
+
+/* ---------- Réglages (⚙️) ---------- */
+#settings-btn {
+    position: absolute;
+    top: 16px;
+    right: 20px;
+    z-index: 70;
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: rgba(10,14,24,0.85);
+    border: 1px solid rgba(255,178,71,0.3);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 19px;
+    cursor: pointer;
+    pointer-events: auto;
+}
+#settings-btn:hover { background: rgba(30,20,10,0.9); }
+#settings-panel {
+    position: absolute;
+    top: 60px;
+    right: 20px;
+    z-index: 70;
+    background: #10131c;
+    border: 1px solid rgba(255,178,71,0.25);
+    border-radius: 14px;
+    padding: 14px 18px;
+    box-shadow: 0 12px 26px rgba(0,0,0,0.5);
+    font-size: 14px;
+    color: #dfe2ee;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 240px;
+}
+#settings-panel label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+#settings-panel input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; }
+.settings-divider { height: 1px; background: rgba(255,178,71,0.2); margin: 2px 0; }
+.settings-section-title { font-family: 'Bebas Neue', sans-serif; letter-spacing: 1px; color: #ffb347; font-size: 15px; }
+#cloud-status { font-size: 12px; color: #9096ac; line-height: 1.4; }
+.settings-code-label { flex-direction: column !important; align-items: stretch !important; gap: 4px !important; font-size: 13px; color: #c7cbdb; }
+#player-code-input {
+    background: #0a0c14;
+    border: 1px solid rgba(255,178,71,0.3);
+    border-radius: 8px;
+    padding: 8px 10px;
+    color: #fff3e0;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+}
+#player-code-input:focus { outline: none; border-color: #ffb347; }
+
+/* ---------- Bandeau question ---------- */
+#phrase-area {
+    position: absolute;
+    top: 18px;
+    left: 20px;
+    right: 70px;
+    background: linear-gradient(135deg, rgba(10,14,24,0.92), rgba(30,14,10,0.92));
+    backdrop-filter: blur(10px);
+    border-radius: 18px;
+    padding: 14px 30px;
+    text-align: center;
+    z-index: 10;
+    border: 2px solid #ff6b35;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.55), 0 0 18px rgba(255,107,53,0.25);
+    pointer-events: none;
+}
+
+#phrase-card {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 25px;
+    line-height: 1.5;
+    letter-spacing: 0.3px;
+    color: #fff3e0;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.8), 0 0 14px rgba(255,140,60,0.35);
+}
+
+.blank-gap {
+    display: inline-block;
+    min-width: 64px;
+    padding: 0 10px;
+    margin: 0 2px;
+    border-bottom: 3px solid #ff9a57;
+    color: #ff9a57;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 2px;
+}
+
+/* ---------- Barre de stats ---------- */
+#stats-bar {
+    position: absolute;
+    bottom: 18px;
+    left: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, rgba(8,10,18,0.9), rgba(20,10,8,0.92));
+    backdrop-filter: blur(8px);
+    border-radius: 16px;
+    padding: 10px 22px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 10;
+    border-top: 2px solid #ffb347;
+    border-bottom: 2px solid #ffb347;
+    pointer-events: none;
+    font-weight: 600;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.stat-item {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    background: rgba(0,0,0,0.45);
+    padding: 5px 18px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,178,71,0.2);
+}
+
+.stat-label {
+    font-size: 15px;
+    color: #ffb347;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+}
+
+.stat-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    letter-spacing: 1px;
+    background: linear-gradient(135deg, #ffd966, #ff6b35);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+#chrono-box {
+    background: rgba(0,0,0,0.6);
+    padding: 6px 22px;
+    border-radius: 12px;
+    font-family: 'Bebas Neue', monospace;
+    font-size: 28px;
+    letter-spacing: 3px;
+    color: #4de3ff;
+    text-shadow: 0 0 10px #1ec8ff;
+    border: 1px solid rgba(77,227,255,0.3);
+}
+#chrono-box.hidden-by-setting { display: none; }
+
+#burning-badge {
+    background: linear-gradient(135deg, rgba(255,47,176,0.95), rgba(255,20,120,0.95));
+    color: #2b0018;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 1.5px;
+    padding: 8px 20px;
+    border-radius: 12px;
+    box-shadow: 0 0 18px rgba(255,47,176,0.7);
+    animation: burningPulse 1.1s ease-in-out infinite;
+}
+@keyframes burningPulse {
+    0%, 100% { box-shadow: 0 0 12px rgba(255,47,176,0.55); }
+    50% { box-shadow: 0 0 26px rgba(255,47,176,0.95); }
+}
+
+/* ---------- Combo Mothra ---------- */
+#combo-indicator {
+    position: absolute;
+    top: 95px;
+    left: 50%;
+    transform: translateX(-50%) scale(0.8);
+    background: linear-gradient(135deg, rgba(255,178,20,0.95), rgba(255,110,20,0.95));
+    color: #221000;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px;
+    letter-spacing: 2px;
+    padding: 8px 26px;
+    border-radius: 40px;
+    z-index: 60;
+    opacity: 0;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    box-shadow: 0 0 22px rgba(255,178,20,0.7);
+    pointer-events: none;
+    white-space: nowrap;
+}
+#combo-indicator.show {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+}
+
+/* ---------- Carte "Leçon express" ---------- */
+.help-card {
+    position: absolute;
+    right: -420px;
+    bottom: 100px;
+    width: 340px;
+    background: #10131c;
+    border-radius: 18px;
+    box-shadow: 0 14px 32px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.06);
+    z-index: 150;
+    font-family: 'Rajdhani', sans-serif;
+    transition: right 0.35s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+    border-left: 6px solid #ff6b35;
+    cursor: pointer;
+    color: #e8e8ee;
+}
+.help-card:hover { background: #151a26; }
+
+.card-header {
+    background: #1c2130;
+    padding: 12px 18px;
+    border-radius: 18px 18px 0 0;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 1.5px;
+    color: #ff9a57;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #ff6b3555;
+}
+.close-card {
+    font-size: 22px;
+    font-weight: bold;
+    cursor: pointer;
+    color: #8a8fa3;
+    width: 28px;
+    text-align: center;
+    border-radius: 20px;
+}
+.close-card:hover { color: #ff6b35; background: #ffffff11; }
+
+.card-body { padding: 16px 20px; }
+.card-body .correction {
+    background: #14261a;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    line-height: 1.4;
+    color: #6fe08a;
+    margin-bottom: 12px;
+    border-left: 4px solid #3fae5c;
+}
+.card-body .correction u { color: #a8ffc0; text-decoration-color: #3fae5c; }
+.card-body .explanation { font-size: 15px; line-height: 1.4; color: #cfd2df; margin: 10px 0; }
+.card-body .rule {
+    background: #2a1c0f;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 14px;
+    border-left: 4px solid #ffb347;
+    color: #ffdcae;
+    margin-top: 10px;
+}
+.card-footer {
+    font-size: 11px;
+    padding: 8px 18px 12px;
+    color: #6c7185;
+    border-top: 1px solid #ffffff10;
+    text-align: center;
+}
+
+/* ---------- Écrans génériques ---------- */
+.screen {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(4,6,12,0.93);
+    backdrop-filter: blur(10px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    z-index: 30;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.screen h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 64px;
+    letter-spacing: 3px;
+    margin-bottom: 16px;
+    background: linear-gradient(135deg, #ffe6b0, #ff6b35);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 0 30px rgba(255,107,53,0.25);
+}
+
+.chapter-eyebrow {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: #ff9a57;
+    margin-bottom: 6px;
+}
+#chapter-screen h1 { font-size: 42px; }
+#chapter-text { white-space: pre-line; }
+
+.screen p { font-size: 20px; color: #c7cbdb; max-width: 680px; line-height: 1.6; }
+
+.screen .levels-track {
+    display: flex;
+    gap: 6px;
+    margin-top: 22px;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 900px;
+}
+.level-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+    padding: 6px 12px 6px 6px;
+    border-radius: 10px;
+    background: #1c2130;
+    border: 1px solid #ff6b3544;
+    color: #ffb347;
+    cursor: default;
+}
+.level-chip.known, .level-chip.next { cursor: pointer; transition: transform 0.12s ease, background 0.12s ease; }
+.level-chip.known:hover, .level-chip.next:hover { transform: translateY(-2px); background: #262c40; }
+.level-chip.known { border-color: #6fe08a66; color: #a8ffc0; }
+.level-chip.next { border-color: #ffb34799; box-shadow: 0 0 12px rgba(255,178,71,0.25); }
+.level-chip.locked { opacity: 0.55; }
+.chip-thumb {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    background: #0a0c14;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+    font-size: 16px;
+}
+.chip-thumb canvas { width: 32px; height: 32px; }
+
+/* ---------- Accueil (deux colonnes) ---------- */
+.home-screen { justify-content: flex-start; padding-top: 26px; }
+.home-header { text-align: center; margin-bottom: 6px; }
+.home-header h1 { font-size: 46px; margin-bottom: 4px; }
+#loading-label { font-size: 14px; color: #ffb347; letter-spacing: 1px; }
+#loading-label.hidden { display: none; }
+
+.home-main {
+    display: flex;
+    gap: 28px;
+    width: 100%;
+    max-width: 960px;
+    align-items: stretch;
+    margin: 14px 0;
+}
+.home-left { flex: 1 1 42%; display: flex; }
+.home-right { flex: 1 1 58%; display: flex; flex-direction: column; gap: 12px; }
+
+.lore-box {
+    background: #10131c;
+    border: 1px solid rgba(255,178,71,0.22);
+    border-radius: 16px;
+    padding: 18px 20px;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+}
+.lore-box.compact { justify-content: center; }
+.lore-line {
+    font-size: 16px;
+    line-height: 1.4;
+    color: #dfe2ee;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+.lore-line .ico { font-size: 19px; flex-shrink: 0; padding-top: 1px; }
+/* IMPORTANT : tout le texte doit être regroupé dans CE SEUL enfant flex.
+   Sans ce wrapper, un <b> au milieu du texte coupe la phrase en plusieurs
+   "items" flex indépendants (icône, texte avant, <b>, texte après), qui se
+   mettent chacun à la ligne à leur compte au lieu de former un seul
+   paragraphe qui s'enroule normalement — d'où le texte éclaté en colonnes. */
+.lore-line .lore-text { flex: 1; min-width: 0; }
+.lore-line b { color: #ffb347; }
+
+.hero-frame {
+    position: relative;
+    border-radius: 16px;
+    overflow: hidden;
+    height: 190px;
+    background: linear-gradient(135deg, #1a2438, #05070d);
+    border: 1px solid rgba(255,178,71,0.22);
+}
+.hero-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.hero-fade {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 60%;
+    background: linear-gradient(to top, #10131c 0%, transparent 100%);
+    pointer-events: none;
+}
+.home-tabs { display: flex; gap: 10px; }
+.tab-btn {
+    flex: 1;
+    margin: 0; padding: 12px 10px;
+    font-size: 14px;
+    letter-spacing: 1px;
+    background: #1c2130;
+    color: #ffb347;
+    border: 1px solid #ff6b3544;
+    box-shadow: none;
+}
+.tab-btn:hover { background: #262c40; transform: none; box-shadow: 0 0 12px rgba(255,178,71,0.25); }
+
+.home-footer { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 960px; }
+
+/* ---------- Dossiers Monarch ---------- */
+.codex-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    width: 100%;
+    max-width: 900px;
+    margin-top: 18px;
+}
+.codex-cell {
+    background: #10131c;
+    border: 1px solid rgba(255,178,71,0.2);
+    border-radius: 16px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.codex-cell.clickable { cursor: pointer; transition: transform 0.12s ease; }
+.codex-cell.clickable:hover { transform: translateY(-3px); border-color: #ffb34799; }
+.codex-cell.locked { opacity: 0.75; }
+.codex-thumb { border-radius: 10px; overflow: hidden; line-height: 0; }
+.codex-thumb canvas { width: 100%; height: auto; display: block; }
+.codex-name { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 1px; color: #fff3e0; }
+.codex-cell.known .codex-name { color: #a8ffc0; }
+.codex-status { font-size: 14px; color: #9096ac; }
+
+/* ---------- Rangs de Godzilla ---------- */
+.medal-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 14px;
+    width: 100%;
+    max-width: 900px;
+    margin-top: 10px;
+}
+.medal-core {
+    background: #10131c;
+    border: 1px solid rgba(255,178,71,0.2);
+    border-radius: 14px;
+    padding: 14px 10px;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+}
+.medal-core.locked { opacity: 0.5; }
+.medal-orb {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: var(--orb-grad, #333);
+    box-shadow: 0 0 18px var(--orb-glow, transparent);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+}
+.medal-name { font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 0.5px; color: #fff3e0; text-align: center; }
+.medal-threshold { font-size: 12px; color: #9096ac; }
+
+/* ---------- Boutons ---------- */
+button {
+    padding: 14px 42px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    background: linear-gradient(135deg, #ff9a3c, #ff5b1f);
+    border: none;
+    border-radius: 40px;
+    color: #1a0c00;
+    margin-top: 26px;
+    margin-right: 10px;
+    transition: transform 0.15s, box-shadow 0.15s;
+    box-shadow: 0 8px 20px rgba(255,90,20,0.35);
+}
+button:disabled { opacity: 0.5; cursor: default; }
+button:hover:not(:disabled) { transform: scale(1.05); box-shadow: 0 12px 26px rgba(255,90,20,0.5); }
+button.secondary {
+    background: transparent;
+    color: #ffb347;
+    border: 2px solid #ffb34766;
+    box-shadow: none;
+}
+button.secondary:hover { background: #ffb34718; }
+button.small { padding: 8px 18px; font-size: 14px; margin-top: 0; letter-spacing: 1px; }
+
+.hidden { display: none !important; }
+
+/* ---------- Curseur viseur ---------- */
+#custom-cursor {
+    position: fixed;
+    width: 32px; height: 32px;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+body.aiming #custom-cursor { opacity: 1; }
+.crosshair-ring {
+    position: absolute; width: 100%; height: 100%;
+    border: 3px solid rgba(255,130,60,0.85);
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px rgba(255,255,200,0.5), 0 0 10px rgba(255,110,30,0.5);
+}
+.crosshair-dot {
+    position: absolute; top: 50%; left: 50%;
+    width: 5px; height: 5px;
+    background: #ff6644;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 0 2px white;
+}
+
+@keyframes confetti {
+    0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(110px) rotate(720deg); opacity: 0; }
+}
+
+@keyframes paletteFlash {
+    0% { opacity: 0; }
+    15% { opacity: 0.55; }
+    100% { opacity: 0; }
+}
+#palier-flash {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: radial-gradient(circle, rgba(255,255,255,0.9), rgba(255,140,50,0.2) 60%, transparent 75%);
+    pointer-events: none;
+    opacity: 0;
+    z-index: 55;
+}
+#palier-flash.active { animation: paletteFlash 0.7s ease-out; }
+
+/* ---------- Petits écrans (téléphone en portrait) ---------- */
+@media (max-width: 700px) {
+    .home-main { flex-direction: column; }
+    .home-left, .home-right { flex: 1 1 auto; }
+}
+
+/* ---------- Invite à tourner l'appareil (téléphone/tablette en portrait) ---------- */
+#rotate-prompt {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    background: #05070d;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 40px;
+    color: #fff3e0;
+}
+#rotate-prompt .rotate-icon {
+    font-size: 64px;
+    margin-bottom: 18px;
+    animation: rotateHint 1.8s ease-in-out infinite;
+}
+#rotate-prompt p { font-size: 18px; line-height: 1.5; max-width: 320px; }
+@keyframes rotateHint {
+    0%, 100% { transform: rotate(0deg); }
+    50% { transform: rotate(90deg); }
+}
+/* Seuil volontairement resserré : ne se déclenche que sur téléphone/petite
+   tablette en portrait, jamais sur un ordinateur en fenêtre étroite. */
+@media (max-width: 760px) and (orientation: portrait) {
+    #rotate-prompt { display: flex; }
+    #game-wrapper { visibility: hidden; }
+}

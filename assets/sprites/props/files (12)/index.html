@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Godzilla : Protocole Titan</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="game-wrapper">
+    <div id="game-container">
+        <canvas id="gameCanvas" width="1100" height="700"></canvas>
+
+        <div id="palier-flash"></div>
+        <div id="combo-indicator"></div>
+
+        <div id="settings-btn" title="Réglages">⚙️</div>
+        <div id="settings-panel" class="hidden">
+            <label>
+                <input type="checkbox" id="chk-show-chrono">
+                Afficher le chrono ⏱️ pendant la partie
+            </label>
+            <button id="btn-quit-menu" class="secondary small">🏠 Revenir au menu</button>
+            <button id="btn-reset-progress" class="secondary small">🗑️ Réinitialiser la progression</button>
+            <div class="settings-divider"></div>
+            <div class="settings-section-title">☁️ Sauvegarde en ligne</div>
+            <div id="cloud-status">Chargement...</div>
+            <label class="settings-code-label">
+                Code élève (au choix, ex. prénom + chiffre)
+                <input type="text" id="player-code-input" placeholder="ex : Lina7" maxlength="24">
+            </label>
+            <button id="btn-save-code" class="secondary small">💾 Valider le code</button>
+        </div>
+
+        <div id="phrase-area">
+            <div id="phrase-card">🦖 Chargement des Titans...</div>
+        </div>
+
+        <div id="stats-bar">
+            <div class="stat-item">
+                <span class="stat-label">📖 Chapitre</span>
+                <span class="stat-value" id="lbl-level">1</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">⚔️ Duel</span>
+                <span class="stat-value" id="lbl-table" style="font-size:22px;">à / a</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">👹 Titan</span>
+                <span class="stat-value" id="lbl-kaiju" style="font-size:20px;">Rodan</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">🎯 Score</span>
+                <span class="stat-value" id="lbl-score">0</span>
+                <span id="lbl-score-max" style="font-size:18px; color:#ffb347;">/8</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">🏆 Points</span>
+                <span class="stat-value" id="lbl-points">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">💥 Fautes</span>
+                <span class="stat-value" id="lbl-errors" style="background:linear-gradient(135deg,#ff8888,#ff4444); -webkit-background-clip:text;">0</span>
+                <span style="font-size:18px; color:#ff8888;">/5</span>
+            </div>
+            <div id="chrono-box">⏱️ 00.0s</div>
+            <div id="burning-badge" class="hidden">🔥 BURNING</div>
+        </div>
+
+        <div id="start-screen" class="screen home-screen">
+            <div class="home-header">
+                <h1>🦖 GODZILLA : PROTOCOLE TITAN</h1>
+                <div id="loading-label">Chargement des images...</div>
+            </div>
+
+            <div class="home-main">
+                <div class="home-left">
+                    <div class="lore-box compact">
+                        <div class="lore-line"><span class="ico">🧪</span><span class="lore-text">D'anciens agents d'<b>Apex Cybernetics</b> ont libéré des Titans.</span></div>
+                        <div class="lore-line"><span class="ico">😡</span><span class="lore-text">Chacun cache un piège grammatical qui le rend incontrôlable.</span></div>
+                        <div class="lore-line"><span class="ico">🦖</span><span class="lore-text">MONARCH envoie Godzilla les neutraliser — ou les libérer. <b>Mothra</b>, elle, veille depuis toujours en silence.</span></div>
+                        <div class="lore-line"><span class="ico">✍️</span><span class="lore-text">Trouve le bon homophone pour viser juste et faire avancer l'histoire !</span></div>
+                    </div>
+                </div>
+
+                <div class="home-right">
+                    <div class="hero-frame">
+                        <img src="assets/presentation.png" alt="Godzilla" class="hero-img" onerror="this.style.display='none'">
+                        <div class="hero-fade"></div>
+                    </div>
+                    <div class="home-tabs">
+                        <button class="tab-btn" id="btn-rules">📜 Règles du jeu</button>
+                        <button class="tab-btn" id="btn-codex">🗂️ Dossiers Monarch</button>
+                        <button class="tab-btn" id="btn-medals">🎖️ Rangs de Godzilla</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="home-footer">
+                <button id="btn-start" disabled>🦖 Commencer le chapitre 1</button>
+                <div class="levels-track" id="levels-track"></div>
+            </div>
+        </div>
+
+        <div id="chapter-screen" class="screen hidden">
+            <div class="chapter-eyebrow" id="chapter-eyebrow">Chapitre 1 · Rodan</div>
+            <h1 id="chapter-title">Titre du chapitre</h1>
+            <p id="chapter-text"></p>
+            <div>
+                <button id="btn-chapter-continue">Continuer</button>
+                <button id="btn-chapter-retry" class="secondary hidden">🔁 Recommencer ce chapitre</button>
+                <button id="btn-chapter-menu" class="secondary hidden">🏠 Menu</button>
+            </div>
+        </div>
+
+        <div id="codex-screen" class="screen hidden">
+            <h1>🗂️ Dossiers Monarch</h1>
+            <p>Les Titans déjà rencontrés, avec leur sort final. Clique sur un dossier révélé pour rejouer ce chapitre.</p>
+            <div class="codex-grid" id="codex-grid"></div>
+            <button id="btn-codex-back" class="secondary">↩️ Retour au menu</button>
+        </div>
+
+        <div id="rules-screen" class="screen hidden">
+            <h1>📜 Règles du jeu</h1>
+            <div class="lore-box">
+                <div class="lore-line"><span class="ico">💥</span><span class="lore-text">5 erreurs sur un chapitre = le Titan s'échappe.</span></div>
+                <div class="lore-line"><span class="ico">⚡</span><span class="lore-text">Réponds vite et sans faute : gros bonus de points !</span></div>
+                <div class="lore-line"><span class="ico">🦋</span><span class="lore-text">3 bonnes réponses d'affilée : <b>Mothra</b> efface une faute, à tout moment de l'histoire — elle n'est jamais un adversaire, juste une gardienne bienveillante.</span></div>
+                <div class="lore-line"><span class="ico">🔥</span><span class="lore-text">Enchaîne des chapitres rapides et propres pour déclencher le mode Burning — plus de points à chaque tir !</span></div>
+                <div class="lore-line"><span class="ico">👹</span><span class="lore-text">Le Titan apparaît derrière les rochers quand la fin du chapitre approche.</span></div>
+                <div class="lore-line"><span class="ico">🔓</span><span class="lore-text">Termine un chapitre pour débloquer le suivant et le retrouver dans les Dossiers Monarch.</span></div>
+            </div>
+            <button id="btn-rules-back" class="secondary">↩️ Retour au menu</button>
+        </div>
+
+        <div id="medals-screen" class="screen hidden">
+            <h1>🎖️ Rangs de Godzilla</h1>
+            <p id="medals-progress">Continue à enchaîner les chapitres rapides et propres pour faire progresser ton rang de Godzilla !</p>
+            <div class="medal-grid" id="medal-grid"></div>
+            <button id="btn-medals-back" class="secondary">↩️ Retour au menu</button>
+        </div>
+
+        <div id="end-screen" class="screen hidden">
+            <h1 id="end-title">Fin de partie</h1>
+            <p id="end-desc"></p>
+            <div>
+                <button id="btn-retry-level" class="hidden">🔁 Réessayer ce chapitre</button>
+                <button id="btn-restart-all" class="secondary hidden">↩️ Repartir du chapitre 1</button>
+                <button id="btn-play-again" class="hidden">✨ Rejouer</button>
+                <button id="btn-menu" class="secondary hidden">🏠 Menu</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="custom-cursor">
+    <div class="crosshair-ring"></div>
+    <div class="crosshair-dot"></div>
+</div>
+
+<div id="rotate-prompt">
+    <div class="rotate-icon">📱</div>
+    <p>Tourne ton téléphone ou ta tablette en <b>mode paysage</b> pour jouer confortablement.</p>
+</div>
+
+<!-- Sauvegarde en ligne (facultative) : voir FIREBASE_CONFIG en haut de
+     game.js + le README pour l'activer. Si ces scripts ne se chargent pas
+     (hors-ligne, réseau bloqué...), le jeu continue de fonctionner
+     normalement avec la sauvegarde locale uniquement. -->
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
