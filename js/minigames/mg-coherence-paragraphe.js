@@ -45,11 +45,9 @@
        le présentait), l'Esprit reprend sa taille normale et sursaute
        en pose `esprit-face-porte2` avec sa bulle souriante.
 
-   ⚠️ Éclats de vitrail : en attendant les images `vitrail-eclat-1.png`
-   à `vitrail-eclat-4.png` (320×112px attendues, texte ajouté par le
-   code), le jeu utilise des rectangles colorés de repli — remplacer
-   juste les fichiers dans /assets/sprites/props/, rien à changer
-   dans le code.
+   Éclats de vitrail : `vitrail-eclat-1.png` à `vitrail-eclat-8.png`,
+   fournis par Julie (320×112px, style pixel art cohérent avec le
+   décor), dans /assets/sprites/props/.
 
    Enregistré sous la même notion/variante qu'avant
    ("coherence_paragraphe" / "vitraux_hugo") pour remplacer
@@ -67,7 +65,7 @@
   const CHAR_DIR = "/assets/sprites/characters/";
   const PROPS_DIR = "/assets/sprites/props/";
 
-  const SHARD_IMAGE_COUNT = 4; // vitrail-eclat-1.png à vitrail-eclat-4.png
+  const SHARD_IMAGE_COUNT = 8; // vitrail-eclat-1.png à vitrail-eclat-8.png
   const SHARD_W = 160, SHARD_H = 56; // taille affichée (images sources en 320x112, 2x, pour la netteté)
 
   // --- Texte central, toujours le même (vitrail de Casimodo) ---
