@@ -107,14 +107,19 @@
     return a;
   }
 
-  function loadImg(name) { const img = new Image(); img.src = CHAR_DIR + name; return img; }
+  function loadImg(name) {
+    const img = new Image();
+    img.onerror = () => console.error(`[La Liane des Mots] Image introuvable : ${CHAR_DIR + name}`);
+    img.src = CHAR_DIR + name;
+    return img;
+  }
   function loadImgs(list) { return list.map(loadImg); }
 
   async function run({ canvas, uiContainer, isRemediation }) {
 
     await MinigameUI.showInstructions({
       title: "La Liane des Mots",
-      objective: "L'Esprit porte une proposition principale (affichée au-dessus de lui). Gavroche et Esméralda, chacun d'un côté du gouffre, proposent une suite possible. Déplace-toi avec les flèches gauche/droite (ou les boutons tactiles) et approche-toi de celui qui a, selon toi, la bonne proposition — un pont magique apparaît si c'est juste ! Attention : les deux propositions sont grammaticalement correctes, mais une seule dit vraiment ce qu'annonce son connecteur (cause ou conséquence). Une erreur ne fait que reculer l'Esprit — aucune vie perdue, on retente aussitôt."
+      objective: "L'Esprit porte une proposition principale (affichée au-dessus de lui). Deux échafaudages de fortune traversent le gouffre : l'un mène à Gavroche, l'autre à Esméralda, chacun te proposant une suite possible. Avance avec les flèches gauche/droite (ou les boutons tactiles) sur l'échafaudage de ton choix. Le personnage bloque le passage tant que tu n'as pas répondu : si sa proposition est la bonne, il te laisse passer (bulle toute contente) ; sinon, il t'explique pourquoi ce n'est pas ça (bulle déçue), et il faut retourner au départ pour retenter avec une nouvelle phrase. Attention : les deux propositions sont grammaticalement correctes, mais une seule dit vraiment ce qu'annonce son connecteur (cause ou conséquence)."
     });
 
     return new Promise(resolve => {
@@ -129,26 +134,50 @@
       const gavrocheSide = [1, 2, 3].map(n => loadImg(`gavroche-marche-${n}.png`));
       const esmeraldaSide = [1, 2, 3].map(n => loadImg(`esmeralda-marche${n}.png`));
 
-      let pitchOrder = shuffle(PITCH_BANK.map((_, i) => i)).slice(0, Math.max(ROUNDS_TO_WIN, 3));
+      // --- File de phrases mélangée, jamais épuisée : si on la vide
+      //     (plusieurs erreurs d'affilée), on la remélange plutôt que
+      //     de planter ou de répéter toujours la même. ---
+      let pitchQueue = [];
+      function nextPitch() {
+        if (pitchQueue.length === 0) pitchQueue = shuffle(PITCH_BANK.map((_, i) => i));
+        return PITCH_BANK[pitchQueue.shift()];
+      }
+
+      // --- Chemin en deux échafaudages : t va de -1 (Gavroche) à +1
+      //     (Esméralda), en passant par 0 (départ, au centre, sur la
+      //     bande de pavés solide devant le gouffre). Un léger arc
+      //     vers le haut au milieu du trajet ("on grimpe sur la
+      //     structure") ; l'arrivée retombe au niveau du sol du PNJ. ---
+      const START_X = 0.5 * CANVAS_W;
+      const START_Y = 0.96 * CANVAS_H;
+      const NPC_Y = GROUND_Y;
+      const RISE = 46; // hauteur de l'arc au sommet de l'échafaudage
+
+      function pathPosition(t) {
+        const side = t < 0 ? -1 : 1;
+        const a = Math.min(1, Math.abs(t));
+        const targetX = side < 0 ? NPC_LEFT_X : NPC_RIGHT_X;
+        const x = START_X + (targetX - START_X) * a;
+        const y = START_Y + (NPC_Y - START_Y) * a - RISE * Math.sin(a * Math.PI);
+        return { x, y };
+      }
+
+      let round = null; // { pitch, leftIsCorrect, leftName, rightName, leftText, rightText }
       let roundIndex = 0;
-      let round = null;         // { pitch, leftIsCorrect, leftName, rightName, leftText, rightText }
       let roundsWon = 0;
 
-      const player = { x: START_X, y: GROUND_Y, facing: "right", moving: false };
+      const player = { t: 0, facing: "right", moving: false };
       let animFrame = 0, animTimer = 0;
 
-      let locked = false; // pendant une résolution (succès/échec), plus de déplacement
-      let bridgeProgress = 0; // 0..1, pont qui se construit
-      let feedbackText = "", feedbackColor = "#f4f1ea", feedbackTimer = 0;
-      let slipTimer = 0;
+      let locked = false;
+      let crossingSide = 0; // -1/0/+1 pendant l'animation de franchissement après une bonne réponse
+      let resultBubble = { side: 0, kind: null, text: "" }; // kind: "happy" | "sad"
+      let resultTimer = 0;
       let resultGiven = false;
 
       function loadRound() {
-        const pitch = PITCH_BANK[pitchOrder[roundIndex]];
+        const pitch = nextPitch();
         const correctOnLeft = Math.random() < 0.5;
-        // Attribue Gavroche/Esméralda aléatoirement aux deux côtés,
-        // indépendamment de qui a la bonne réponse — aucune position
-        // ni aucun personnage n'est jamais un indice fiable.
         const names = shuffle(["Gavroche", "Esméralda"]);
         round = {
           pitch,
@@ -158,12 +187,12 @@
           leftText: correctOnLeft ? pitch.correct : pitch.wrong,
           rightText: correctOnLeft ? pitch.wrong : pitch.correct
         };
-        bridgeProgress = 0;
+        resultBubble = { side: 0, kind: null, text: "" };
       }
       loadRound();
 
       uiContainer.innerHTML = `
-        <div class="hud-item">${isRemediation ? "Entraînement" : "Évaluation"} — Manche <span id="mg-round">1</span> / ${ROUNDS_TO_WIN}</div>
+        <div class="hud-item">${isRemediation ? "Entraînement" : "Évaluation"} — Franchissements réussis : <span id="mg-round">0</span> / ${ROUNDS_TO_WIN}</div>
       `;
       uiContainer.insertAdjacentHTML("beforeend", `
         <div class="touch-controls">
@@ -194,35 +223,40 @@
         btn.addEventListener("mouseup", set(false));
       });
 
-      function showFeedback(text, color, duration) {
-        feedbackText = text; feedbackColor = color; feedbackTimer = duration || 90;
-      }
-
-      function resolveChoice(pickedCorrect) {
+      function resolveChoice(side) {
+        // side: -1 (Gavroche) ou +1 (Esméralda)
         locked = true;
+        const pickedCorrect = side < 0 ? round.leftIsCorrect : !round.leftIsCorrect;
+        const why = round.pitch.why;
+
         if (pickedCorrect) {
-          const buildBridge = () => {
-            bridgeProgress += 0.03;
-            if (bridgeProgress < 1) { requestAnimationFrame(buildBridge); return; }
-            showFeedback("✓ Exact ! " + round.pitch.why, "#6fcf97", 160);
-            roundsWon++;
-            setTimeout(() => {
-              roundIndex++;
-              if (roundsWon >= ROUNDS_TO_WIN) { endGame(); return; }
-              player.x = START_X;
-              loadRound();
-              roundLabel.textContent = Math.min(roundsWon + 1, ROUNDS_TO_WIN);
-              locked = false;
-            }, 1700);
-          };
-          buildBridge();
-        } else {
-          showFeedback("✗ Pas cette fois — " + round.pitch.why, "#d9534f", 160);
-          slipTimer = 24;
+          resultBubble = { side, kind: "happy", text: "" };
           setTimeout(() => {
-            player.x = START_X;
+            // Le passage est libre : on continue au-delà du PNJ pour
+            // terminer la traversée, puis on enchaîne.
+            crossingSide = side;
+            const finishCrossing = () => {
+              player.t += side * 0.03;
+              if (Math.abs(player.t) < 1.3) { requestAnimationFrame(finishCrossing); return; }
+              roundsWon++;
+              roundLabel.textContent = Math.min(roundsWon, ROUNDS_TO_WIN);
+              if (roundsWon >= ROUNDS_TO_WIN) { endGame(); return; }
+              player.t = 0;
+              crossingSide = 0;
+              loadRound();
+              locked = false;
+            };
+            finishCrossing();
+          }, 1300);
+        } else {
+          resultBubble = { side, kind: "sad", text: why };
+          resultTimer = 220;
+          setTimeout(() => {
+            player.t = 0;
+            resultBubble = { side: 0, kind: null, text: "" };
+            loadRound(); // nouvelle phrase obligatoire après une erreur
             locked = false;
-          }, 1400);
+          }, 2600);
         }
       }
 
@@ -238,37 +272,35 @@
         cleanup();
         await MinigameUI.showResult({
           passed: true,
-          message: "Trois ponts franchis, trois liens logiques rétablis. Gavroche et Esméralda applaudissent bien fort !"
+          message: "Trois échafaudages franchis, trois liens logiques rétablis. Gavroche et Esméralda applaudissent bien fort !"
         });
         resolve({ passed: true, score: ROUNDS_TO_WIN, total: ROUNDS_TO_WIN });
       }
 
       let rafId;
       function loop() {
-        if (!locked) {
-          player.moving = false;
-          if (keys.left) { player.x -= 3.4; player.facing = "left"; player.moving = true; }
-          if (keys.right) { player.x += 3.4; player.facing = "right"; player.moving = true; }
-          player.x = Math.max(20, Math.min(CANVAS_W - 20, player.x));
+        try {
+          if (!locked) {
+            player.moving = false;
+            if (keys.left) { player.t = Math.max(-1, player.t - 0.018); player.facing = "left"; player.moving = true; }
+            if (keys.right) { player.t = Math.min(1, player.t + 0.018); player.facing = "right"; player.moving = true; }
 
-          if (player.moving) {
-            animTimer++;
-            if (animTimer >= 8) { animTimer = 0; animFrame = (animFrame + 1) % 3; }
+            if (player.moving) {
+              animTimer++;
+              if (animTimer >= 8) { animTimer = 0; animFrame = (animFrame + 1) % 3; }
+            }
+
+            // Le PNJ bloque le passage : atteindre ±1 déclenche la résolution.
+            if (player.t <= -0.98) resolveChoice(-1);
+            else if (player.t >= 0.98) resolveChoice(1);
           }
 
-          // Proximité avec un PNJ = choix déclenché automatiquement
-          if (Math.abs(player.x - NPC_LEFT_X) < 30) {
-            resolveChoice(round.leftIsCorrect);
-          } else if (Math.abs(player.x - NPC_RIGHT_X) < 30) {
-            resolveChoice(!round.leftIsCorrect);
-          }
-        } else if (slipTimer > 0) {
-          slipTimer--;
+          if (resultTimer > 0) resultTimer--;
+
+          render();
+        } catch (err) {
+          console.error("[La Liane des Mots] Erreur dans la boucle de jeu :", err);
         }
-
-        if (feedbackTimer > 0) feedbackTimer--;
-
-        render();
         if (!resultGiven) rafId = requestAnimationFrame(loop);
       }
 
@@ -302,36 +334,77 @@
         return lines;
       }
 
-      function drawBubble(cx, y, text, maxWidth) {
-        ctx.font = "12px sans-serif";
-        const lines = wrapText(text, maxWidth - 24);
-        const lh = 15;
-        const bw = maxWidth;
-        const bh = lines.length * lh + 18;
-        const bx = cx - bw / 2;
-        const by = y - bh - 14;
-
+      function drawBubbleBox(cx, y, w, h) {
+        const bx = Math.max(6, Math.min(CANVAS_W - w - 6, cx - w / 2));
+        const by = y - h - 14;
         ctx.fillStyle = "rgba(26,21,48,0.92)";
         ctx.strokeStyle = "#e8c468";
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.roundRect ? ctx.roundRect(bx, by, bw, bh, 8) : ctx.rect(bx, by, bw, bh);
+        ctx.roundRect ? ctx.roundRect(bx, by, w, h, 8) : ctx.rect(bx, by, w, h);
         ctx.fill();
         ctx.stroke();
-        // petite pointe
         ctx.beginPath();
-        ctx.moveTo(cx - 8, by + bh);
-        ctx.lineTo(cx + 8, by + bh);
-        ctx.lineTo(cx, by + bh + 10);
+        ctx.moveTo(cx - 8, by + h);
+        ctx.lineTo(cx + 8, by + h);
+        ctx.lineTo(cx, by + h + 10);
         ctx.closePath();
         ctx.fillStyle = "#e8c468";
         ctx.fill();
+        return { bx, by };
+      }
 
+      function drawTextBubble(cx, y, text, maxWidth) {
+        ctx.font = "12px sans-serif";
+        const lines = wrapText(text, maxWidth - 24);
+        const lh = 15;
+        const bh = lines.length * lh + 18;
+        const { bx, by } = drawBubbleBox(cx, y, maxWidth, bh);
         ctx.fillStyle = "#f4f1ea";
         ctx.textAlign = "center";
         ctx.textBaseline = "top";
         let ty = by + 9;
-        lines.forEach(l => { ctx.fillText(l, cx, ty); ty += lh; });
+        lines.forEach(l => { ctx.fillText(l, bx + maxWidth / 2, ty); ty += lh; });
+      }
+
+      function drawSmiley(cx, cy, happy, radius) {
+        ctx.save();
+        ctx.strokeStyle = "#1a1530";
+        ctx.lineWidth = 2;
+        ctx.fillStyle = happy ? "#6fcf97" : "#d9534f";
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = "#1a1530";
+        ctx.beginPath(); ctx.arc(cx - radius * 0.35, cy - radius * 0.15, radius * 0.1, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(cx + radius * 0.35, cy - radius * 0.15, radius * 0.1, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath();
+        if (happy) ctx.arc(cx, cy + radius * 0.05, radius * 0.4, 0.15 * Math.PI, 0.85 * Math.PI);
+        else ctx.arc(cx, cy + radius * 0.55, radius * 0.4, 1.15 * Math.PI, 1.85 * Math.PI);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      function drawSmileyBubble(cx, y, happy, why) {
+        const w = happy ? 90 : 260;
+        if (happy) {
+          const h = 66;
+          const { bx, by } = drawBubbleBox(cx, y, w, h);
+          drawSmiley(bx + w / 2, by + h / 2, true, 22);
+        } else {
+          ctx.font = "12px sans-serif";
+          const lines = wrapText(why, w - 60);
+          const lh = 15;
+          const h = Math.max(66, lines.length * lh + 18);
+          const { bx, by } = drawBubbleBox(cx, y, w, h);
+          drawSmiley(bx + 34, by + h / 2, false, 18);
+          ctx.fillStyle = "#f4f1ea";
+          ctx.textAlign = "left";
+          ctx.textBaseline = "top";
+          let ty = by + (h - lines.length * lh) / 2;
+          lines.forEach(l => { ctx.fillText(l, bx + 60, ty); ty += lh; });
+        }
       }
 
       function render() {
@@ -342,58 +415,61 @@
           ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
         }
 
-        // Pont magique (se construit progressivement au centre du gouffre)
-        if (bridgeProgress > 0) {
-          const w = (GORGE_X2 - GORGE_X1) * bridgeProgress;
-          ctx.save();
-          ctx.shadowColor = "#e8c468";
-          ctx.shadowBlur = 14;
-          ctx.fillStyle = "#e8c468";
-          ctx.fillRect(GORGE_X1, GROUND_Y - 6, w, 8);
-          ctx.restore();
-        }
+        // Deux échafaudages (traits pointillés simples, style bois de fortune)
+        [-1, 1].forEach(side => {
+          const from = pathPosition(0);
+          const mid = pathPosition(side * 0.5);
+          const to = pathPosition(side);
+          ctx.strokeStyle = "rgba(180,150,110,0.8)";
+          ctx.lineWidth = 5;
+          ctx.beginPath();
+          ctx.moveTo(from.x, from.y + 6);
+          ctx.quadraticCurveTo(mid.x, mid.y + 6, to.x, to.y + 6);
+          ctx.stroke();
+          ctx.strokeStyle = "rgba(90,70,50,0.9)";
+          ctx.lineWidth = 2;
+          ctx.setLineDash([10, 8]);
+          ctx.beginPath();
+          ctx.moveTo(from.x, from.y + 6);
+          ctx.quadraticCurveTo(mid.x, mid.y + 6, to.x, to.y + 6);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        });
 
-        // Principale (bulle fixe au-dessus de l'Esprit, suit son déplacement)
-        drawBubble(player.x, player.y - 46, round.pitch.principal, 260);
+        // Principale (bulle fixe en haut, ne suit plus le joueur pour rester lisible)
+        drawTextBubble(CANVAS_W / 2, 90, round.pitch.principal, 320);
 
-        // PNJ + leurs propositions
+        // PNJ + leur proposition (ou le smiley de résultat, une fois résolu)
         const NW = 34, NH = 46;
-        drawBubble(NPC_LEFT_X, GROUND_Y - NH - 10, round.leftText, 240);
-        drawBubble(NPC_RIGHT_X, GROUND_Y - NH - 10, round.rightText, 240);
+        const leftPos = pathPosition(-1), rightPos = pathPosition(1);
+
+        if (resultBubble.side === -1 && resultBubble.kind) {
+          drawSmileyBubble(leftPos.x, leftPos.y, resultBubble.kind === "happy", resultBubble.text);
+        } else {
+          drawTextBubble(leftPos.x, leftPos.y, round.leftText, 230);
+        }
+        if (resultBubble.side === 1 && resultBubble.kind) {
+          drawSmileyBubble(rightPos.x, rightPos.y, resultBubble.kind === "happy", resultBubble.text);
+        } else {
+          drawTextBubble(rightPos.x, rightPos.y, round.rightText, 230);
+        }
 
         const leftImgs = round.leftName === "Gavroche" ? gavrocheSide : esmeraldaSide;
         const rightImgs = round.rightName === "Gavroche" ? gavrocheSide : esmeraldaSide;
-        drawSprite(leftImgs[1], NPC_LEFT_X - NW / 2, GROUND_Y - NH, NW, NH, true);
-        drawSprite(rightImgs[1], NPC_RIGHT_X - NW / 2, GROUND_Y - NH, NW, NH, false);
+        drawSprite(leftImgs[1], leftPos.x - NW / 2, leftPos.y - NH, NW, NH, true);
+        drawSprite(rightImgs[1], rightPos.x - NW / 2, rightPos.y - NH, NW, NH, false);
 
         ctx.fillStyle = "#c9c2e0";
         ctx.font = "11px sans-serif";
         ctx.textAlign = "center";
-        ctx.fillText(round.leftName, NPC_LEFT_X, GROUND_Y + 14);
-        ctx.fillText(round.rightName, NPC_RIGHT_X, GROUND_Y + 14);
+        ctx.fillText(round.leftName, leftPos.x, leftPos.y + 14);
+        ctx.fillText(round.rightName, rightPos.x, rightPos.y + 14);
 
-        // Esprit (joueur)
+        // Esprit (joueur), sur l'échafaudage
         const PW = 30, PH = 44;
-        const wobble = slipTimer > 0 ? Math.sin(slipTimer * 0.8) * 6 : 0;
+        const pos = pathPosition(player.t);
         const frame = player.moving ? espritSide[1 + (animFrame % 3)] : espritSide[1];
-        drawSprite(frame, player.x - PW / 2 + wobble, player.y - PH, PW, PH, player.facing === "left");
-
-        // Message de retour (succès/échec de la manche)
-        if (feedbackTimer > 0) {
-          ctx.save();
-          ctx.globalAlpha = Math.min(1, feedbackTimer / 30);
-          ctx.fillStyle = "rgba(26,21,48,0.88)";
-          ctx.fillRect(CANVAS_W / 2 - 340, 14, 680, 50);
-          ctx.fillStyle = feedbackColor;
-          ctx.font = "bold 13px sans-serif";
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          const lines = wrapText(feedbackText, 650);
-          const lh = 16;
-          let ty = 39 - (lines.length - 1) * lh / 2;
-          lines.forEach(l => { ctx.fillText(l, CANVAS_W / 2, ty); ty += lh; });
-          ctx.restore();
-        }
+        drawSprite(frame, pos.x - PW / 2, pos.y - PH, PW, PH, player.facing === "left");
       }
 
       render();
