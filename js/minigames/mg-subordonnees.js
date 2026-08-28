@@ -50,13 +50,6 @@
   const BG_SRC = "/assets/backgrounds/decors_minijeu_cour_miracles.png";
   const CHAR_DIR = "/assets/sprites/characters/";
 
-  const GROUND_Y = 0.90 * CANVAS_H;   // ligne de déplacement (pavés du premier plan)
-  const NPC_LEFT_X = 0.30 * CANVAS_W;
-  const NPC_RIGHT_X = 0.70 * CANVAS_W;
-  const START_X = 0.10 * CANVAS_W;
-  const GORGE_X1 = 0.40 * CANVAS_W;   // zone du gouffre (pour le pont dessiné)
-  const GORGE_X2 = 0.60 * CANVAS_W;
-
   const ROUNDS_TO_WIN = 3;
 
   /**
@@ -131,6 +124,7 @@
       const bgImg = new Image(); bgImg.src = BG_SRC;
 
       const espritSide = [0, 1, 2, 3, 4, 5].map(n => loadImg(`esprit-marche-${n}.png`));
+      const espritDos = [1, 2, 3].map(n => loadImg(`esprit-dos-${n}.png`));
       const gavrocheSide = [1, 2, 3].map(n => loadImg(`gavroche-marche-${n}.png`));
       const esmeraldaSide = [1, 2, 3].map(n => loadImg(`esmeralda-marche${n}.png`));
 
@@ -143,23 +137,41 @@
         return PITCH_BANK[pitchQueue.shift()];
       }
 
-      // --- Chemin en deux échafaudages : t va de -1 (Gavroche) à +1
-      //     (Esméralda), en passant par 0 (départ, au centre, sur la
-      //     bande de pavés solide devant le gouffre). Un léger arc
-      //     vers le haut au milieu du trajet ("on grimpe sur la
-      //     structure") ; l'arrivée retombe au niveau du sol du PNJ. ---
-      const START_X = 0.5 * CANVAS_W;
-      const START_Y = 0.96 * CANVAS_H;
-      const NPC_Y = GROUND_Y;
-      const RISE = 46; // hauteur de l'arc au sommet de l'échafaudage
+      // --- Parcours façon Donkey Kong (v3, suite au retour de Julie) :
+      //     UNE SEULE entrée en bas à gauche, avec une échelle qui
+      //     monte jusqu'à une bifurcation ; de là, DEUX poutres
+      //     inclinées mènent chacune à un étage différent (Gavroche
+      //     plus bas/proche, Esméralda plus haut/loin). t va de -1
+      //     (tout en haut chez Gavroche) à +1 (tout en haut chez
+      //     Esméralda), en passant par 0 (départ, en bas de l'échelle).
+      //     LADDER_FRACTION = portion du trajet (en |t|) passée sur
+      //     l'échelle PARTAGÉE avant la bifurcation — au-delà, chaque
+      //     branche suit sa propre poutre inclinée jusqu'à son étage.
+      const ENTRANCE_X = 0.12 * CANVAS_W;
+      const ENTRANCE_Y = 0.92 * CANVAS_H;
+      const FORK_Y = 0.55 * CANVAS_H;
+      const GAVROCHE_LEDGE = { x: 0.72 * CANVAS_W, y: 0.42 * CANVAS_H };
+      const ESMERALDA_LEDGE = { x: 0.85 * CANVAS_W, y: 0.20 * CANVAS_H };
+      const LADDER_FRACTION = 0.35;
 
+      function lerp(a, b, f) { return a + (b - a) * f; }
+
+      /**
+       * Renvoie { x, y, climbing } pour une position t (-1..1) sur le
+       * parcours. climbing=true tant qu'on est sur l'échelle partagée
+       * (avant la bifurcation) — l'Esprit doit alors être dessiné de
+       * dos, comme demandé par Julie.
+       */
       function pathPosition(t) {
         const side = t < 0 ? -1 : 1;
         const a = Math.min(1, Math.abs(t));
-        const targetX = side < 0 ? NPC_LEFT_X : NPC_RIGHT_X;
-        const x = START_X + (targetX - START_X) * a;
-        const y = START_Y + (NPC_Y - START_Y) * a - RISE * Math.sin(a * Math.PI);
-        return { x, y };
+        if (a <= LADDER_FRACTION) {
+          const f = a / LADDER_FRACTION;
+          return { x: ENTRANCE_X, y: lerp(ENTRANCE_Y, FORK_Y, f), climbing: true };
+        }
+        const f = (a - LADDER_FRACTION) / (1 - LADDER_FRACTION);
+        const target = side < 0 ? GAVROCHE_LEDGE : ESMERALDA_LEDGE;
+        return { x: lerp(ENTRANCE_X, target.x, f), y: lerp(FORK_Y, target.y, f), climbing: false };
       }
 
       let round = null; // { pitch, leftIsCorrect, leftName, rightName, leftText, rightText }
@@ -415,26 +427,35 @@
           ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
         }
 
-        // Deux échafaudages (traits pointillés simples, style bois de fortune)
-        [-1, 1].forEach(side => {
-          const from = pathPosition(0);
-          const mid = pathPosition(side * 0.5);
-          const to = pathPosition(side);
-          ctx.strokeStyle = "rgba(180,150,110,0.8)";
-          ctx.lineWidth = 5;
+        // --- Structure façon Donkey Kong : une échelle unique (entrée),
+        //     puis deux poutres inclinées vers deux étages différents ---
+        function drawLadder(x, yTop, yBottom) {
+          ctx.strokeStyle = "#c98a4b";
+          ctx.lineWidth = 4;
           ctx.beginPath();
-          ctx.moveTo(from.x, from.y + 6);
-          ctx.quadraticCurveTo(mid.x, mid.y + 6, to.x, to.y + 6);
+          ctx.moveTo(x - 10, yTop); ctx.lineTo(x - 10, yBottom);
+          ctx.moveTo(x + 10, yTop); ctx.lineTo(x + 10, yBottom);
           ctx.stroke();
-          ctx.strokeStyle = "rgba(90,70,50,0.9)";
-          ctx.lineWidth = 2;
-          ctx.setLineDash([10, 8]);
-          ctx.beginPath();
-          ctx.moveTo(from.x, from.y + 6);
-          ctx.quadraticCurveTo(mid.x, mid.y + 6, to.x, to.y + 6);
-          ctx.stroke();
+          ctx.lineWidth = 3;
+          for (let y = yTop; y <= yBottom; y += 14) {
+            ctx.beginPath();
+            ctx.moveTo(x - 10, y); ctx.lineTo(x + 10, y);
+            ctx.stroke();
+          }
+        }
+        function drawGirder(x1, y1, x2, y2) {
+          ctx.strokeStyle = "#b5552e";
+          ctx.lineWidth = 10;
+          ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+          ctx.strokeStyle = "#7a3418";
+          ctx.lineWidth = 3;
+          ctx.setLineDash([2, 6]);
+          ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
           ctx.setLineDash([]);
-        });
+        }
+        drawLadder(ENTRANCE_X, FORK_Y, ENTRANCE_Y);
+        drawGirder(ENTRANCE_X, FORK_Y, GAVROCHE_LEDGE.x, GAVROCHE_LEDGE.y);
+        drawGirder(ENTRANCE_X, FORK_Y, ESMERALDA_LEDGE.x, ESMERALDA_LEDGE.y);
 
         // Principale (bulle fixe en haut, ne suit plus le joueur pour rester lisible)
         drawTextBubble(CANVAS_W / 2, 90, round.pitch.principal, 320);
@@ -465,11 +486,18 @@
         ctx.fillText(round.leftName, leftPos.x, leftPos.y + 14);
         ctx.fillText(round.rightName, rightPos.x, rightPos.y + 14);
 
-        // Esprit (joueur), sur l'échafaudage
+        // Esprit (joueur) : de DOS sur l'échelle (avant la bifurcation),
+        // de profil sur la poutre inclinée ensuite — comme demandé.
         const PW = 30, PH = 44;
         const pos = pathPosition(player.t);
-        const frame = player.moving ? espritSide[1 + (animFrame % 3)] : espritSide[1];
-        drawSprite(frame, pos.x - PW / 2, pos.y - PH, PW, PH, player.facing === "left");
+        let frame;
+        if (pos.climbing) {
+          frame = player.moving ? espritDos[animFrame % espritDos.length] : espritDos[0];
+        } else {
+          frame = player.moving ? espritSide[1 + (animFrame % 3)] : espritSide[1];
+        }
+        const flip = !pos.climbing && player.facing === "left";
+        drawSprite(frame, pos.x - PW / 2, pos.y - PH, PW, PH, flip);
       }
 
       render();
