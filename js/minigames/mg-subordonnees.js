@@ -1,48 +1,59 @@
 /* ============================================================
-   LE MANUSCRIT DES MONDES — mg-subordonnees.js (v2)
+   LE MANUSCRIT DES MONDES — mg-subordonnees.js (v3)
    ============================================================
    Mini-jeu "La Liane des Mots" (Monde 1 — Hugo, acte propositions
-   subordonnées). REMPLACE ENTIÈREMENT l'ancien "Les Cloches de
-   Notre-Dame" (memory), jugé "nul" par Julie.
+   subordonnées). REFONTE COMPLÈTE suite au cahier des charges
+   validé par Julie (CAHIER_DES_CHARGES_liane-des-mots.md) — les
+   deux tentatives précédentes (curseur simple, poutres courbées)
+   ne correspondaient pas à sa vision. Cette version suit le
+   document de référence de près : vraie structure Donkey Kong,
+   plateformes + échelles, contrôles haut/bas/gauche/droite.
 
-   ---- PRINCIPE ----
-   L'Esprit (joueur) porte une PROPOSITION PRINCIPALE, affichée en
-   bulle au-dessus de lui. Gavroche et Esméralda, postés chacun d'un
-   côté du gouffre de la Cour des Miracles, proposent chacun une
-   PROPOSITION SUBORDONNÉE candidate pour compléter la phrase.
+   ---- STRUCTURE DU NIVEAU (Monde 1 : 2 choix, 1 bifurcation) ----
 
-   Le piège n'est PAS "une subordonnée correcte contre une absurde" :
-   les deux propositions sont grammaticalement correctes et
-   plausibles isolément — mais UNE SEULE correspond réellement au
-   lien logique annoncé par son propre connecteur (cause vs
-   conséquence, pour ce premier monde). L'autre utilise un connecteur
-   qui annonce le contraire de ce que dit vraiment la phrase (ex. un
-   "si bien que" sur un contenu qui est en réalité une CAUSE, pas une
-   conséquence).
+                [Plateforme A]              [Plateforme B]
+                PNJ bloque le passage       PNJ bloque le passage
+                     |                            |
+                échelle A                    échelle B
+                     |                            |
+                +----+----------------------------+----+
+                |      Plateforme de bifurcation        |
+                +---------------+------------------------+
+                                |
+                          échelle d'entrée
+                                |
+                            [Départ]
 
-   Déplacement simple, un seul axe horizontal, le long du premier
-   plan (bande de pavés devant le gouffre) — pas de saut ni de vraie
-   physique de plateforme (choix délibéré : impossible de calibrer
-   des sauts de façon fiable sans pouvoir tester en direct). S'approcher
-   du bon PNJ fait apparaître un pont magique lumineux au-dessus du
-   gouffre ; se tromper fait glisser l'Esprit en arrière (grimace,
-   AUCUNE perte de vie), et on retente aussitôt.
+   - Une échelle d'entrée unique mène du sol à la plateforme de
+     bifurcation.
+   - Sur la bifurcation, on se déplace latéralement pour choisir
+     l'échelle A (gauche) ou B (droite), qui montent chacune vers
+     une plateforme à une hauteur DIFFÉRENTE.
+   - Chaque plateforme d'arrivée est BLOQUÉE par un PNJ qui affiche
+     sa proposition de subordonnée — impossible de le contourner.
+   - Bonne réponse → une échelle de sortie apparaît PLUS LOIN sur
+     cette même plateforme (au-delà du PNJ), qui permet de
+     redescendre de l'autre côté : la manche est gagnée.
+   - Mauvaise réponse → chute comique (tête de mort façon "Game
+     Over" rétro), retour à la case départ, NOUVELLE phrase à la
+     prochaine tentative (jamais la même qu'on vient de rater).
 
-   Palier 1 (ce monde) : le connecteur est déjà écrit dans la
-   proposition candidate, rien à assembler. Les paliers suivants
-   (Monde 2+) introduiront la récolte du bon connecteur séparément —
-   volontairement pas ici, pour rester simple en première rencontre.
+   ---- CONTRÔLES ----
+   Gauche/Droite : déplacement le long d'une plateforme.
+   Haut/Bas : grimper/descendre une échelle, uniquement si le
+   personnage est aligné avec sa base (comme dans Donkey Kong).
 
-   Assignation Gavroche/Esméralda (qui dit la bonne réponse, de quel
-   côté) : entièrement aléatoire à chaque manche, pour qu'aucune
-   mémorisation de position ne remplace la réflexion.
+   ---- LES PNJ SONT UN PARAMÈTRE DU NIVEAU ----
+   Volontairement définis dans LEVEL_NPCS (pas codés en dur ailleurs
+   dans le fichier) : quand on dupliquera ce fichier pour un futur
+   monde, seule cette liste (+ les phrases) doit changer.
 
    Enregistré sous la même notion/variante qu'avant
    ("subordonnees" / "cloches_hugo") pour remplacer entièrement
-   l'ancienne version.
+   les versions précédentes.
    ============================================================ */
 
-(function registerSubordonneesHugoV2() {
+(function registerSubordonneesHugoV3() {
 
   const CANVAS_W = 1024;
   const CANVAS_H = 572;
@@ -51,12 +62,21 @@
   const CHAR_DIR = "/assets/sprites/characters/";
 
   const ROUNDS_TO_WIN = 3;
+  const ALIGN_TOLERANCE = 14; // marge horizontale tolérée pour "aligné avec la base d'une échelle"
+  const WALK_SPEED = 2.6;
+  const CLIMB_SPEED = 2.2;
+
+  // --- PNJ du Monde 1 (Hugo). À REMPLACER intégralement pour un futre
+  //     monde — rien d'autre dans ce fichier ne dépend de ces noms. ---
+  const LEVEL_NPCS = [
+    { name: "Gavroche", sprites: [1, 2, 3].map(n => `gavroche-marche-${n}.png`) },
+    { name: "Esméralda", sprites: [1, 2, 3].map(n => `esmeralda-marche${n}.png`) }
+  ];
 
   /**
    * Banque de manches : une principale + une subordonnée correcte
    * (avec son vrai connecteur) + une version INVERSÉE (même contenu
-   * factuel, mauvais connecteur — piège purement logique, jamais une
-   * phrase absurde).
+   * factuel, mauvais connecteur — piège purement logique).
    */
   const PITCH_BANK = [
     {
@@ -79,8 +99,8 @@
     },
     {
       principal: "Gavroche éclata de rire",
-      correct: "parce que Frollo venait de glisser sur une pelure",
-      wrong: "si bien que Frollo venait de glisser sur une pelure",
+      correct: "parce que Frollo venait de glisser sur une peau de banane",
+      wrong: "si bien que Frollo venait de glisser sur une peau de banane",
       why: "« parce que » annonce une CAUSE : c'est la glissade de Frollo qui a fait rire Gavroche, pas l'inverse."
     },
     {
@@ -106,13 +126,12 @@
     img.src = CHAR_DIR + name;
     return img;
   }
-  function loadImgs(list) { return list.map(loadImg); }
 
   async function run({ canvas, uiContainer, isRemediation }) {
 
     await MinigameUI.showInstructions({
       title: "La Liane des Mots",
-      objective: "L'Esprit porte une proposition principale (affichée au-dessus de lui). Deux échafaudages de fortune traversent le gouffre : l'un mène à Gavroche, l'autre à Esméralda, chacun te proposant une suite possible. Avance avec les flèches gauche/droite (ou les boutons tactiles) sur l'échafaudage de ton choix. Le personnage bloque le passage tant que tu n'as pas répondu : si sa proposition est la bonne, il te laisse passer (bulle toute contente) ; sinon, il t'explique pourquoi ce n'est pas ça (bulle déçue), et il faut retourner au départ pour retenter avec une nouvelle phrase. Attention : les deux propositions sont grammaticalement correctes, mais une seule dit vraiment ce qu'annonce son connecteur (cause ou conséquence)."
+      objective: "Grimpe l'échelle de départ (flèche du haut), puis choisis ton chemin sur la plateforme de bifurcation (flèches gauche/droite) pour emprunter l'une des deux échelles qui montent chacune vers un personnage différent. Ce personnage bloque le passage tant que tu n'as pas répondu : bonne proposition → une échelle de sortie s'ouvre plus loin sur sa plateforme, tu peux redescendre de l'autre côté. Mauvaise proposition → tout le monde dégringole, il faut recommencer avec une nouvelle phrase. Les deux propositions sont grammaticalement correctes : une seule dit vraiment ce qu'annonce son connecteur (cause ou conséquence)."
     });
 
     return new Promise(resolve => {
@@ -125,104 +144,101 @@
 
       const espritSide = [0, 1, 2, 3, 4, 5].map(n => loadImg(`esprit-marche-${n}.png`));
       const espritDos = [1, 2, 3].map(n => loadImg(`esprit-dos-${n}.png`));
-      const gavrocheSide = [1, 2, 3].map(n => loadImg(`gavroche-marche-${n}.png`));
-      const esmeraldaSide = [1, 2, 3].map(n => loadImg(`esmeralda-marche${n}.png`));
+      const npcSprites = LEVEL_NPCS.map(npc => npc.sprites.map(loadImg));
 
-      // --- File de phrases mélangée, jamais épuisée : si on la vide
-      //     (plusieurs erreurs d'affilée), on la remélange plutôt que
-      //     de planter ou de répéter toujours la même. ---
+      // ============================================================
+      // GÉOMÉTRIE DU NIVEAU (voir schéma en en-tête)
+      // ============================================================
+      const GROUND_Y = 0.90 * CANVAS_H;
+      const LADDER0_X = 0.15 * CANVAS_W;
+      const GROUND_X0 = LADDER0_X - 50;
+
+      const FORK_Y = 0.62 * CANVAS_H;
+      const FORK_X0 = 0.10 * CANVAS_W;
+      const FORK_X1 = 0.58 * CANVAS_W;
+      const LADDER_A_X = 0.25 * CANVAS_W;
+      const LADDER_B_X = 0.48 * CANVAS_W;
+
+      const PLAT_A_Y = 0.40 * CANVAS_H;
+      const PLAT_A_X0 = LADDER_A_X;
+      const PLAT_A_X1 = 0.62 * CANVAS_W;
+      const NPC_A_X = 0.44 * CANVAS_W;
+      const EXIT_LADDER_A_X = PLAT_A_X1 - 20;
+
+      const PLAT_B_Y = 0.20 * CANVAS_H;
+      const PLAT_B_X0 = LADDER_B_X;
+      const PLAT_B_X1 = 0.90 * CANVAS_W;
+      const NPC_B_X = 0.68 * CANVAS_W;
+      const EXIT_LADDER_B_X = PLAT_B_X1 - 20;
+
+      const EXIT_GROUND_Y = GROUND_Y;
+
+      // --- File de phrases mélangée, jamais épuisée ---
       let pitchQueue = [];
       function nextPitch() {
         if (pitchQueue.length === 0) pitchQueue = shuffle(PITCH_BANK.map((_, i) => i));
         return PITCH_BANK[pitchQueue.shift()];
       }
 
-      // --- Parcours façon Donkey Kong (v3, suite au retour de Julie) :
-      //     UNE SEULE entrée en bas à gauche, avec une échelle qui
-      //     monte jusqu'à une bifurcation ; de là, DEUX poutres
-      //     inclinées mènent chacune à un étage différent (Gavroche
-      //     plus bas/proche, Esméralda plus haut/loin). t va de -1
-      //     (tout en haut chez Gavroche) à +1 (tout en haut chez
-      //     Esméralda), en passant par 0 (départ, en bas de l'échelle).
-      //     LADDER_FRACTION = portion du trajet (en |t|) passée sur
-      //     l'échelle PARTAGÉE avant la bifurcation — au-delà, chaque
-      //     branche suit sa propre poutre inclinée jusqu'à son étage.
-      const ENTRANCE_X = 0.12 * CANVAS_W;
-      const ENTRANCE_Y = 0.92 * CANVAS_H;
-      const FORK_Y = 0.55 * CANVAS_H;
-      const GAVROCHE_LEDGE = { x: 0.72 * CANVAS_W, y: 0.42 * CANVAS_H };
-      const ESMERALDA_LEDGE = { x: 0.85 * CANVAS_W, y: 0.20 * CANVAS_H };
-      const LADDER_FRACTION = 0.35;
-
-      function lerp(a, b, f) { return a + (b - a) * f; }
-
-      /**
-       * Renvoie { x, y, climbing } pour une position t (-1..1) sur le
-       * parcours. climbing=true tant qu'on est sur l'échelle partagée
-       * (avant la bifurcation) — l'Esprit doit alors être dessiné de
-       * dos, comme demandé par Julie.
-       */
-      function pathPosition(t) {
-        const side = t < 0 ? -1 : 1;
-        const a = Math.min(1, Math.abs(t));
-        if (a <= LADDER_FRACTION) {
-          const f = a / LADDER_FRACTION;
-          return { x: ENTRANCE_X, y: lerp(ENTRANCE_Y, FORK_Y, f), climbing: true };
-        }
-        const f = (a - LADDER_FRACTION) / (1 - LADDER_FRACTION);
-        const target = side < 0 ? GAVROCHE_LEDGE : ESMERALDA_LEDGE;
-        return { x: lerp(ENTRANCE_X, target.x, f), y: lerp(FORK_Y, target.y, f), climbing: false };
-      }
-
-      let round = null; // { pitch, leftIsCorrect, leftName, rightName, leftText, rightText }
-      let roundIndex = 0;
+      let round = null; // { pitch, aIsCorrect, npcA, npcB, textA, textB }
       let roundsWon = 0;
-
-      const player = { t: 0, facing: "right", moving: false };
-      let animFrame = 0, animTimer = 0;
-
-      let locked = false;
-      let crossingSide = 0; // -1/0/+1 pendant l'animation de franchissement après une bonne réponse
-      let resultBubble = { side: 0, kind: null, text: "" }; // kind: "happy" | "sad"
-      let resultTimer = 0;
       let resultGiven = false;
 
       function loadRound() {
         const pitch = nextPitch();
-        const correctOnLeft = Math.random() < 0.5;
-        const names = shuffle(["Gavroche", "Esméralda"]);
+        const aIsCorrect = Math.random() < 0.5;
+        const npcOrder = shuffle([0, 1]); // qui (parmi LEVEL_NPCS) est sur A, qui est sur B
         round = {
           pitch,
-          leftIsCorrect: correctOnLeft,
-          leftName: names[0],
-          rightName: names[1],
-          leftText: correctOnLeft ? pitch.correct : pitch.wrong,
-          rightText: correctOnLeft ? pitch.wrong : pitch.correct
+          aIsCorrect,
+          npcAIndex: npcOrder[0],
+          npcBIndex: npcOrder[1],
+          textA: aIsCorrect ? pitch.correct : pitch.wrong,
+          textB: aIsCorrect ? pitch.wrong : pitch.correct
         };
-        resultBubble = { side: 0, kind: null, text: "" };
+        platformState.A = { resolved: false, blocked: true };
+        platformState.B = { resolved: false, blocked: true };
       }
+
+      const platformState = { A: { resolved: false, blocked: true }, B: { resolved: false, blocked: true } };
       loadRound();
+
+      // --- Joueur : état = segment courant + position sur ce segment ---
+      const player = {
+        state: "ground", // ground | ladder0 | fork | ladderA | ladderB | platA | platB | exitLadderA | exitLadderB
+        x: GROUND_X0,
+        y: GROUND_Y,
+        facing: "right",
+        moving: false
+      };
+      let animFrame = 0, animTimer = 0;
+
+      let locked = false;
+      let falling = false, fallTimer = 0, fallX = 0, fallY = 0;
+      let resultBubble = { platform: null, kind: null, text: "" }; // kind: "happy" | null (l'échec est géré par la chute, pas une bulle)
 
       uiContainer.innerHTML = `
         <div class="hud-item">${isRemediation ? "Entraînement" : "Évaluation"} — Franchissements réussis : <span id="mg-round">0</span> / ${ROUNDS_TO_WIN}</div>
       `;
       uiContainer.insertAdjacentHTML("beforeend", `
-        <div class="touch-controls">
-          <button class="touch-btn" data-dir="left">◀</button>
-          <button class="touch-btn" data-dir="right">▶</button>
+        <div class="touch-controls" style="display:grid; grid-template-columns:repeat(3,44px); grid-template-rows:repeat(2,44px); gap:4px; justify-content:center;">
+          <div></div><button class="touch-btn" data-dir="up">▲</button><div></div>
+          <button class="touch-btn" data-dir="left">◀</button><div></div><button class="touch-btn" data-dir="right">▶</button>
+          <div></div><button class="touch-btn" data-dir="down">▼</button><div></div>
         </div>
       `);
       const roundLabel = document.getElementById("mg-round");
 
       const keys = {};
-      function onKeyDown(e) {
-        if (e.key === "ArrowLeft" || e.key === "q" || e.key === "Q" || e.key === "a" || e.key === "A") keys.left = true;
-        if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") keys.right = true;
+      function mapKey(e) {
+        if (e.key === "ArrowLeft" || e.key === "q" || e.key === "Q" || e.key === "a" || e.key === "A") return "left";
+        if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") return "right";
+        if (e.key === "ArrowUp" || e.key === "z" || e.key === "Z" || e.key === "w" || e.key === "W") return "up";
+        if (e.key === "ArrowDown" || e.key === "s" || e.key === "S") return "down";
+        return null;
       }
-      function onKeyUp(e) {
-        if (e.key === "ArrowLeft" || e.key === "q" || e.key === "Q" || e.key === "a" || e.key === "A") keys.left = false;
-        if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") keys.right = false;
-      }
+      function onKeyDown(e) { const k = mapKey(e); if (k) { keys[k] = true; e.preventDefault(); } }
+      function onKeyUp(e) { const k = mapKey(e); if (k) keys[k] = false; }
       window.addEventListener("keydown", onKeyDown);
       window.addEventListener("keyup", onKeyUp);
 
@@ -235,41 +251,133 @@
         btn.addEventListener("mouseup", set(false));
       });
 
-      function resolveChoice(side) {
-        // side: -1 (Gavroche) ou +1 (Esméralda)
-        locked = true;
-        const pickedCorrect = side < 0 ? round.leftIsCorrect : !round.leftIsCorrect;
-        const why = round.pitch.why;
+      function aligned(x, targetX) { return Math.abs(x - targetX) <= ALIGN_TOLERANCE; }
 
-        if (pickedCorrect) {
-          resultBubble = { side, kind: "happy", text: "" };
-          setTimeout(() => {
-            // Le passage est libre : on continue au-delà du PNJ pour
-            // terminer la traversée, puis on enchaîne.
-            crossingSide = side;
-            const finishCrossing = () => {
-              player.t += side * 0.03;
-              if (Math.abs(player.t) < 1.3) { requestAnimationFrame(finishCrossing); return; }
-              roundsWon++;
-              roundLabel.textContent = Math.min(roundsWon, ROUNDS_TO_WIN);
-              if (roundsWon >= ROUNDS_TO_WIN) { endGame(); return; }
-              player.t = 0;
-              crossingSide = 0;
-              loadRound();
-              locked = false;
-            };
-            finishCrossing();
-          }, 1300);
-        } else {
-          resultBubble = { side, kind: "sad", text: why };
-          resultTimer = 220;
-          setTimeout(() => {
-            player.t = 0;
-            resultBubble = { side: 0, kind: null, text: "" };
-            loadRound(); // nouvelle phrase obligatoire après une erreur
-            locked = false;
-          }, 2600);
+      /**
+       * Met à jour player.state/x/y d'un pas, selon les touches
+       * actuellement enfoncées — machine à états explicite, câblée
+       * pour CETTE géométrie précise (voir schéma en en-tête).
+       */
+      function updateMovement() {
+        player.moving = false;
+        const s = player.state;
+
+        if (s === "ground") {
+          if (keys.left) { player.x -= WALK_SPEED; player.facing = "left"; player.moving = true; }
+          if (keys.right) { player.x += WALK_SPEED; player.facing = "right"; player.moving = true; }
+          player.x = Math.max(GROUND_X0, Math.min(LADDER0_X, player.x));
+          if (aligned(player.x, LADDER0_X) && keys.up) player.state = "ladder0";
+
+        } else if (s === "ladder0") {
+          if (keys.up) { player.y -= CLIMB_SPEED; player.moving = true; }
+          if (keys.down) { player.y += CLIMB_SPEED; player.moving = true; }
+          player.y = Math.max(FORK_Y, Math.min(GROUND_Y, player.y));
+          if (player.y <= FORK_Y) { player.state = "fork"; player.x = LADDER0_X; }
+          if (player.y >= GROUND_Y) { player.state = "ground"; player.x = LADDER0_X; }
+
+        } else if (s === "fork") {
+          if (keys.left) { player.x -= WALK_SPEED; player.facing = "left"; player.moving = true; }
+          if (keys.right) { player.x += WALK_SPEED; player.facing = "right"; player.moving = true; }
+          player.x = Math.max(FORK_X0, Math.min(FORK_X1, player.x));
+          if (aligned(player.x, LADDER0_X) && keys.down) player.state = "ladder0";
+          if (aligned(player.x, LADDER_A_X) && keys.up) player.state = "ladderA";
+          if (aligned(player.x, LADDER_B_X) && keys.up) player.state = "ladderB";
+
+        } else if (s === "ladderA" || s === "ladderB") {
+          const targetY = s === "ladderA" ? PLAT_A_Y : PLAT_B_Y;
+          if (keys.up) { player.y -= CLIMB_SPEED; player.moving = true; }
+          if (keys.down) { player.y += CLIMB_SPEED; player.moving = true; }
+          player.y = Math.max(targetY, Math.min(FORK_Y, player.y));
+          if (player.y <= targetY) {
+            player.state = s === "ladderA" ? "platA" : "platB";
+            player.x = s === "ladderA" ? LADDER_A_X : LADDER_B_X;
+          }
+          if (player.y >= FORK_Y) { player.state = "fork"; player.x = s === "ladderA" ? LADDER_A_X : LADDER_B_X; }
+
+        } else if (s === "platA" || s === "platB") {
+          const isA = s === "platA";
+          const platY = isA ? PLAT_A_Y : PLAT_B_Y;
+          const platX0 = isA ? PLAT_A_X0 : PLAT_B_X0;
+          const platX1 = isA ? PLAT_A_X1 : PLAT_B_X1;
+          const laddX = isA ? LADDER_A_X : LADDER_B_X;
+          const npcX = isA ? NPC_A_X : NPC_B_X;
+          const exitX = isA ? EXIT_LADDER_A_X : EXIT_LADDER_B_X;
+          const st = isA ? platformState.A : platformState.B;
+
+          let minX = platX0, maxX = platX1;
+          if (st.blocked) {
+            // Le PNJ bloque le passage : impossible d'aller plus loin
+            // que lui tant que ce n'est pas résolu.
+            maxX = npcX;
+          }
+
+          if (keys.left) { player.x -= WALK_SPEED; player.facing = "left"; player.moving = true; }
+          if (keys.right) { player.x += WALK_SPEED; player.facing = "right"; player.moving = true; }
+          player.x = Math.max(minX, Math.min(maxX, player.x));
+
+          if (aligned(player.x, npcX) && st.blocked) {
+            resolveChoice(isA ? "A" : "B");
+            return;
+          }
+          if (aligned(player.x, laddX) && keys.down) { player.state = isA ? "ladderA" : "ladderB"; }
+          if (st.resolved && aligned(player.x, exitX) && keys.down) {
+            player.state = isA ? "exitLadderA" : "exitLadderB";
+          }
+
+        } else if (s === "exitLadderA" || s === "exitLadderB") {
+          player.y += CLIMB_SPEED;
+          player.moving = true;
+          if (player.y >= EXIT_GROUND_Y) {
+            winRound();
+          }
         }
+      }
+
+      function showFeedback(text, color, duration) {
+        // conservé pour d'éventuels messages ponctuels ; non utilisé
+        // pour l'échec, géré par la chute comique à la place.
+      }
+
+      function resolveChoice(platformKey) {
+        locked = true;
+        const isA = platformKey === "A";
+        const correct = isA ? round.aIsCorrect : !round.aIsCorrect;
+        const st = isA ? platformState.A : platformState.B;
+
+        if (correct) {
+          st.resolved = true;
+          st.blocked = false;
+          resultBubble = { platform: platformKey, kind: "happy", text: "" };
+          setTimeout(() => { locked = false; }, 900);
+        } else {
+          startFall(isA ? NPC_A_X : NPC_B_X, isA ? PLAT_A_Y : PLAT_B_Y, round.pitch.why);
+        }
+      }
+
+      function startFall(x, y, why) {
+        falling = true;
+        fallTimer = 0;
+        fallX = x; fallY = y;
+        setTimeout(() => {
+          falling = false;
+          player.state = "ground";
+          player.x = GROUND_X0;
+          player.y = GROUND_Y;
+          resultBubble = { platform: null, kind: null, text: "" };
+          loadRound(); // nouvelle phrase obligatoire après une erreur
+          locked = false;
+        }, 1900);
+      }
+
+      function winRound() {
+        roundsWon++;
+        roundLabel.textContent = Math.min(roundsWon, ROUNDS_TO_WIN);
+        if (roundsWon >= ROUNDS_TO_WIN) { endGame(); return; }
+        player.state = "ground";
+        player.x = GROUND_X0;
+        player.y = GROUND_Y;
+        resultBubble = { platform: null, kind: null, text: "" };
+        loadRound();
       }
 
       function cleanup() {
@@ -284,7 +392,7 @@
         cleanup();
         await MinigameUI.showResult({
           passed: true,
-          message: "Trois échafaudages franchis, trois liens logiques rétablis. Gavroche et Esméralda applaudissent bien fort !"
+          message: "Trois plateformes franchies, trois liens logiques rétablis !"
         });
         resolve({ passed: true, score: ROUNDS_TO_WIN, total: ROUNDS_TO_WIN });
       }
@@ -292,23 +400,14 @@
       let rafId;
       function loop() {
         try {
-          if (!locked) {
-            player.moving = false;
-            if (keys.left) { player.t = Math.max(-1, player.t - 0.018); player.facing = "left"; player.moving = true; }
-            if (keys.right) { player.t = Math.min(1, player.t + 0.018); player.facing = "right"; player.moving = true; }
-
+          if (!locked && !falling) {
+            updateMovement();
             if (player.moving) {
               animTimer++;
               if (animTimer >= 8) { animTimer = 0; animFrame = (animFrame + 1) % 3; }
             }
-
-            // Le PNJ bloque le passage : atteindre ±1 déclenche la résolution.
-            if (player.t <= -0.98) resolveChoice(-1);
-            else if (player.t >= 0.98) resolveChoice(1);
           }
-
-          if (resultTimer > 0) resultTimer--;
-
+          if (falling) fallTimer++;
           render();
         } catch (err) {
           console.error("[La Liane des Mots] Erreur dans la boucle de jeu :", err);
@@ -346,24 +445,64 @@
         return lines;
       }
 
-      function drawBubbleBox(cx, y, w, h) {
-        const bx = Math.max(6, Math.min(CANVAS_W - w - 6, cx - w / 2));
-        const by = y - h - 14;
-        ctx.fillStyle = "rgba(26,21,48,0.92)";
-        ctx.strokeStyle = "#e8c468";
+      function drawLadder(x, yTop, yBottom) {
+        ctx.strokeStyle = "#c98a4b";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(x - 10, yTop); ctx.lineTo(x - 10, yBottom);
+        ctx.moveTo(x + 10, yTop); ctx.lineTo(x + 10, yBottom);
+        ctx.stroke();
+        ctx.lineWidth = 3;
+        for (let y = yTop; y <= yBottom; y += 14) {
+          ctx.beginPath();
+          ctx.moveTo(x - 10, y); ctx.lineTo(x + 10, y);
+          ctx.stroke();
+        }
+      }
+
+      function drawPlatform(x0, x1, y, tilt) {
+        ctx.save();
+        const midX = (x0 + x1) / 2;
+        ctx.translate(midX, y);
+        ctx.rotate(tilt || 0);
+        ctx.translate(-midX, -y);
+        ctx.fillStyle = "#5a4632";
+        ctx.fillRect(x0, y - 6, x1 - x0, 10);
+        ctx.strokeStyle = "#2f2418";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x0, y - 6, x1 - x0, 10);
+        ctx.restore();
+      }
+
+      function drawSkull(cx, cy, size, alpha) {
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = "#f4f1ea";
+        ctx.strokeStyle = "#1a1530";
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.roundRect ? ctx.roundRect(bx, by, w, h, 8) : ctx.rect(bx, by, w, h);
+        ctx.arc(cx, cy, size, Math.PI, 0);
+        ctx.lineTo(cx + size, cy + size * 0.5);
+        ctx.lineTo(cx + size * 0.6, cy + size * 0.4);
+        ctx.lineTo(cx + size * 0.3, cy + size * 0.7);
+        ctx.lineTo(cx, cy + size * 0.4);
+        ctx.lineTo(cx - size * 0.3, cy + size * 0.7);
+        ctx.lineTo(cx - size * 0.6, cy + size * 0.4);
+        ctx.lineTo(cx - size, cy + size * 0.5);
+        ctx.closePath();
         ctx.fill();
         ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(cx - 8, by + h);
-        ctx.lineTo(cx + 8, by + h);
-        ctx.lineTo(cx, by + h + 10);
-        ctx.closePath();
-        ctx.fillStyle = "#e8c468";
-        ctx.fill();
-        return { bx, by };
+        // yeux en croix
+        ctx.strokeStyle = "#1a1530";
+        ctx.lineWidth = 2.5;
+        [-1, 1].forEach(sideX => {
+          const ex = cx + sideX * size * 0.42, ey = cy - size * 0.05;
+          ctx.beginPath();
+          ctx.moveTo(ex - 5, ey - 5); ctx.lineTo(ex + 5, ey + 5);
+          ctx.moveTo(ex + 5, ey - 5); ctx.lineTo(ex - 5, ey + 5);
+          ctx.stroke();
+        });
+        ctx.restore();
       }
 
       function drawTextBubble(cx, y, text, maxWidth) {
@@ -371,7 +510,20 @@
         const lines = wrapText(text, maxWidth - 24);
         const lh = 15;
         const bh = lines.length * lh + 18;
-        const { bx, by } = drawBubbleBox(cx, y, maxWidth, bh);
+        const bx = Math.max(6, Math.min(CANVAS_W - maxWidth - 6, cx - maxWidth / 2));
+        const by = y - bh - 14;
+        ctx.fillStyle = "rgba(26,21,48,0.92)";
+        ctx.strokeStyle = "#e8c468";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.roundRect ? ctx.roundRect(bx, by, maxWidth, bh, 8) : ctx.rect(bx, by, maxWidth, bh);
+        ctx.fill();
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(cx - 8, by + bh); ctx.lineTo(cx + 8, by + bh); ctx.lineTo(cx, by + bh + 10);
+        ctx.closePath();
+        ctx.fillStyle = "#e8c468";
+        ctx.fill();
         ctx.fillStyle = "#f4f1ea";
         ctx.textAlign = "center";
         ctx.textBaseline = "top";
@@ -379,44 +531,29 @@
         lines.forEach(l => { ctx.fillText(l, bx + maxWidth / 2, ty); ty += lh; });
       }
 
-      function drawSmiley(cx, cy, happy, radius) {
-        ctx.save();
-        ctx.strokeStyle = "#1a1530";
+      function drawHappyBubble(cx, y) {
+        const w = 90, h = 66;
+        const bx = cx - w / 2, by = y - h - 14;
+        ctx.fillStyle = "rgba(26,21,48,0.92)";
+        ctx.strokeStyle = "#6fcf97";
         ctx.lineWidth = 2;
-        ctx.fillStyle = happy ? "#6fcf97" : "#d9534f";
         ctx.beginPath();
-        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+        ctx.roundRect ? ctx.roundRect(bx, by, w, h, 8) : ctx.rect(bx, by, w, h);
+        ctx.fill(); ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(cx - 8, by + h); ctx.lineTo(cx + 8, by + h); ctx.lineTo(cx, by + h + 10);
+        ctx.closePath();
+        ctx.fillStyle = "#6fcf97";
         ctx.fill();
-        ctx.stroke();
-        ctx.fillStyle = "#1a1530";
-        ctx.beginPath(); ctx.arc(cx - radius * 0.35, cy - radius * 0.15, radius * 0.1, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.arc(cx + radius * 0.35, cy - radius * 0.15, radius * 0.1, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath();
-        if (happy) ctx.arc(cx, cy + radius * 0.05, radius * 0.4, 0.15 * Math.PI, 0.85 * Math.PI);
-        else ctx.arc(cx, cy + radius * 0.55, radius * 0.4, 1.15 * Math.PI, 1.85 * Math.PI);
-        ctx.stroke();
-        ctx.restore();
-      }
-
-      function drawSmileyBubble(cx, y, happy, why) {
-        const w = happy ? 90 : 260;
-        if (happy) {
-          const h = 66;
-          const { bx, by } = drawBubbleBox(cx, y, w, h);
-          drawSmiley(bx + w / 2, by + h / 2, true, 22);
-        } else {
-          ctx.font = "12px sans-serif";
-          const lines = wrapText(why, w - 60);
-          const lh = 15;
-          const h = Math.max(66, lines.length * lh + 18);
-          const { bx, by } = drawBubbleBox(cx, y, w, h);
-          drawSmiley(bx + 34, by + h / 2, false, 18);
-          ctx.fillStyle = "#f4f1ea";
-          ctx.textAlign = "left";
-          ctx.textBaseline = "top";
-          let ty = by + (h - lines.length * lh) / 2;
-          lines.forEach(l => { ctx.fillText(l, bx + 60, ty); ty += lh; });
-        }
+        // smiley content
+        const scx = bx + w / 2, scy = by + h / 2;
+        ctx.strokeStyle = "#6fcf97";
+        ctx.fillStyle = "#6fcf97";
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(scx, scy, 20, 0, Math.PI * 2); ctx.stroke();
+        ctx.beginPath(); ctx.arc(scx - 7, scy - 4, 2, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(scx + 7, scy - 4, 2, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(scx, scy + 2, 10, 0.15 * Math.PI, 0.85 * Math.PI); ctx.stroke();
       }
 
       function render() {
@@ -427,77 +564,67 @@
           ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
         }
 
-        // --- Structure façon Donkey Kong : une échelle unique (entrée),
-        //     puis deux poutres inclinées vers deux étages différents ---
-        function drawLadder(x, yTop, yBottom) {
-          ctx.strokeStyle = "#c98a4b";
-          ctx.lineWidth = 4;
-          ctx.beginPath();
-          ctx.moveTo(x - 10, yTop); ctx.lineTo(x - 10, yBottom);
-          ctx.moveTo(x + 10, yTop); ctx.lineTo(x + 10, yBottom);
-          ctx.stroke();
-          ctx.lineWidth = 3;
-          for (let y = yTop; y <= yBottom; y += 14) {
-            ctx.beginPath();
-            ctx.moveTo(x - 10, y); ctx.lineTo(x + 10, y);
-            ctx.stroke();
-          }
-        }
-        function drawGirder(x1, y1, x2, y2) {
-          ctx.strokeStyle = "#b5552e";
-          ctx.lineWidth = 10;
-          ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
-          ctx.strokeStyle = "#7a3418";
-          ctx.lineWidth = 3;
-          ctx.setLineDash([2, 6]);
-          ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
-          ctx.setLineDash([]);
-        }
-        drawLadder(ENTRANCE_X, FORK_Y, ENTRANCE_Y);
-        drawGirder(ENTRANCE_X, FORK_Y, GAVROCHE_LEDGE.x, GAVROCHE_LEDGE.y);
-        drawGirder(ENTRANCE_X, FORK_Y, ESMERALDA_LEDGE.x, ESMERALDA_LEDGE.y);
+        // Structure : échelles + plateformes (légèrement inclinées pour le style)
+        drawLadder(LADDER0_X, FORK_Y, GROUND_Y);
+        drawPlatform(FORK_X0, FORK_X1, FORK_Y, -0.01);
+        drawLadder(LADDER_A_X, PLAT_A_Y, FORK_Y);
+        drawLadder(LADDER_B_X, PLAT_B_Y, FORK_Y);
+        drawPlatform(PLAT_A_X0, PLAT_A_X1, PLAT_A_Y, 0.015);
+        drawPlatform(PLAT_B_X0, PLAT_B_X1, PLAT_B_Y, -0.012);
+        if (platformState.A.resolved) drawLadder(EXIT_LADDER_A_X, PLAT_A_Y, GROUND_Y);
+        if (platformState.B.resolved) drawLadder(EXIT_LADDER_B_X, PLAT_B_Y, GROUND_Y);
 
-        // Principale (bulle fixe en haut, ne suit plus le joueur pour rester lisible)
-        drawTextBubble(CANVAS_W / 2, 90, round.pitch.principal, 320);
+        // Principale (bulle fixe en haut)
+        drawTextBubble(CANVAS_W / 2, 60, round.pitch.principal, 340);
 
-        // PNJ + leur proposition (ou le smiley de résultat, une fois résolu)
+        // PNJ A et B + leur proposition
         const NW = 34, NH = 46;
-        const leftPos = pathPosition(-1), rightPos = pathPosition(1);
+        const npcAImgs = npcSprites[round.npcAIndex];
+        const npcBImgs = npcSprites[round.npcBIndex];
 
-        if (resultBubble.side === -1 && resultBubble.kind) {
-          drawSmileyBubble(leftPos.x, leftPos.y, resultBubble.kind === "happy", resultBubble.text);
-        } else {
-          drawTextBubble(leftPos.x, leftPos.y, round.leftText, 230);
+        if (!platformState.A.resolved) {
+          drawTextBubble(NPC_A_X, PLAT_A_Y, round.textA, 220);
+          drawSprite(npcAImgs[1], NPC_A_X - NW / 2, PLAT_A_Y - NH, NW, NH, true);
+          ctx.fillStyle = "#c9c2e0"; ctx.font = "11px sans-serif"; ctx.textAlign = "center";
+          ctx.fillText(LEVEL_NPCS[round.npcAIndex].name, NPC_A_X, PLAT_A_Y + 14);
+        } else if (resultBubble.platform === "A" && resultBubble.kind === "happy") {
+          drawHappyBubble(NPC_A_X, PLAT_A_Y);
+          drawSprite(npcAImgs[1], NPC_A_X - NW / 2, PLAT_A_Y - NH, NW, NH, true);
         }
-        if (resultBubble.side === 1 && resultBubble.kind) {
-          drawSmileyBubble(rightPos.x, rightPos.y, resultBubble.kind === "happy", resultBubble.text);
-        } else {
-          drawTextBubble(rightPos.x, rightPos.y, round.rightText, 230);
+
+        if (!platformState.B.resolved) {
+          drawTextBubble(NPC_B_X, PLAT_B_Y, round.textB, 220);
+          drawSprite(npcBImgs[1], NPC_B_X - NW / 2, PLAT_B_Y - NH, NW, NH, true);
+          ctx.fillStyle = "#c9c2e0"; ctx.font = "11px sans-serif"; ctx.textAlign = "center";
+          ctx.fillText(LEVEL_NPCS[round.npcBIndex].name, NPC_B_X, PLAT_B_Y + 14);
+        } else if (resultBubble.platform === "B" && resultBubble.kind === "happy") {
+          drawHappyBubble(NPC_B_X, PLAT_B_Y);
+          drawSprite(npcBImgs[1], NPC_B_X - NW / 2, PLAT_B_Y - NH, NW, NH, true);
         }
 
-        const leftImgs = round.leftName === "Gavroche" ? gavrocheSide : esmeraldaSide;
-        const rightImgs = round.rightName === "Gavroche" ? gavrocheSide : esmeraldaSide;
-        drawSprite(leftImgs[1], leftPos.x - NW / 2, leftPos.y - NH, NW, NH, true);
-        drawSprite(rightImgs[1], rightPos.x - NW / 2, rightPos.y - NH, NW, NH, false);
-
-        ctx.fillStyle = "#c9c2e0";
-        ctx.font = "11px sans-serif";
-        ctx.textAlign = "center";
-        ctx.fillText(round.leftName, leftPos.x, leftPos.y + 14);
-        ctx.fillText(round.rightName, rightPos.x, rightPos.y + 14);
-
-        // Esprit (joueur) : de DOS sur l'échelle (avant la bifurcation),
-        // de profil sur la poutre inclinée ensuite — comme demandé.
+        // Esprit (joueur) : de dos sur les échelles, de profil sur les plateformes
         const PW = 30, PH = 44;
-        const pos = pathPosition(player.t);
-        let frame;
-        if (pos.climbing) {
-          frame = player.moving ? espritDos[animFrame % espritDos.length] : espritDos[0];
+        if (!falling) {
+          const onLadder = player.state.startsWith("ladder") || player.state.startsWith("exitLadder");
+          let frame;
+          if (onLadder) {
+            frame = player.moving ? espritDos[animFrame % espritDos.length] : espritDos[0];
+          } else {
+            frame = player.moving ? espritSide[1 + (animFrame % 3)] : espritSide[1];
+          }
+          const flip = !onLadder && player.facing === "left";
+          drawSprite(frame, player.x - PW / 2, player.y - PH, PW, PH, flip);
         } else {
-          frame = player.moving ? espritSide[1 + (animFrame % 3)] : espritSide[1];
+          // Chute comique : le joueur (et le PNJ fautif) dégringolent,
+          // une tête de mort apparaît au point de chute.
+          const t = Math.min(1, fallTimer / 34);
+          const dropY = fallY + t * (GROUND_Y - fallY) + 10;
+          ctx.save();
+          ctx.globalAlpha = 1 - t * 0.3;
+          drawSprite(espritSide[1], fallX - PW / 2, dropY - PH, PW, PH, false);
+          ctx.restore();
+          if (t > 0.35) drawSkull(fallX, dropY - PH - 30, 22, Math.min(1, (t - 0.35) / 0.3));
         }
-        const flip = !pos.climbing && player.facing === "left";
-        drawSprite(frame, pos.x - PW / 2, pos.y - PH, PW, PH, flip);
       }
 
       render();
