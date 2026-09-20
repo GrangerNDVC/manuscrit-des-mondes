@@ -1,39 +1,105 @@
 /* ============================================================
-   LE MANUSCRIT DES MONDES — mg-construction-recit.js
+   LE MANUSCRIT DES MONDES — mg-construction-recit.js (v4)
    ============================================================
-   Mini-jeu "Le Récit de Gavroche" (Monde 1 — Hugo).
+   Mini-jeu "Le Sceau du Mal-Dit" (Monde 1 — Hugo, acte 6).
    Notion : construction d'une histoire (schéma narratif en
-   5 étapes : situation initiale, élément déclencheur,
-   péripéties, résolution, situation finale).
+   5 étapes). REMPLACE ENTIÈREMENT la v3 ("Le Récit de Gavroche",
+   point-and-click sur un parchemin) par un combat de boss façon
+   JRPG rétro, validé avec Julie via
+   CAHIER_DES_CHARGES_combat-mal-dit-construction-recit.md.
 
-   Principe pédagogique (vision structurelle globale) : le joueur
-   doit placer 5 cartes-étapes dans les bons emplacements d'un
-   "parchemin" (le récit de Gavroche), par clic successif
-   (carte sélectionnée -> emplacement cible).
+   ---- Personnage joueur (précision apportée cette session) ----
+   Les sprites fournis sont tous préfixés "esprit-" (convention
+   déjà utilisée partout ailleurs pour L'Esprit de la Littérature,
+   ex. esprit-marche.png, esprit-neutre.png...) : c'est donc
+   L'ESPRIT qui mène ce combat, et non Gavroche seul comme
+   envisagé initialement dans le cahier des charges. Gavroche
+   rejoint l'équipe comme compagnon APRÈS la victoire (scène de
+   fin), cohérent avec « Gavroche décide de venir AVEC LUI ».
 
-   ---- CORRECTION (session du 1er août 2026) ----
-   Bug repéré et non corrigé lors de la session précédente (voir
-   ETAT_DU_PROJET.md, section 6) : avec 5 cartes disposées en
-   2 colonnes, la dernière ligne du pool débordait d'environ 44px
-   sous le bas du canevas (450px) et chevauchait visuellement le
-   dernier emplacement du parchemin.
-   Corrigé en passant le pool de 2 à 3 colonnes, avec des cartes
-   plus compactes (largeur/hauteur réduites, police plus petite
-   pour ce bloc uniquement). Vérifié par calcul : avec 5 cartes en
-   3 colonnes (2 lignes), la grille tient désormais entre y=338 et
-   y=440, avec une marge de 10px au-dessus (sous le dernier
-   emplacement du parchemin, qui se termine à y=328) et de 10px en
-   dessous (canevas = 450px de haut). Aucune autre partie du
-   mini-jeu n'a été modifiée.
+   ---- Déroulé (5 rounds, un par étape du schéma narratif) ----
+   Cinématique d'intro : Frollo (humain) se transforme sous nos
+   yeux, possédé par le Mal-Dit (frolo-transformation-demon.jfif),
+   puis le combat commence.
 
-   Enregistré sous la notion "construction_recit",
-   variante "parchemin_hugo".
+   Par round :
+   1. PHASE ATTAQUE : les phrases restantes de l'histoire du jour
+      sont affichées mélangées. Il faut cliquer sur celle qui vient
+      chronologiquement en premier parmi celles pas encore
+      utilisées. Bonne réponse → l'Esprit frappe (cycle
+      esprit-combat1/2/3). Mauvaise réponse → Frollo riposte
+      aussitôt d'une boule de feu rose, l'Esprit est touché.
+   2. PHASE DÉFENSE (seulement si l'attaque a réussi) : Frollo
+      envoie une boule de feu rose ; il faut identifier l'étape du
+      schéma narratif de la phrase qu'on vient de jouer, parmi les
+      5 toujours affichées. Bonne réponse → l'Esprit esquive ou se
+      défend (esprit-combat_esquive / esprit-defense1 / defense2,
+      tirés au sort pour varier). Mauvaise réponse → touché
+      (esprit-touche-critique, plus sévère qu'en phase attaque
+      puisque la parade a échoué).
+
+   Toute erreur (attaque OU défense) fait perdre UNE VIE sur 3 et
+   relance l'intégralité de la tentative (round 1) avec une AUTRE
+   histoire piochée dans la banque — jamais deux fois la même à la
+   suite. 3 vies perdues = échec du mini-jeu (esprit-KO.png),
+   retour au VN pour remédiation classique. 5 rounds réussis sur
+   une même tentative, sans la moindre erreur = victoire : Frollo
+   se re-transforme en humain vaincu
+   (frolo-vaincu-retransformation-humain.jfif), l'Esprit savoure sa
+   victoire (esprit-victoire1/2 en alternance) et reçoit la
+   première clé du jeu (cle-monde1.png).
+
+   Frollo (frolodemon1/2/3) tourne en boucle en permanence pendant
+   le combat, qu'il attaque ou non — l'animation d'idle ne s'arrête
+   jamais tant qu'il n'est pas vaincu.
+
+   ⚠️ Assets requis, chemins à respecter dans le dépôt :
+     /assets/sprites/characters/esprit-combat1.png
+     /assets/sprites/characters/esprit-combat2.png
+     /assets/sprites/characters/esprit-combat3.png
+     /assets/sprites/characters/esprit-combat_esquive.png
+     /assets/sprites/characters/esprit-defense1.png
+     /assets/sprites/characters/esprit-defense2.png
+     /assets/sprites/characters/esprit-touche.png
+     /assets/sprites/characters/esprit-touche-critique.png
+     /assets/sprites/characters/esprit-KO.png
+     /assets/sprites/characters/esprit-victoire1.png
+     /assets/sprites/characters/esprit-victoire2.png
+     /assets/sprites/characters/frolodemon1.png
+     /assets/sprites/characters/frolodemon2.png
+     /assets/sprites/characters/frolodemon3.png
+     /assets/sprites/characters/frolo-transformation-demon.jfif
+     /assets/sprites/characters/frolo-vaincu-retransformation-humain.jfif
+     /assets/sprites/props/cle-monde1.png
+     /assets/backgrounds/decors_combat_maldit_hugo.jfif   (À GÉNÉRER,
+       voir le prompt donné à Julie en session — pas encore fourni,
+       filet de sécurité couleur uni en attendant)
+
+   ⚠️ Point noté pour plus tard (hors périmètre du Monde 1) : à
+   partir du Monde 2, il faudra un choix de personnage jouable
+   (Esprit / Gavroche / autres compagnons gagnés) pour ce type de
+   mini-jeu, plus un "mode indice" activable en VN grâce aux
+   compagnons débloqués. Non traité ici — voir mémoire du projet.
+
+   Variante enregistrée INCHANGÉE ("construction_recit" /
+   "parchemin_hugo") — même principe que pour les refontes
+   précédentes (barricades_hugo, egouts_hugo, vitraux_hugo) : le
+   nom historique est conservé pour ne rien avoir à changer
+   ailleurs dans le code, même s'il ne décrit plus vraiment ce
+   mini-jeu.
    ============================================================ */
 
-(function registerConstructionRecitHugo() {
+(function registerSceauDuMalDitHugo() {
 
   const CANVAS_W = 800;
   const CANVAS_H = 450;
+
+  const CHAR_DIR = "/assets/sprites/characters/";
+  const PROPS_DIR = "/assets/sprites/props/";
+  const BG_SRC = "/assets/backgrounds/decors_combat_maldit_hugo.jfif";
+
+  const MAX_LIVES = 3;
+  const ROUND_COUNT = 5;
 
   const STAGE_ORDER = [
     "situation_initiale",
@@ -50,10 +116,9 @@
     situation_finale: "Situation finale"
   };
 
-  /**
-   * Banque de mini-récits : 5 cartes correspondant chacune à
-   * une étape du schéma narratif, dans l'ordre correct.
-   */
+  // Banque reprise telle quelle de la version précédente (contenu déjà
+  // validé — voir section 6 du cahier des charges : aucune réécriture
+  // nécessaire, seule la présentation change).
   const STORY_BANK = [
     [
       { stage: "situation_initiale", text: "Gavroche dormait sur les pavés." },
@@ -101,11 +166,37 @@
     return a;
   }
 
+  function pickStory(excludeIndex) {
+    let idx;
+    do {
+      idx = Math.floor(Math.random() * STORY_BANK.length);
+    } while (STORY_BANK.length > 1 && idx === excludeIndex);
+    return idx;
+  }
+
+  function loadChar(name) { const img = new Image(); img.src = CHAR_DIR + name; return img; }
+  function loadProp(name) { const img = new Image(); img.src = PROPS_DIR + name; return img; }
+  function loadBg(src) { const img = new Image(); img.src = src; return img; }
+  function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+  function wrapText(ctx, text, maxWidth) {
+    const words = text.split(" ");
+    const lines = [];
+    let line = "";
+    words.forEach(word => {
+      const test = line ? line + " " + word : word;
+      if (ctx.measureText(test).width > maxWidth && line) { lines.push(line); line = word; }
+      else line = test;
+    });
+    if (line) lines.push(line);
+    return lines;
+  }
+
   async function run({ canvas, uiContainer, isRemediation }) {
 
     await MinigameUI.showInstructions({
-      title: "Le Récit de Gavroche",
-      objective: "Clique sur une carte en bas, puis sur l'étape du schéma narratif où elle doit aller (situation initiale, élément déclencheur, péripéties, résolution, situation finale). Une fois les 5 cartes placées, clique sur Valider."
+      title: "Le Sceau du Mal-Dit",
+      objective: "Frollo se dresse devant vous, possédé par le Mal-Dit. ATTAQUE : parmi les phrases mélangées, clique sur celle qui vient chronologiquement en premier dans l'histoire. DÉFENSE : indique ensuite à quelle étape du schéma narratif elle correspond, pour esquiver la riposte de Frollo. La moindre erreur — en attaque comme en défense — te coûte une vie et relance le combat avec une autre histoire. Tu as 3 vies pour briser le sceau."
     });
 
     return new Promise(resolve => {
@@ -114,71 +205,155 @@
       canvas.height = CANVAS_H;
       const ctx = canvas.getContext("2d");
 
-      const story = STORY_BANK[Math.floor(Math.random() * STORY_BANK.length)];
+      // --- Assets ---
+      const bgImage = loadBg(BG_SRC);
+      const cleImg = loadProp("cle-monde1.png");
 
-      // Cartes mélangées (zone basse), emplacements ordonnés (zone haute)
-      const order = shuffle(story.map((_, i) => i));
+      const esprit = {
+        combat: [loadChar("esprit-combat1.png"), loadChar("esprit-combat2.png"), loadChar("esprit-combat3.png")],
+        esquive: loadChar("esprit-combat_esquive.png"),
+        defense: [loadChar("esprit-defense1.png"), loadChar("esprit-defense2.png")],
+        touche: loadChar("esprit-touche.png"),
+        toucheCritique: loadChar("esprit-touche-critique.png"),
+        ko: loadChar("esprit-KO.png"),
+        victoire: [loadChar("esprit-victoire1.png"), loadChar("esprit-victoire2.png")]
+      };
+      const frollo = {
+        demon: [loadChar("frolodemon1.png"), loadChar("frolodemon2.png"), loadChar("frolodemon3.png")],
+        transformation: loadChar("frolo-transformation-demon.jfif"),
+        retransformation: loadChar("frolo-vaincu-retransformation-humain.jfif")
+      };
 
-      const SLOT_W = 720;
-      const SLOT_H = 50;
-      const slots = STAGE_ORDER.map((stage, i) => ({
-        stage,
-        x: 40,
-        y: 30 + i * (SLOT_H + 12),
-        w: SLOT_W,
-        h: SLOT_H,
-        filled: null
-      }));
+      // --- Positions ---
+      const ESPRIT_BOX = { x: 70, y: 90, w: 170, h: 220 };
+      const FROLLO_BOX = { x: 540, y: 40, w: 210, h: 270 };
 
-      // Correction de débordement (voir ETAT_DU_PROJET.md, section 6) :
-      // avec 5 cartes en 2 colonnes, la dernière ligne débordait d'environ
-      // 44px sous le bas du canevas et chevauchait le dernier emplacement
-      // du parchemin (qui se termine à y=328). Passage à 3 colonnes, avec
-      // des cartes plus compactes : la grille tient désormais entre
-      // y=338 et y=440 (marge de 10px de chaque côté).
-      const POOL_COLS = 3;
-      const CARD_W = 230;
-      const CARD_H = 46;
-      const CARD_GAP_X = 15;
-      const CARD_GAP_Y = 10;
-      const POOL_START_Y = 338;
-      const poolGridW = POOL_COLS * CARD_W + (POOL_COLS - 1) * CARD_GAP_X;
-      const POOL_START_X = (CANVAS_W - poolGridW) / 2;
+      // --- État de partie ---
+      let lives = MAX_LIVES;
+      let round = 0; // 0..4, round courant de la tentative en cours
+      let storyIndex = pickStory(-1);
+      let story = STORY_BANK[storyIndex];
+      let pool = shuffle(story.map((_, i) => i)); // indices de phrases restant à jouer, affichage mélangé
 
-      const cards = order.map((storyIdx, i) => {
-        const col = i % POOL_COLS;
-        const row = Math.floor(i / POOL_COLS);
-        return {
-          storyIdx,
-          x: POOL_START_X + col * (CARD_W + CARD_GAP_X),
-          y: POOL_START_Y + row * (CARD_H + CARD_GAP_Y),
-          w: CARD_W,
-          h: CARD_H,
-          placedInSlot: null,
-          selected: false
-        };
-      });
+      let currentSentenceIdx = null; // phrase en cours de défense
+
+      // phase: intro_transform | attack | esprit_strike | frollo_attack_travel |
+      //        defense | dodge_resolve | hit_resolve | round_pause |
+      //        victory_transform | victory_key | defeat | done
+      let phase = "intro_transform";
+      let phaseTimer = 110; // laisse le temps de voir la transformation avant le 1er round
+
+      let espritSprite = { kind: "combat", frame: 0 };
+      let frolloAnimTimer = 0, frolloAnimFrame = 0;
+      let frolloFlash = 0; // >0 = flash rouge (touché)
+
+      const fireball = { active: false, x: 0, y: 0, fromX: 0, fromY: 0, toX: 0, toY: 0, t: 0, total: 1 };
+
+      let feedback = "";
+      let feedbackColor = "#f4f1ea";
 
       let resultGiven = false;
-      let selectedCard = null;
 
       uiContainer.innerHTML = `
-        <div class="hud-item">${isRemediation ? "Entraînement" : "Évaluation"} — Place chaque carte dans la bonne étape</div>
-        <div class="hud-item"><button id="mg-validate" class="touch-btn" style="width:auto;height:auto;border-radius:8px;padding:8px 16px;">Valider</button></div>
+        <div class="hud-item">${isRemediation ? "Entraînement" : "Évaluation"} — Le Sceau du Mal-Dit</div>
+        <div class="hud-item">Manche <span id="mg-round">1</span> / ${ROUND_COUNT}</div>
       `;
 
-      async function endGame(passed) {
-        if (resultGiven) return;
-        resultGiven = true;
-        canvas.removeEventListener("click", onClick);
-        await MinigameUI.showResult({
-          passed,
-          message: passed
-            ? "Le schéma narratif est complet et dans le bon ordre !"
-            : "Certaines cartes n'étaient pas à la bonne étape. Repense à l'enchaînement : situation initiale → élément déclencheur → péripéties → résolution → situation finale."
-        });
-        resolve({ passed, score: passed ? 1 : 0, total: 1 });
+      function updateHud() {
+        const el = document.getElementById("mg-round");
+        if (el) el.textContent = Math.min(round + 1, ROUND_COUNT);
       }
+
+      function espritCenter() {
+        return { x: ESPRIT_BOX.x + ESPRIT_BOX.w / 2, y: ESPRIT_BOX.y + ESPRIT_BOX.h * 0.4 };
+      }
+      function frolloCenter() {
+        return { x: FROLLO_BOX.x + FROLLO_BOX.w / 2, y: FROLLO_BOX.y + FROLLO_BOX.h * 0.4 };
+      }
+
+      function launchFireball(totalFrames) {
+        const from = frolloCenter(), to = espritCenter();
+        fireball.active = true;
+        fireball.fromX = from.x; fireball.fromY = from.y;
+        fireball.toX = to.x; fireball.toY = to.y;
+        fireball.t = 0;
+        fireball.total = totalFrames;
+      }
+
+      function goToPhase(next, timer) {
+        phase = next;
+        phaseTimer = timer || 0;
+      }
+
+      function startAttempt(newStoryIndex) {
+        storyIndex = newStoryIndex;
+        story = STORY_BANK[storyIndex];
+        pool = shuffle(story.map((_, i) => i));
+        round = 0;
+        currentSentenceIdx = null;
+        espritSprite = { kind: "combat", frame: 0 };
+        updateHud();
+        goToPhase("attack", 0);
+      }
+
+      function onWrongAttack() {
+        feedback = "✗ Ce n'est pas la phrase suivante dans l'histoire...";
+        feedbackColor = "#d9534f";
+        launchFireball(20);
+        goToPhase("frollo_attack_travel", 20);
+      }
+
+      function onCorrectAttack(sentenceIdx) {
+        pool = pool.filter(i => i !== sentenceIdx);
+        currentSentenceIdx = sentenceIdx;
+        feedback = "✓ Coup porté !";
+        feedbackColor = "#6fcf97";
+        frolloFlash = 18;
+        espritSprite = { kind: "combat", frame: 0 };
+        goToPhase("esprit_strike", 24);
+      }
+
+      function onWrongDefense() {
+        feedback = "✗ Mauvaise parade — le Mal-Dit trouve une faille !";
+        feedbackColor = "#d9534f";
+        goToPhase("hit_resolve", 1); // la boule de feu est déjà en vol (frollo_attack_travel a précédé)
+      }
+
+      function onCorrectDefense(stageClicked) {
+        const style = pick(["esquive", "defense1", "defense2"]);
+        espritSprite = style === "esquive" ? { kind: "esquive" } : { kind: "defense", frame: style === "defense1" ? 0 : 1 };
+        feedback = "✓ Esquivé !";
+        feedbackColor = "#6fcf97";
+        fireball.active = false;
+        goToPhase("dodge_resolve", 40);
+      }
+
+      function loseLife(critical) {
+        lives--;
+        espritSprite = critical ? { kind: "toucheCritique" } : { kind: "touche" };
+        fireball.active = false;
+        if (lives <= 0) {
+          espritSprite = { kind: "ko" };
+          goToPhase("defeat", 90);
+        } else {
+          goToPhase("round_pause", 90);
+        }
+      }
+
+      function onRoundCleared() {
+        round++;
+        updateHud();
+        if (round >= ROUND_COUNT) {
+          goToPhase("victory_transform", 100);
+        } else {
+          espritSprite = { kind: "combat", frame: 0 };
+          feedback = "";
+          goToPhase("attack", 0);
+        }
+      }
+
+      // --- Interactions (clic canvas, hit-test manuel) ---
+      let clickRects = []; // { x,y,w,h, onClick }
 
       function getCanvasCoords(clientX, clientY) {
         const rect = canvas.getBoundingClientRect();
@@ -189,143 +364,338 @@
 
       function onClick(e) {
         const { x, y } = getCanvasCoords(e.clientX, e.clientY);
-
-        // Clic sur une carte ?
-        const card = cards.find(c => x >= c.x && x <= c.x + c.w && y >= c.y && y <= c.y + c.h);
-        if (card) {
-          cards.forEach(c => c.selected = false);
-          if (card.placedInSlot !== null) {
-            slots[card.placedInSlot].filled = null;
-            card.placedInSlot = null;
-          }
-          card.selected = true;
-          selectedCard = card;
-          render();
-          return;
-        }
-
-        // Clic sur un emplacement ?
-        const slot = slots.find(s => x >= s.x && x <= s.x + s.w && y >= s.y && y <= s.y + s.h);
-        if (slot && selectedCard) {
-          if (slot.filled !== null) {
-            // Libère la carte déjà présente
-            const occupant = cards[slot.filled];
-            occupant.placedInSlot = null;
-          }
-          slot.filled = cards.indexOf(selectedCard);
-          selectedCard.placedInSlot = slots.indexOf(slot);
-          selectedCard.selected = false;
-          selectedCard = null;
-          render();
+        for (const r of clickRects) {
+          if (x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h) { r.onClick(); return; }
         }
       }
-
       canvas.addEventListener("click", onClick);
 
-      document.getElementById("mg-validate").addEventListener("click", () => {
-        const allFilled = slots.every(s => s.filled !== null);
-        if (!allFilled) return;
-
-        let allCorrect = true;
-        slots.forEach((slot, slotIdx) => {
-          const card = cards[slot.filled];
-          const isCorrect = story[card.storyIdx].stage === slot.stage;
-          if (!isCorrect) allCorrect = false;
-          card.feedback = isCorrect ? "correct" : "incorrect";
-        });
-        render();
-
-        setTimeout(() => endGame(allCorrect), 1000);
-      });
-
-      function wrapText(text, maxWidth) {
-        const words = text.split(" ");
-        const lines = [];
-        let line = "";
-        words.forEach(word => {
-          const test = line ? line + " " + word : word;
-          if (ctx.measureText(test).width > maxWidth && line) {
-            lines.push(line);
-            line = word;
-          } else {
-            line = test;
-          }
-        });
-        if (line) lines.push(line);
-        return lines;
+      function cleanup() {
+        canvas.removeEventListener("click", onClick);
+        cancelAnimationFrame(rafId);
       }
 
-      function render() {
-        ctx.fillStyle = "#1a1530";
-        ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
-
-        ctx.font = "13px sans-serif";
-
-        // Emplacements (parchemin)
-        slots.forEach(slot => {
-          ctx.fillStyle = "rgba(157,140,255,0.08)";
-          ctx.fillRect(slot.x, slot.y, slot.w, slot.h);
-          ctx.strokeStyle = "#e8c468";
-          ctx.setLineDash([6, 6]);
-          ctx.lineWidth = 2;
-          ctx.strokeRect(slot.x, slot.y, slot.w, slot.h);
-          ctx.setLineDash([]);
-
-          ctx.fillStyle = "#e8c468";
-          ctx.font = "bold 13px sans-serif";
-          ctx.textAlign = "left";
-          ctx.textBaseline = "middle";
-          ctx.fillText(STAGE_LABELS[slot.stage] + " :", slot.x + 10, slot.y + slot.h / 2);
-
-          if (slot.filled !== null) {
-            const card = cards[slot.filled];
-            ctx.font = "13px sans-serif";
-            ctx.fillStyle = "#f4f1ea";
-            ctx.textAlign = "right";
-            const labelWidth = ctx.measureText(STAGE_LABELS[slot.stage] + " : ").width;
-            const availW = slot.w - 20 - labelWidth - 10;
-            const lines = wrapText(story[card.storyIdx].text, availW);
-            ctx.fillText(lines[0] + (lines.length > 1 ? "…" : ""), slot.x + slot.w - 10, slot.y + slot.h / 2);
-          }
+      async function endVictory() {
+        if (resultGiven) return;
+        resultGiven = true;
+        cleanup();
+        await MinigameUI.showResult({
+          passed: true,
+          message: "Le sceau se brise ! Frollo reprend forme humaine, vaincu et hagard. L'Esprit recueille la première clé du Manuscrit... et Gavroche annonce qu'il l'accompagnera désormais dans ses prochaines aventures."
         });
+        resolve({ passed: true, score: ROUND_COUNT, total: ROUND_COUNT });
+      }
 
-        // Cartes (pool du bas) — police réduite (11px) pour ce bloc
-        // uniquement, cohérente avec le format plus compact des cartes
-        // depuis la correction du débordement.
-        cards.forEach(card => {
-          if (card.placedInSlot !== null) return; // affichée dans le slot
+      async function endDefeat() {
+        if (resultGiven) return;
+        resultGiven = true;
+        cleanup();
+        await MinigameUI.showResult({
+          passed: false,
+          message: "Le Mal-Dit est trop puissant, cette fois. L'Esprit doit reprendre des forces avant de retenter l'assaut."
+        });
+        resolve({ passed: false, score: round, total: ROUND_COUNT });
+      }
 
-          let fillColor = "#2b2347";
-          if (card.feedback === "correct") fillColor = "#6fcf97";
-          if (card.feedback === "incorrect") fillColor = "#d9534f";
+      // --- Boucle principale ---
+      let rafId;
 
-          ctx.fillStyle = fillColor;
-          ctx.fillRect(card.x, card.y, card.w, card.h);
-          ctx.strokeStyle = card.selected ? "#e8c468" : "#9d8cff";
-          ctx.lineWidth = card.selected ? 3 : 2;
-          ctx.strokeRect(card.x, card.y, card.w, card.h);
+      function update() {
+        // Idle de Frollo : tourne en boucle en permanence, sauf pendant
+        // les cinématiques dédiées de transformation/re-transformation.
+        if (phase !== "intro_transform" && phase !== "victory_transform" && phase !== "victory_key") {
+          frolloAnimTimer++;
+          if (frolloAnimTimer >= 18) { frolloAnimTimer = 0; frolloAnimFrame = (frolloAnimFrame + 1) % frollo.demon.length; }
+        }
+        if (frolloFlash > 0) frolloFlash--;
 
-          ctx.font = "11px sans-serif";
+        if (fireball.active) {
+          fireball.t++;
+          const p = Math.min(1, fireball.t / fireball.total);
+          fireball.x = fireball.fromX + (fireball.toX - fireball.fromX) * p;
+          fireball.y = fireball.fromY + (fireball.toY - fireball.fromY) * p;
+        }
+
+        if (phaseTimer > 0) phaseTimer--;
+
+        switch (phase) {
+          case "intro_transform":
+            if (phaseTimer <= 0) startAttempt(storyIndex);
+            break;
+          case "esprit_strike":
+            espritSprite.frame = Math.floor((24 - phaseTimer) / 8) % esprit.combat.length;
+            if (phaseTimer <= 0) {
+              launchFireball(35);
+              goToPhase("frollo_attack_travel", 35);
+            }
+            break;
+          case "frollo_attack_travel":
+            if (phaseTimer <= 0) {
+              // Si on vient d'une mauvaise attaque, currentSentenceIdx est
+              // resté celui du round en cours (pas encore résolu) : dans ce
+              // cas on inflige directement le coup. Sinon (attaque réussie),
+              // c'est la phase défense qui doit trancher — mais comme le
+              // joueur a déjà pu cliquer sur une étiquette pendant le vol de
+              // la boule, on ne bascule ici que si aucune défense n'a
+              // encore été résolue.
+              if (phase === "frollo_attack_travel" && currentSentenceIdx === null) {
+                loseLife(false);
+              }
+            }
+            break;
+          case "round_pause":
+            if (phaseTimer <= 0) {
+              const nextStory = pickStory(storyIndex);
+              startAttempt(nextStory);
+            }
+            break;
+          case "hit_resolve":
+            if (phaseTimer <= 0) {
+              loseLife(true);
+            }
+            break;
+          case "dodge_resolve":
+            if (phaseTimer <= 0) {
+              currentSentenceIdx = null;
+              onRoundCleared();
+            }
+            break;
+          case "victory_transform":
+            if (phaseTimer <= 0) goToPhase("victory_key", 70);
+            break;
+          case "victory_key":
+            if (phaseTimer <= 0) endVictory();
+            break;
+          case "defeat":
+            if (phaseTimer <= 0) endDefeat();
+            break;
+        }
+
+        if (espritSprite.kind === "victoire") {
+          espritSprite.timer = (espritSprite.timer || 0) + 1;
+          if (espritSprite.timer % 24 === 0) espritSprite.frame = 1 - (espritSprite.frame || 0);
+        }
+      }
+
+      // --- Rendu ---
+      function drawImgBox(img, box, flash) {
+        if (img && img.complete && img.naturalWidth > 0) {
+          if (flash) {
+            ctx.save();
+            ctx.filter = "brightness(1.8) saturate(0.3)";
+            ctx.drawImage(img, box.x, box.y, box.w, box.h);
+            ctx.restore();
+          } else {
+            ctx.drawImage(img, box.x, box.y, box.w, box.h);
+          }
+        } else {
+          ctx.fillStyle = "#3a2a55";
+          ctx.fillRect(box.x, box.y, box.w, box.h);
+        }
+      }
+
+      function currentEspritImage() {
+        switch (espritSprite.kind) {
+          case "combat": return esprit.combat[espritSprite.frame % esprit.combat.length];
+          case "esquive": return esprit.esquive;
+          case "defense": return esprit.defense[espritSprite.frame];
+          case "touche": return esprit.touche;
+          case "toucheCritique": return esprit.toucheCritique;
+          case "ko": return esprit.ko;
+          case "victoire": return esprit.victoire[espritSprite.frame || 0];
+          default: return esprit.combat[0];
+        }
+      }
+
+      function drawHealthBar() {
+        const segW = 60, segH = 14, gap = 6;
+        const totalW = ROUND_COUNT * segW + (ROUND_COUNT - 1) * gap;
+        const startX = (CANVAS_W - totalW) / 2;
+        for (let i = 0; i < ROUND_COUNT; i++) {
+          const x = startX + i * (segW + gap);
+          ctx.fillStyle = i < round ? "#6fcf97" : "rgba(157,140,255,0.15)";
+          ctx.fillRect(x, 10, segW, segH);
+          ctx.strokeStyle = "#e8c468";
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(x, 10, segW, segH);
+        }
+        ctx.fillStyle = "#c9c2e0";
+        ctx.font = "12px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("Sceau du Mal-Dit", CANVAS_W / 2, 40);
+      }
+
+      function drawLives() {
+        ctx.font = "18px sans-serif";
+        ctx.textAlign = "left";
+        let hearts = "";
+        for (let i = 0; i < MAX_LIVES; i++) hearts += i < lives ? "❤ " : "🖤 ";
+        ctx.fillText(hearts, 16, 28);
+      }
+
+      function drawFeedback() {
+        if (!feedback) return;
+        ctx.fillStyle = "rgba(26,21,48,0.85)";
+        ctx.fillRect(CANVAS_W / 2 - 300, 262, 600, 30);
+        ctx.fillStyle = feedbackColor;
+        ctx.font = "bold 13px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(feedback, CANVAS_W / 2, 277);
+        ctx.textBaseline = "alphabetic";
+      }
+
+      function drawFireball() {
+        if (!fireball.active) return;
+        const grad = ctx.createRadialGradient(fireball.x, fireball.y, 1, fireball.x, fireball.y, 14);
+        grad.addColorStop(0, "#ffd6f0");
+        grad.addColorStop(0.5, "#e85fc4");
+        grad.addColorStop(1, "rgba(232,95,196,0)");
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(fireball.x, fireball.y, 14, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      function drawAttackCards() {
+        const items = pool;
+        const n = items.length;
+        const cardW = 145, cardH = 70, gap = 10;
+        const totalW = n * cardW + (n - 1) * gap;
+        const startX = (CANVAS_W - totalW) / 2;
+        const y = 310;
+        ctx.font = "12px sans-serif";
+        items.forEach((sentenceIdx, i) => {
+          const x = startX + i * (cardW + gap);
+          ctx.fillStyle = "#2b2347";
+          ctx.fillRect(x, y, cardW, cardH);
+          ctx.strokeStyle = "#9d8cff";
+          ctx.lineWidth = 2;
+          ctx.strokeRect(x, y, cardW, cardH);
+
           ctx.fillStyle = "#f4f1ea";
-          const lines = wrapText(story[card.storyIdx].text, card.w - 16);
-          const lineHeight = 13;
-          const totalH = lines.length * lineHeight;
-          let ty = card.y + card.h / 2 - totalH / 2 + lineHeight / 2;
+          const lines = wrapText(ctx, story[sentenceIdx].text, cardW - 16);
+          const lh = 15;
+          let ty = y + cardH / 2 - (lines.length - 1) * lh / 2;
           ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          lines.forEach(line => {
-            ctx.fillText(line, card.x + card.w / 2, ty);
-            ty += lineHeight;
+          lines.forEach(line => { ctx.fillText(line, x + cardW / 2, ty); ty += lh; });
+
+          clickRects.push({
+            x, y, w: cardW, h: cardH,
+            onClick: () => {
+              if (phase !== "attack") return;
+              if (sentenceIdx === round) onCorrectAttack(sentenceIdx);
+              else onWrongAttack();
+            }
           });
         });
       }
 
-      render();
+      function drawDefenseButtons() {
+        const n = STAGE_ORDER.length;
+        const btnW = 145, btnH = 46, gap = 10;
+        const totalW = n * btnW + (n - 1) * gap;
+        const startX = (CANVAS_W - totalW) / 2;
+        const y = 330;
+        ctx.font = "12px sans-serif";
+        STAGE_ORDER.forEach((stage, i) => {
+          const x = startX + i * (btnW + gap);
+          ctx.fillStyle = "#2b2347";
+          ctx.fillRect(x, y, btnW, btnH);
+          ctx.strokeStyle = "#e8c468";
+          ctx.lineWidth = 2;
+          ctx.strokeRect(x, y, btnW, btnH);
+          ctx.fillStyle = "#f4f1ea";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(STAGE_LABELS[stage], x + btnW / 2, y + btnH / 2);
+          ctx.textBaseline = "alphabetic";
+
+          clickRects.push({
+            x, y, w: btnW, h: btnH,
+            onClick: () => {
+              if (phase !== "frollo_attack_travel" && phase !== "defense") return;
+              if (currentSentenceIdx === null) return;
+              const correctStage = story[currentSentenceIdx].stage;
+              if (stage === correctStage) onCorrectDefense(stage);
+              else onWrongDefense();
+            }
+          });
+        });
+      }
+
+      function render() {
+        clickRects = [];
+
+        if (bgImage.complete && bgImage.naturalWidth > 0) {
+          ctx.drawImage(bgImage, 0, 0, CANVAS_W, CANVAS_H);
+        } else {
+          ctx.fillStyle = "#1a1530";
+          ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+        }
+
+        if (phase === "intro_transform") {
+          drawImgBox(frollo.transformation, { x: CANVAS_W / 2 - 130, y: 40, w: 260, h: 340 }, false);
+          ctx.fillStyle = "rgba(26,21,48,0.75)";
+          ctx.fillRect(0, 395, CANVAS_W, 40);
+          ctx.fillStyle = "#e85fc4";
+          ctx.font = "bold 14px sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText("Frollo se tord de douleur... le Mal-Dit prend possession de lui !", CANVAS_W / 2, 419);
+          return;
+        }
+
+        if (phase === "victory_transform" || phase === "victory_key") {
+          drawImgBox(frollo.retransformation, { x: CANVAS_W / 2 - 130, y: 30, w: 260, h: 320 }, false);
+          const img = esprit.victoire[Math.floor(phaseTimer / 20) % 2];
+          drawImgBox(img, ESPRIT_BOX, false);
+          if (phase === "victory_key" && cleImg) {
+            const scale = Math.min(1, (70 - phaseTimer) / 20);
+            const kw = 46 * scale, kh = 90 * scale;
+            drawImgBox(cleImg, { x: ESPRIT_BOX.x + ESPRIT_BOX.w / 2 - kw / 2, y: ESPRIT_BOX.y - 30, w: kw, h: kh }, false);
+          }
+          ctx.fillStyle = "rgba(26,21,48,0.75)";
+          ctx.fillRect(0, 395, CANVAS_W, 40);
+          ctx.fillStyle = "#e8c468";
+          ctx.font = "bold 14px sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText(
+            phase === "victory_transform" ? "Le sceau se brise... Frollo reprend forme humaine." : "L'Esprit recueille la première clé !",
+            CANVAS_W / 2, 419
+          );
+          return;
+        }
+
+        drawHealthBar();
+        drawLives();
+
+        drawImgBox(frollo.demon[frolloAnimFrame], FROLLO_BOX, frolloFlash > 0);
+        drawImgBox(currentEspritImage(), ESPRIT_BOX, false);
+
+        drawFireball();
+        drawFeedback();
+
+        if (phase === "attack") {
+          drawAttackCards();
+        } else if (phase === "frollo_attack_travel" || phase === "defense") {
+          if (currentSentenceIdx !== null) drawDefenseButtons();
+        }
+
+      }
+
+
+      function loop() {
+        update();
+        render();
+        if (!resultGiven) rafId = requestAnimationFrame(loop);
+      }
+
+      loop();
     });
   }
 
   SceneManager.registerMinigame("construction_recit", "parchemin_hugo", {
-    title: "Le Récit de Gavroche",
+    title: "Le Sceau du Mal-Dit",
     run
   });
 
