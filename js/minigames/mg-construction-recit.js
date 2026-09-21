@@ -1,7 +1,40 @@
 /* ============================================================
-   LE MANUSCRIT DES MONDES — mg-construction-recit.js (v5)
+   LE MANUSCRIT DES MONDES — mg-construction-recit.js (v6)
    ============================================================
    Mini-jeu "Le Sceau du Mal-Dit" (Monde 1 — Hugo, acte 6).
+
+   ---- v6 : retour de test — gabarit, mise en page, contrôles ----
+   1. PERSONNAGES BEAUCOUP TROP GRANDS ET TROP HAUTS. Réduits
+      drastiquement (l'Esprit ~1cm à l'écran, Frollo exactement le
+      double dans les deux dimensions — même rapport largeur/hauteur
+      pour les deux) et reposés au sol, en bas du canevas — l'espace
+      libéré au-dessus leur est rendu pour l'exercice (questions,
+      jauges), qui passe donc du bas vers le haut de l'écran.
+   2. TEXTES TROP GROS/PIXELISÉS. Toutes les tailles de police et
+      les boutons ont été réduits en conséquence, pour se rapprocher
+      de la sobriété des autres mini-jeux du jeu.
+   3. CONTRÔLES CLAVIER EN TEMPS RÉEL (remplace les boutons cliqués
+      pour les actions de combat — les boutons tactiles restent
+      disponibles en parallèle pour le tactile, même esprit que Le
+      Pont de Gavroche) :
+        - Flèches gauche/droite (ou Q/D) : déplace l'Esprit sur sa
+          zone, purement cosmétique (aucun effet de jeu — juste plus
+          vivant qu'un personnage figé).
+        - Flèche haut ou barre Espace : SAUT. Remplace l'ancien
+          bouton "Parer" — si une boule de feu de Frollo est en vol
+          ET qu'il reste une charge 🛡️, le saut esquive/pare
+          (consomme la charge, comme avant). Sans boule de feu en
+          vol, c'est un saut purement cosmétique, sans coût ni effet.
+        - Entrée (ou bouton tactile ⚔️) : ATTAQUE, comme avant
+          (consomme une charge ⚔️, retire un segment à Frollo).
+      "Recharger" reste un bouton cliqué (canevas) : ce n'est pas une
+      action de combat, mais un changement de phase.
+
+   Le reste (mécanique en deux phases, banque de questions mixte,
+   jauges, vies, victoire/défaite) est IDENTIQUE à la v5 — voir
+   ci-dessous pour le détail.
+
+   ---- v5 (mécanique, inchangée) ----
    Notion officielle de l'acte : construction d'une histoire
    (schéma narratif). Mais suite à la discussion avec Julie, ce
    combat final teste désormais un MIX de révision sur TOUTES les
@@ -9,11 +42,6 @@
    est qu'une composante parmi d'autres, pour ne pas faire doublon
    avec "Les Vitraux Retrouvés" (acte 4), qui teste déjà la mise en
    ordre logique d'un paragraphe.
-
-   ---- v5 : refonte complète du gameplay (retour de Julie : "pas
-   rigolo") ----
-   Fini le système à rounds/tentatives de la v4. Nouvelle mécanique
-   à deux temps, décrite par Julie :
 
    1. PHASE ENTRAÎNEMENT (accumulation, sans risque) : une question
       rapide à la fois (QCM à 3 options), piochée au hasard dans
@@ -27,15 +55,12 @@
 
    2. PHASE COMBAT : Frollo attaque automatiquement à intervalle
       régulier (boule de feu). Le joueur peut :
-      - cliquer "🛡️ Parer" (si charge dispo) pendant qu'une boule de
-        feu est en vol pour l'esquiver/la bloquer (sprite tiré au
-        sort parmi esquive/defense1/defense2) et consommer 1 charge
-        de défense. Sans parade (pas de clic à temps, ou plus de
-        charge), l'Esprit est touché et perd une vie (sur 3, comme
-        avant).
-      - cliquer "⚔️ Attaquer" (si charge dispo), à tout moment, pour
-        frapper Frollo et lui retirer un segment de vie (4 segments
-        = 4 charges d'attaque max, un coup = un segment).
+      - SAUTER (voir contrôles v6 ci-dessus) pour esquiver, si charge
+        dispo. Sans parade, l'Esprit est touché et perd une vie
+        (sur 3, comme avant).
+      - ATTAQUER (voir contrôles v6), à tout moment si charge dispo,
+        pour frapper Frollo et lui retirer un segment de vie (4
+        segments = 4 charges d'attaque max, un coup = un segment).
       - cliquer "🔄 Recharger" à tout moment pour retourner en phase
         Entraînement et regagner des charges (vie de Frollo et vies
         du joueur inchangées, seules les jauges de charges sont
