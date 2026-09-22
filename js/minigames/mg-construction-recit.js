@@ -205,9 +205,18 @@
         retransformation: loadChar("frolo-vaincu-retransformation-humain.jfif")
       };
 
-      // --- Positions (v4.1 : réduites, Esprit en miroir vers Frollo) ---
-      const ESPRIT_BOX = { x: 100, y: 160, w: 90, h: 130 };
-      const FROLLO_BOX = { x: 600, y: 120, w: 120, h: 170 };
+      // --- Positions (v6 : personnages nettement réduits — l'Esprit
+      // ~1cm à l'écran, Frollo exactement le double dans les deux
+      // dimensions, mêmes proportions largeur/hauteur pour les
+      // deux — et posés au sol (bas du canevas) plutôt qu'en
+      // hauteur, pour rendre l'espace du haut à l'exercice. ---
+      const GROUND_Y = 420; // ligne de sol commune (bas des sprites)
+      const ESPRIT_W = 34, ESPRIT_H = 50;
+      const FROLLO_W = 68, FROLLO_H = 100;
+      const ESPRIT_BASE_X = 110;
+      const ESPRIT_MOVE_MIN = 70, ESPRIT_MOVE_MAX = 260; // v6 : zone de déplacement au clavier
+      const ESPRIT_BOX = { x: ESPRIT_BASE_X, y: GROUND_Y - ESPRIT_H, w: ESPRIT_W, h: ESPRIT_H };
+      const FROLLO_BOX = { x: CANVAS_W - FROLLO_W - 110, y: GROUND_Y - FROLLO_H, w: FROLLO_W, h: FROLLO_H };
 
       // --- État de partie ---
       let lives = MAX_LIVES;
@@ -226,7 +235,14 @@
 
       const fireball = { active: false, x: 0, y: 0, fromX: 0, fromY: 0, toX: 0, toY: 0, t: 0, total: 1 };
       let frolloAttackTimer = FROLLO_ATTACK_INTERVAL;
-      let combatLocked = false; // vrai pendant une résolution (esquive/touché/attaque), bloque les clics
+      let combatLocked = false; // vrai pendant une résolution (esquive/touché/attaque), bloque les actions
+
+      // --- v6 : déplacement + saut cosmétiques au clavier ---
+      const WALK_SPEED = 2.6;
+      const keysHeld = { left: false, right: false };
+      let jumpTimer = 0; // >0 pendant le petit bond visuel du saut
+      const JUMP_DURATION = 20;
+      const JUMP_HEIGHT = 22;
 
       let feedback = "";
       let feedbackColor = "#f4f1ea";
@@ -305,7 +321,8 @@
       }
 
       // --- Actions en combat ---
-      function onAttackClick() {
+      // --- Actions en combat (v6 : appelables au clavier ET au tactile) ---
+      function tryAttack() {
         if (combatLocked || phase !== "combat" || attackCharge <= 0) return;
         attackCharge--;
         combatLocked = true;
@@ -317,19 +334,31 @@
         goToPhase("combat_strike", 24);
       }
 
-      function onParryClick() {
-        if (combatLocked || phase !== "combat" || defenseCharge <= 0 || !fireball.active) return;
-        defenseCharge--;
-        combatLocked = true;
-        const style = pick(["esquive", "defense1", "defense2"]);
-        espritSprite = style === "esquive" ? { kind: "esquive" } : { kind: "defense", frame: style === "defense1" ? 0 : 1 };
-        fireball.active = false;
-        feedback = "✓ Paré !";
-        feedbackColor = "#6fcf97";
-        goToPhase("combat_parry", 40);
+      /**
+       * v6 : le SAUT remplace le bouton "Parer". S'il y a une boule de
+       * feu en vol ET une charge de défense disponible, le saut PARE
+       * (consomme la charge, comme l'ancien bouton). Sinon, c'est un
+       * bond purement cosmétique (jumpTimer), sans coût ni effet — le
+       * joueur garde la main pour "jouer" avec son personnage sans que
+       * ça gâche une charge.
+       */
+      function tryJump() {
+        if (combatLocked || phase !== "combat") return;
+        if (fireball.active && defenseCharge > 0) {
+          defenseCharge--;
+          combatLocked = true;
+          const style = pick(["esquive", "defense1", "defense2"]);
+          espritSprite = style === "esquive" ? { kind: "esquive" } : { kind: "defense", frame: style === "defense1" ? 0 : 1 };
+          fireball.active = false;
+          feedback = "✓ Paré !";
+          feedbackColor = "#6fcf97";
+          goToPhase("combat_parry", 40);
+        } else {
+          jumpTimer = JUMP_DURATION;
+        }
       }
 
-      function onRechargeClick() {
+      function tryRecharge() {
         if (phase !== "combat") return;
         enterTraining();
       }
@@ -349,7 +378,7 @@
         }
       }
 
-      // --- Interactions (clic canvas, hit-test manuel) ---
+      // --- Interactions (clic canvas, hit-test manuel — questions & Recharger) ---
       let clickRects = [];
 
       function getCanvasCoords(clientX, clientY) {
@@ -367,8 +396,46 @@
       }
       canvas.addEventListener("click", onClick);
 
+      // --- v6 : clavier temps réel (déplacement + saut/parade + attaque) ---
+      function onKeyDown(e) {
+        if (e.key === "ArrowLeft" || e.key === "q" || e.key === "Q" || e.key === "a" || e.key === "A") keysHeld.left = true;
+        if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") keysHeld.right = true;
+        if ((e.key === "ArrowUp" || e.key === " " || e.key === "w" || e.key === "W") && !e.repeat) { tryJump(); e.preventDefault(); }
+        if (e.key === "Enter" && !e.repeat) tryAttack();
+      }
+      function onKeyUp(e) {
+        if (e.key === "ArrowLeft" || e.key === "q" || e.key === "Q" || e.key === "a" || e.key === "A") keysHeld.left = false;
+        if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") keysHeld.right = false;
+      }
+      window.addEventListener("keydown", onKeyDown);
+      window.addEventListener("keyup", onKeyUp);
+
+      // --- v6 : boutons tactiles, mêmes actions que le clavier (parité mobile) ---
+      uiContainer.insertAdjacentHTML("beforeend", `
+        <div class="touch-controls">
+          <button class="touch-btn" id="btn-left">◀</button>
+          <button class="touch-btn" id="btn-jump">⤴</button>
+          <button class="touch-btn" id="btn-right">▶</button>
+          <button class="touch-btn" id="btn-attack">⚔️</button>
+        </div>
+      `);
+      const btnLeft = document.getElementById("btn-left");
+      const btnRight = document.getElementById("btn-right");
+      ["mousedown", "touchstart"].forEach(evt => {
+        btnLeft.addEventListener(evt, () => keysHeld.left = true);
+        btnRight.addEventListener(evt, () => keysHeld.right = true);
+      });
+      ["mouseup", "mouseleave", "touchend", "touchcancel"].forEach(evt => {
+        btnLeft.addEventListener(evt, () => keysHeld.left = false);
+        btnRight.addEventListener(evt, () => keysHeld.right = false);
+      });
+      document.getElementById("btn-jump").addEventListener("click", tryJump);
+      document.getElementById("btn-attack").addEventListener("click", tryAttack);
+
       function cleanup() {
         canvas.removeEventListener("click", onClick);
+        window.removeEventListener("keydown", onKeyDown);
+        window.removeEventListener("keyup", onKeyUp);
         cancelAnimationFrame(rafId);
       }
 
@@ -403,6 +470,15 @@
           if (frolloAnimTimer >= 18) { frolloAnimTimer = 0; frolloAnimFrame = (frolloAnimFrame + 1) % frollo.demon.length; }
         }
         if (frolloFlash > 0) frolloFlash--;
+
+        // v6 : déplacement cosmétique au clavier, actif seulement en
+        // phase de combat (pas pendant l'entraînement, où l'Esprit
+        // n'a pas de raison de bouger).
+        if (phase === "combat") {
+          if (keysHeld.left && !keysHeld.right) ESPRIT_BOX.x = Math.max(ESPRIT_MOVE_MIN, ESPRIT_BOX.x - WALK_SPEED);
+          else if (keysHeld.right && !keysHeld.left) ESPRIT_BOX.x = Math.min(ESPRIT_MOVE_MAX, ESPRIT_BOX.x + WALK_SPEED);
+        }
+        if (jumpTimer > 0) jumpTimer--;
 
         if (fireball.active) {
           fireball.t++;
@@ -510,59 +586,59 @@
       }
 
       function drawFrolloHealthBar() {
-        const segW = 60, segH = 14, gap = 6;
+        const segW = 44, segH = 10, gap = 5;
         const totalW = MAX_CHARGE * segW + (MAX_CHARGE - 1) * gap;
         const startX = (CANVAS_W - totalW) / 2;
         for (let i = 0; i < MAX_CHARGE; i++) {
           const x = startX + i * (segW + gap);
           ctx.fillStyle = i < frolloHealth ? "#d9534f" : "rgba(157,140,255,0.15)";
-          ctx.fillRect(x, 10, segW, segH);
+          ctx.fillRect(x, 8, segW, segH);
           ctx.strokeStyle = "#e8c468";
-          ctx.lineWidth = 1.5;
-          ctx.strokeRect(x, 10, segW, segH);
+          ctx.lineWidth = 1;
+          ctx.strokeRect(x, 8, segW, segH);
         }
         ctx.fillStyle = "#c9c2e0";
-        ctx.font = "12px sans-serif";
+        ctx.font = "9px sans-serif";
         ctx.textAlign = "center";
-        ctx.fillText("Sceau du Mal-Dit — vie de Frollo", CANVAS_W / 2, 40);
+        ctx.fillText("Vie de Frollo", CANVAS_W / 2, 30);
       }
 
       function drawLives() {
-        ctx.font = "18px sans-serif";
+        ctx.font = "13px sans-serif";
         ctx.textAlign = "left";
         let hearts = "";
         for (let i = 0; i < MAX_LIVES; i++) hearts += i < lives ? "❤ " : "🖤 ";
-        ctx.fillText(hearts, 16, 28);
+        ctx.fillText(hearts, 12, 20);
       }
 
       function drawCharges() {
-        ctx.font = "13px sans-serif";
+        ctx.font = "10px sans-serif";
         ctx.textAlign = "right";
         ctx.fillStyle = "#f4f1ea";
-        ctx.fillText(`⚔️ ${attackCharge}/${MAX_CHARGE}    🛡️ ${defenseCharge}/${MAX_CHARGE}`, CANVAS_W - 16, 28);
+        ctx.fillText(`⚔️ ${attackCharge}/${MAX_CHARGE}  🛡️ ${defenseCharge}/${MAX_CHARGE}`, CANVAS_W - 12, 20);
       }
 
-      function drawFeedback() {
+      function drawFeedback(y) {
         if (!feedback) return;
         ctx.fillStyle = "rgba(26,21,48,0.85)";
-        ctx.fillRect(CANVAS_W / 2 - 320, 262, 640, 30);
+        ctx.fillRect(CANVAS_W / 2 - 280, y, 560, 24);
         ctx.fillStyle = feedbackColor;
-        ctx.font = "bold 12px sans-serif";
+        ctx.font = "10px sans-serif";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        ctx.fillText(feedback.length > 110 ? feedback.slice(0, 108) + "…" : feedback, CANVAS_W / 2, 277);
+        ctx.fillText(feedback.length > 120 ? feedback.slice(0, 118) + "…" : feedback, CANVAS_W / 2, y + 12);
         ctx.textBaseline = "alphabetic";
       }
 
       function drawFireball() {
         if (!fireball.active) return;
-        const grad = ctx.createRadialGradient(fireball.x, fireball.y, 1, fireball.x, fireball.y, 14);
+        const grad = ctx.createRadialGradient(fireball.x, fireball.y, 1, fireball.x, fireball.y, 11);
         grad.addColorStop(0, "#ffd6f0");
         grad.addColorStop(0.5, "#e85fc4");
         grad.addColorStop(1, "rgba(232,95,196,0)");
         ctx.fillStyle = grad;
         ctx.beginPath();
-        ctx.arc(fireball.x, fireball.y, 14, 0, Math.PI * 2);
+        ctx.arc(fireball.x, fireball.y, 11, 0, Math.PI * 2);
         ctx.fill();
       }
 
@@ -570,41 +646,45 @@
         ctx.fillStyle = enabled ? "#2b2347" : "rgba(43,35,71,0.4)";
         ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
         ctx.strokeStyle = enabled ? "#e8c468" : "rgba(232,196,104,0.3)";
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 1.5;
         ctx.strokeRect(rect.x, rect.y, rect.w, rect.h);
         ctx.fillStyle = enabled ? "#f4f1ea" : "rgba(244,241,234,0.4)";
-        ctx.font = "bold 13px sans-serif";
+        ctx.font = "10px sans-serif";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.fillText(label, rect.x + rect.w / 2, rect.y + rect.h / 2);
         ctx.textBaseline = "alphabetic";
       }
 
+      // v6 : toute la zone d'exercice (questions, jauges, boutons) est
+      // remontée en haut de l'écran (juste sous la barre de vie de
+      // Frollo), pour laisser le bas du canevas aux personnages, posés
+      // au sol.
+      const EXERCISE_TOP = 42;
+
       function drawTrainingUI() {
         if (!currentQuestion) return;
         const q = currentQuestion;
 
-        // Question
         ctx.fillStyle = "#2b2347";
-        ctx.fillRect(60, 300, CANVAS_W - 120, 40);
+        ctx.fillRect(50, EXERCISE_TOP, CANVAS_W - 100, 34);
         ctx.strokeStyle = "#9d8cff";
-        ctx.lineWidth = 2;
-        ctx.strokeRect(60, 300, CANVAS_W - 120, 40);
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(50, EXERCISE_TOP, CANVAS_W - 100, 34);
         ctx.fillStyle = "#f4f1ea";
-        ctx.font = "13px sans-serif";
+        ctx.font = "10px sans-serif";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        const qLines = wrapText(ctx, q.question, CANVAS_W - 150);
-        let qy = 320 - (qLines.length - 1) * 8;
-        qLines.forEach(l => { ctx.fillText(l, CANVAS_W / 2, qy); qy += 16; });
+        const qLines = wrapText(ctx, q.question, CANVAS_W - 130).slice(0, 2);
+        let qy = EXERCISE_TOP + 17 - (qLines.length - 1) * 7;
+        qLines.forEach(l => { ctx.fillText(l, CANVAS_W / 2, qy); qy += 14; });
         ctx.textBaseline = "alphabetic";
 
-        // Options
         const n = q.options.length;
-        const btnW = 220, btnH = 46, gap = 14;
+        const btnW = 165, btnH = 34, gap = 10;
         const totalW = n * btnW + (n - 1) * gap;
         const startX = (CANVAS_W - totalW) / 2;
-        const y = 355;
+        const y = EXERCISE_TOP + 42;
         q.options.forEach((opt, i) => {
           const x = startX + i * (btnW + gap);
           const enabled = !questionLocked;
@@ -612,34 +692,30 @@
           clickRects.push({ x, y, w: btnW, h: btnH, onClick: () => onAnswerClick(i) });
         });
 
-        // Bouton Combattre
         const canFight = attackCharge > 0 || defenseCharge > 0;
-        const fightRect = { x: CANVAS_W / 2 - 90, y: 410, w: 180, h: 32 };
+        const fightRect = { x: CANVAS_W / 2 - 75, y: EXERCISE_TOP + 84, w: 150, h: 26 };
         drawButton(fightRect, "⚔️ Combattre !", canFight);
         if (canFight) clickRects.push({ ...fightRect, onClick: enterCombat });
+
+        drawFeedback(EXERCISE_TOP + 116);
       }
 
       function drawCombatUI() {
-        const btnW = 170, btnH = 40, gap = 16;
-        const y = 400;
-        const totalW = 3 * btnW + 2 * gap;
-        const startX = (CANVAS_W - totalW) / 2;
+        // v6 : Attaquer/Parer sont maintenant au clavier (Entrée /
+        // Espace-Flèche haut) + boutons tactiles — seul "Recharger"
+        // reste un bouton cliqué ici, puisque ce n'est pas une action
+        // de combat mais un changement de phase.
+        ctx.fillStyle = "#c9c2e0";
+        ctx.font = "10px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("◀ ▶ bouger  —  Espace / ↑ sauter-parer  —  Entrée attaquer", CANVAS_W / 2, EXERCISE_TOP + 14);
 
-        const atkRect = { x: startX, y, w: btnW, h: btnH };
-        const parRect = { x: startX + btnW + gap, y, w: btnW, h: btnH };
-        const rechRect = { x: startX + 2 * (btnW + gap), y, w: btnW, h: btnH };
-
-        const atkEnabled = !combatLocked && attackCharge > 0;
-        const parEnabled = !combatLocked && defenseCharge > 0 && fireball.active;
+        const rechRect = { x: CANVAS_W / 2 - 70, y: EXERCISE_TOP + 26, w: 140, h: 26 };
         const rechEnabled = !combatLocked;
-
-        drawButton(atkRect, `⚔️ Attaquer (${attackCharge})`, atkEnabled);
-        drawButton(parRect, `🛡️ Parer (${defenseCharge})`, parEnabled);
         drawButton(rechRect, "🔄 Recharger", rechEnabled);
+        if (rechEnabled) clickRects.push({ ...rechRect, onClick: tryRecharge });
 
-        if (atkEnabled) clickRects.push({ ...atkRect, onClick: onAttackClick });
-        if (parEnabled) clickRects.push({ ...parRect, onClick: onParryClick });
-        if (rechEnabled) clickRects.push({ ...rechRect, onClick: onRechargeClick });
+        drawFeedback(EXERCISE_TOP + 62);
       }
 
       function render() {
@@ -653,33 +729,33 @@
         }
 
         if (phase === "intro_transform") {
-          drawImgBox(frollo.transformation, { x: CANVAS_W / 2 - 130, y: 40, w: 260, h: 340 }, false, false);
+          drawImgBox(frollo.transformation, { x: CANVAS_W / 2 - 90, y: 60, w: 180, h: 235 }, false, false);
           ctx.fillStyle = "rgba(26,21,48,0.75)";
-          ctx.fillRect(0, 395, CANVAS_W, 40);
+          ctx.fillRect(0, 405, CANVAS_W, 32);
           ctx.fillStyle = "#e85fc4";
-          ctx.font = "bold 14px sans-serif";
+          ctx.font = "11px sans-serif";
           ctx.textAlign = "center";
-          ctx.fillText("Frollo se tord de douleur... le Mal-Dit prend possession de lui !", CANVAS_W / 2, 419);
+          ctx.fillText("Frollo se tord de douleur... le Mal-Dit prend possession de lui !", CANVAS_W / 2, 421);
           return;
         }
 
         if (phase === "victory_transform" || phase === "victory_key") {
-          drawImgBox(frollo.retransformation, { x: CANVAS_W / 2 - 130, y: 30, w: 260, h: 320 }, false, false);
+          drawImgBox(frollo.retransformation, { x: CANVAS_W / 2 - 85, y: 70, w: 170, h: 220 }, false, false);
           const img = esprit.victoire[Math.floor(phaseTimer / 20) % 2];
           drawImgBox(img, ESPRIT_BOX, false, true);
           if (phase === "victory_key" && cleImg) {
             const scale = Math.min(1, (70 - phaseTimer) / 20);
-            const kw = 46 * scale, kh = 90 * scale;
-            drawImgBox(cleImg, { x: ESPRIT_BOX.x + ESPRIT_BOX.w / 2 - kw / 2, y: ESPRIT_BOX.y - 30, w: kw, h: kh }, false, false);
+            const kw = 26 * scale, kh = 52 * scale;
+            drawImgBox(cleImg, { x: ESPRIT_BOX.x + ESPRIT_BOX.w / 2 - kw / 2, y: ESPRIT_BOX.y - 20, w: kw, h: kh }, false, false);
           }
           ctx.fillStyle = "rgba(26,21,48,0.75)";
-          ctx.fillRect(0, 395, CANVAS_W, 40);
+          ctx.fillRect(0, 405, CANVAS_W, 32);
           ctx.fillStyle = "#e8c468";
-          ctx.font = "bold 14px sans-serif";
+          ctx.font = "11px sans-serif";
           ctx.textAlign = "center";
           ctx.fillText(
             phase === "victory_transform" ? "Le sceau se brise... Frollo reprend forme humaine." : "Un signe scintille dans les airs, un instant...",
-            CANVAS_W / 2, 419
+            CANVAS_W / 2, 421
           );
           return;
         }
@@ -688,11 +764,16 @@
         drawLives();
         drawCharges();
 
+        // Personnages posés au sol — l'Esprit reçoit un petit bond
+        // visuel pendant jumpTimer (v6), sans affecter sa position de
+        // référence (ESPRIT_BOX.y) utilisée pour viser la boule de feu.
+        const jumpOffset = jumpTimer > 0 ? Math.sin((jumpTimer / JUMP_DURATION) * Math.PI) * JUMP_HEIGHT : 0;
+        const espritDrawBox = { x: ESPRIT_BOX.x, y: ESPRIT_BOX.y - jumpOffset, w: ESPRIT_BOX.w, h: ESPRIT_BOX.h };
+
         drawImgBox(frollo.demon[frolloAnimFrame], FROLLO_BOX, frolloFlash > 0, false);
-        drawImgBox(currentEspritImage(), ESPRIT_BOX, false, true);
+        drawImgBox(currentEspritImage(), espritDrawBox, false, true);
 
         drawFireball();
-        drawFeedback();
 
         if (phase === "training") drawTrainingUI();
         else drawCombatUI();
