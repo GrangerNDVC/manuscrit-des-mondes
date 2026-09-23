@@ -1,9 +1,50 @@
 /* ============================================================
-   LE MANUSCRIT DES MONDES — mg-construction-recit.js (v6)
+   LE MANUSCRIT DES MONDES — mg-construction-recit.js (v7)
    ============================================================
    Mini-jeu "Le Sceau du Mal-Dit" (Monde 1 — Hugo, acte 6).
 
-   ---- v6 : retour de test — gabarit, mise en page, contrôles ----
+   ---- v7 : retour de test #2 — positionnement, marche, combo ----
+   1. Personnages rapprochés et un peu remontés (ils étaient trop
+      bas et trop éloignés pour "se toucher").
+   2. NOUVELLE RÈGLE : une attaque au CLAVIER a deux formes.
+      - MÊLÉE (Entrée, sans sauter) : ne touche Frollo que si
+        l'Esprit s'est rapproché (voir MELEE_RANGE) — sinon rien ne
+        se passe, la charge n'est pas perdue, juste un message
+        invite à se rapprocher.
+      - COMBO À DISTANCE (Entrée PENDANT un saut) : aura + tir
+        d'énergie qui touche Frollo à n'importe quelle distance,
+        aucune contrainte de position.
+   3. Sprites de MARCHE ajoutés (esprit-combat-marche1/2/3), utilisés
+      en cycle pendant le déplacement ; le sprite "combat" (idle,
+      esprit-combat1) sert d'état immobile, et reste utilisé pour le
+      swing d'attaque en mêlée.
+   4. Saut plus haut (JUMP_HEIGHT augmenté) pour bien lire l'esquive.
+      PARADE (↓, statique, esprit-defense2) et SAUT (↑/Espace,
+      esprit-combat_esquive) sont maintenant deux actions distinctes
+      — confirmé par Julie après le fichier de référence qu'elle a
+      fourni (jeu-de-combat.html) : les deux permettent d'éviter une
+      attaque de Frollo si une charge 🛡️ est disponible.
+   5. Indices clavier plus lisibles (texte à l'écran agrandi, sur
+      deux lignes, + rappel explicite dans l'overlay d'instructions).
+   6. Correctif "fuite de réponse" : QUESTION_BANK avait presque
+      toujours la bonne réponse en 1ère position — l'ordre des 3
+      options est désormais mélangé à chaque question (même principe
+      que le correctif historique de mg-ponctuation.js).
+
+   ⚠️ Point encore PROVISOIRE, à confirmer par Julie (proposé en
+   attendant : option A ci-dessous) : le déclencheur du tir à
+   distance. Trois pistes proposées, inspirées de son jeu de combat
+   (spécial déclenché par un enchaînement de touches précis) :
+     A. Sauter PUIS Attaquer pendant le saut (RETENU pour l'instant).
+     B. Touche dédiée, coûte 2 charges d'attaque au lieu d'1.
+     C. Enchaînement de touches précis en moins de 2s (façon jeu de
+        combat de Julie) — plus fidèle à sa référence, mais plus
+        exigeant pour des élèves de 12 ans qui découvrent le jeu.
+   Idem pour la fenêtre d'esquive au saut : ici valable pendant TOUT
+   le saut (accessible) plutôt que seulement au sommet (exigeant,
+   comme dans son jeu) — à confirmer aussi.
+
+   ---- v6 (conservé) : gabarit, clavier, mise en page ----
    1. PERSONNAGES BEAUCOUP TROP GRANDS ET TROP HAUTS. Réduits
       drastiquement (l'Esprit ~1cm à l'écran, Frollo exactement le
       double dans les deux dimensions — même rapport largeur/hauteur
@@ -112,7 +153,8 @@
 
   // Douceur du 1er monde : Frollo attaque assez rarement, laisse le
   // temps de lire et de réagir. À resserrer dans les mondes suivants.
-  const FROLLO_ATTACK_INTERVAL = 200; // ~3.3s à 60fps
+  const FROLLO_ATTACK_INTERVAL = 200; // ~3.3s à 60fps — à distance
+  const FROLLO_ATTACK_INTERVAL_CLOSE = 130; // ~2.2s — v7 : plus agressif au contact (risque/récompense de la mêlée)
   const FIREBALL_TRAVEL_FRAMES = 55;
 
   // --- Banque de questions mixte : mélange les 6 notions du monde,
@@ -177,7 +219,7 @@
 
     await MinigameUI.showInstructions({
       title: "Le Sceau du Mal-Dit",
-      objective: "ENTRAÎNEMENT : réponds aux questions (mélange de tout ce que tu as appris dans ce monde) pour débloquer des charges ⚔️ Attaque ou 🛡️ Défense, au hasard, jusqu'à 4 de chaque. Clique sur « Combattre ! » quand tu es prêt. COMBAT : Frollo attaque régulièrement — pare avec 🛡️ (sinon tu perds une vie), et frappe avec ⚔️ pour lui retirer un segment de vie. Plus de charges ? Clique sur 🔄 pour retourner t'entraîner. Vide sa barre de vie avant de perdre tes 3 vies !"
+      objective: "ENTRAÎNEMENT : réponds aux questions (mélange de tout ce que tu as appris dans ce monde) pour débloquer des charges ⚔️ Attaque ou 🛡️ Défense, au hasard, jusqu'à 4 de chaque. Clique sur « Combattre ! » quand tu es prêt. COMBAT (au clavier) : ◀ ▶ pour te déplacer, ↓ pour PARER, ↑ ou Espace pour SAUTER (deux façons d'éviter une attaque de Frollo, si tu as une charge 🛡️). Entrée pour ATTAQUER — rapproche-toi de Frollo pour le toucher, ou saute en même temps pour un tir à distance qui touche de n'importe où. Plus de charges ? Le bouton 🔄 Recharger te ramène t'entraîner. Vide la barre de vie de Frollo avant de perdre tes 3 vies !"
     });
 
     return new Promise(resolve => {
@@ -192,6 +234,7 @@
 
       const esprit = {
         combat: [loadChar("esprit-combat1.png"), loadChar("esprit-combat2.png"), loadChar("esprit-combat3.png")],
+        marche: [loadChar("esprit-combat-marche1.png"), loadChar("esprit-combat-marche2.png"), loadChar("esprit-combat-marche3.png")],
         esquive: loadChar("esprit-combat_esquive.png"),
         defense: [loadChar("esprit-defense1.png"), loadChar("esprit-defense2.png")],
         touche: loadChar("esprit-touche.png"),
@@ -210,13 +253,18 @@
       // dimensions, mêmes proportions largeur/hauteur pour les
       // deux — et posés au sol (bas du canevas) plutôt qu'en
       // hauteur, pour rendre l'espace du haut à l'exercice. ---
-      const GROUND_Y = 420; // ligne de sol commune (bas des sprites)
+      // v7 : personnages remontés et rapprochés (ils étaient trop bas
+      // et trop éloignés pour se toucher). MELEE_RANGE définit à
+      // partir de quelle distance (entre centres) l'Esprit est
+      // considéré comme "au contact" pour une attaque en mêlée.
+      const GROUND_Y = 400;
       const ESPRIT_W = 34, ESPRIT_H = 50;
       const FROLLO_W = 68, FROLLO_H = 100;
-      const ESPRIT_BASE_X = 110;
-      const ESPRIT_MOVE_MIN = 70, ESPRIT_MOVE_MAX = 260; // v6 : zone de déplacement au clavier
+      const ESPRIT_BASE_X = 140;
+      const ESPRIT_MOVE_MIN = 90, ESPRIT_MOVE_MAX = 430; // zone de déplacement au clavier
       const ESPRIT_BOX = { x: ESPRIT_BASE_X, y: GROUND_Y - ESPRIT_H, w: ESPRIT_W, h: ESPRIT_H };
-      const FROLLO_BOX = { x: CANVAS_W - FROLLO_W - 110, y: GROUND_Y - FROLLO_H, w: FROLLO_W, h: FROLLO_H };
+      const FROLLO_BOX = { x: 480, y: GROUND_Y - FROLLO_H, w: FROLLO_W, h: FROLLO_H };
+      const MELEE_RANGE = 95; // distance max (centre à centre) pour qu'un coup de mêlée touche
 
       // --- État de partie ---
       let lives = MAX_LIVES;
@@ -234,15 +282,17 @@
       let frolloFlash = 0;
 
       const fireball = { active: false, x: 0, y: 0, fromX: 0, fromY: 0, toX: 0, toY: 0, t: 0, total: 1 };
+      const espritBolt = { active: false, x: 0, y: 0, fromX: 0, fromY: 0, toX: 0, toY: 0, t: 0, total: 1 }; // v7 : tir à distance du joueur
       let frolloAttackTimer = FROLLO_ATTACK_INTERVAL;
       let combatLocked = false; // vrai pendant une résolution (esquive/touché/attaque), bloque les actions
 
-      // --- v6 : déplacement + saut cosmétiques au clavier ---
+      // --- v6 : déplacement au clavier ---
       const WALK_SPEED = 2.6;
       const keysHeld = { left: false, right: false };
       let jumpTimer = 0; // >0 pendant le petit bond visuel du saut
-      const JUMP_DURATION = 20;
-      const JUMP_HEIGHT = 22;
+      const JUMP_DURATION = 28; // v7 : un peu plus long, pour laisser une vraie fenêtre au combo saut+attaque
+      const JUMP_HEIGHT = 42;   // v7 : nettement plus haut, pour bien lire l'esquive
+      let walkAnimTimer = 0, walkFrame = 0; // v7 : cycle des sprites esprit-combat-marche1/2/3
 
       let feedback = "";
       let feedbackColor = "#f4f1ea";
@@ -254,7 +304,17 @@
 
       function nextQuestion() {
         if (questionQueue.length === 0) questionQueue = shuffle(QUESTION_BANK.map((_, i) => i));
-        currentQuestion = QUESTION_BANK[questionQueue.pop()];
+        const base = QUESTION_BANK[questionQueue.pop()];
+        // v7 : correctif "fuite de réponse" — la bonne réponse était
+        // presque toujours en 1ère position dans QUESTION_BANK. On
+        // mélange désormais l'ordre d'affichage des options à chaque
+        // question, en recalculant l'index correct en conséquence.
+        const order = shuffle(base.options.map((_, i) => i));
+        currentQuestion = {
+          ...base,
+          options: order.map(i => base.options[i]),
+          correct: order.indexOf(base.correct)
+        };
         questionLocked = false;
       }
 
@@ -274,6 +334,17 @@
         fireball.toX = to.x; fireball.toY = to.y;
         fireball.t = 0;
         fireball.total = FIREBALL_TRAVEL_FRAMES;
+      }
+
+      // v7 : tir à distance du joueur (combo saut+attaque) — même
+      // principe que la boule de feu de Frollo, mais dans l'autre sens.
+      function launchEspritBolt() {
+        const from = espritCenter(), to = frolloCenter();
+        espritBolt.active = true;
+        espritBolt.fromX = from.x; espritBolt.fromY = from.y;
+        espritBolt.toX = to.x; espritBolt.toY = to.y;
+        espritBolt.t = 0;
+        espritBolt.total = 30;
       }
 
       function goToPhase(next, timer) {
@@ -320,41 +391,83 @@
         }, 1600);
       }
 
-      // --- Actions en combat ---
-      // --- Actions en combat (v6 : appelables au clavier ET au tactile) ---
-      function tryAttack() {
-        if (combatLocked || phase !== "combat" || attackCharge <= 0) return;
-        attackCharge--;
-        combatLocked = true;
-        espritSprite = { kind: "combat", frame: 0 };
-        frolloFlash = 18;
-        frolloHealth = Math.max(0, frolloHealth - 1);
-        feedback = "✓ Coup porté !";
-        feedbackColor = "#6fcf97";
-        goToPhase("combat_strike", 24);
+      // --- Actions en combat (v7 : mêlée/distance + parade/saut distincts, clavier ET tactile) ---
+
+      function espritFrolloDistance() {
+        return Math.abs(espritCenter().x - frolloCenter().x);
       }
 
       /**
-       * v6 : le SAUT remplace le bouton "Parer". S'il y a une boule de
-       * feu en vol ET une charge de défense disponible, le saut PARE
-       * (consomme la charge, comme l'ancien bouton). Sinon, c'est un
-       * bond purement cosmétique (jumpTimer), sans coût ni effet — le
-       * joueur garde la main pour "jouer" avec son personnage sans que
-       * ça gâche une charge.
+       * v7 (provisoire — option A du choix A/B/C proposé à Julie) :
+       * ENTRÉE pendant un saut (jumpTimer > 0) = combo à distance,
+       * touche Frollo quelle que soit la distance. ENTRÉE sans
+       * sauter = mêlée, ne touche que si l'Esprit est assez proche
+       * (MELEE_RANGE) — sinon rien ne se passe, charge non
+       * consommée, juste une invite à se rapprocher.
+       */
+      function tryAttack() {
+        if (combatLocked || phase !== "combat" || attackCharge <= 0) return;
+        const ranged = jumpTimer > 0;
+
+        if (!ranged && espritFrolloDistance() > MELEE_RANGE) {
+          feedback = "✗ Trop loin ! Rapproche-toi de Frollo, ou saute en même temps pour un tir à distance.";
+          feedbackColor = "#d9534f";
+          return; // ne consomme pas la charge
+        }
+
+        attackCharge--;
+        combatLocked = true;
+        frolloHealth = Math.max(0, frolloHealth - 1);
+
+        if (ranged) {
+          espritSprite = { kind: "combat", frame: 0 };
+          launchEspritBolt();
+          feedback = "✓ Frappe à distance !";
+          feedbackColor = "#6fcf97";
+          goToPhase("combat_ranged", 40);
+        } else {
+          espritSprite = { kind: "combat", frame: 0 };
+          frolloFlash = 18;
+          feedback = "✓ Coup porté !";
+          feedbackColor = "#6fcf97";
+          goToPhase("combat_strike", 24);
+        }
+      }
+
+      /**
+       * v7 : SAUT — esquive uniquement (sprite esquive), fenêtre large
+       * (tout le saut, pas seulement le sommet — choix fait pour
+       * rester accessible ; à resserrer plus tard si Julie préfère
+       * plus exigeant). Bond toujours visible, combo ou pas.
        */
       function tryJump() {
+        if (combatLocked || phase !== "combat") return;
+        jumpTimer = JUMP_DURATION;
+        if (fireball.active && defenseCharge > 0) {
+          defenseCharge--;
+          espritSprite = { kind: "esquive" };
+          fireball.active = false;
+          feedback = "✓ Esquivé !";
+          feedbackColor = "#6fcf97";
+        }
+      }
+
+      /**
+       * v7 : PARADE — nouvelle action distincte du saut, statique
+       * (l'Esprit ne bouge pas), sprite esprit-defense2. Comme le
+       * saut, elle esquive une boule de feu en vol si une charge de
+       * défense est disponible ; sinon, immobilité sans effet.
+       */
+      function tryParry() {
         if (combatLocked || phase !== "combat") return;
         if (fireball.active && defenseCharge > 0) {
           defenseCharge--;
           combatLocked = true;
-          const style = pick(["esquive", "defense1", "defense2"]);
-          espritSprite = style === "esquive" ? { kind: "esquive" } : { kind: "defense", frame: style === "defense1" ? 0 : 1 };
+          espritSprite = { kind: "defense", frame: 1 }; // esprit-defense2
           fireball.active = false;
           feedback = "✓ Paré !";
           feedbackColor = "#6fcf97";
           goToPhase("combat_parry", 40);
-        } else {
-          jumpTimer = JUMP_DURATION;
         }
       }
 
@@ -401,6 +514,7 @@
         if (e.key === "ArrowLeft" || e.key === "q" || e.key === "Q" || e.key === "a" || e.key === "A") keysHeld.left = true;
         if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") keysHeld.right = true;
         if ((e.key === "ArrowUp" || e.key === " " || e.key === "w" || e.key === "W") && !e.repeat) { tryJump(); e.preventDefault(); }
+        if ((e.key === "ArrowDown" || e.key === "s" || e.key === "S") && !e.repeat) { tryParry(); e.preventDefault(); }
         if (e.key === "Enter" && !e.repeat) tryAttack();
       }
       function onKeyUp(e) {
@@ -410,11 +524,12 @@
       window.addEventListener("keydown", onKeyDown);
       window.addEventListener("keyup", onKeyUp);
 
-      // --- v6 : boutons tactiles, mêmes actions que le clavier (parité mobile) ---
+      // --- v7 : boutons tactiles, mêmes actions que le clavier (parité mobile) ---
       uiContainer.insertAdjacentHTML("beforeend", `
         <div class="touch-controls">
           <button class="touch-btn" id="btn-left">◀</button>
           <button class="touch-btn" id="btn-jump">⤴</button>
+          <button class="touch-btn" id="btn-parry">🛡️</button>
           <button class="touch-btn" id="btn-right">▶</button>
           <button class="touch-btn" id="btn-attack">⚔️</button>
         </div>
@@ -430,6 +545,7 @@
         btnRight.addEventListener(evt, () => keysHeld.right = false);
       });
       document.getElementById("btn-jump").addEventListener("click", tryJump);
+      document.getElementById("btn-parry").addEventListener("click", tryParry);
       document.getElementById("btn-attack").addEventListener("click", tryAttack);
 
       function cleanup() {
@@ -471,12 +587,27 @@
         }
         if (frolloFlash > 0) frolloFlash--;
 
-        // v6 : déplacement cosmétique au clavier, actif seulement en
-        // phase de combat (pas pendant l'entraînement, où l'Esprit
-        // n'a pas de raison de bouger).
+        // v7 : déplacement au clavier, actif seulement en phase de
+        // combat. Le sprite de l'Esprit (marche/idle/saut) est décidé
+        // ICI, à chaque frame où aucune action ne le verrouille
+        // (combatLocked) — c'est ce qui permet au saut/à la marche de
+        // s'afficher immédiatement, sans dépendre de quelle touche a
+        // déclenché quoi.
         if (phase === "combat") {
           if (keysHeld.left && !keysHeld.right) ESPRIT_BOX.x = Math.max(ESPRIT_MOVE_MIN, ESPRIT_BOX.x - WALK_SPEED);
           else if (keysHeld.right && !keysHeld.left) ESPRIT_BOX.x = Math.min(ESPRIT_MOVE_MAX, ESPRIT_BOX.x + WALK_SPEED);
+
+          if (!combatLocked) {
+            if (jumpTimer > 0) {
+              espritSprite = { kind: "esquive" };
+            } else if (keysHeld.left || keysHeld.right) {
+              walkAnimTimer++;
+              if (walkAnimTimer >= 7) { walkAnimTimer = 0; walkFrame = (walkFrame + 1) % esprit.marche.length; }
+              espritSprite = { kind: "walk", frame: walkFrame };
+            } else {
+              espritSprite = { kind: "combat", frame: 0 };
+            }
+          }
         }
         if (jumpTimer > 0) jumpTimer--;
 
@@ -490,6 +621,13 @@
             hitEsprit(false);
           }
         }
+        if (espritBolt.active) {
+          espritBolt.t++;
+          const p = Math.min(1, espritBolt.t / espritBolt.total);
+          espritBolt.x = espritBolt.fromX + (espritBolt.toX - espritBolt.fromX) * p;
+          espritBolt.y = espritBolt.fromY + (espritBolt.toY - espritBolt.fromY) * p;
+          if (espritBolt.t >= espritBolt.total) espritBolt.active = false;
+        }
 
         if (phaseTimer > 0) phaseTimer--;
 
@@ -501,7 +639,12 @@
           case "combat":
             frolloAttackTimer--;
             if (frolloAttackTimer <= 0 && !fireball.active) {
-              frolloAttackTimer = FROLLO_ATTACK_INTERVAL;
+              // v7 : Frollo attaque plus souvent quand l'Esprit est au
+              // contact (mêlée) — moins de temps pour revenir sauter
+              // ou parer, cohérent avec le risque/récompense décrit
+              // par Julie. À distance, rythme normal (doux, Monde 1).
+              const close = espritFrolloDistance() <= MELEE_RANGE;
+              frolloAttackTimer = close ? FROLLO_ATTACK_INTERVAL_CLOSE : FROLLO_ATTACK_INTERVAL;
               launchFireball();
             }
             break;
@@ -511,6 +654,16 @@
             if (phaseTimer <= 0) {
               feedback = "";
               combatLocked = false;
+              if (frolloHealth <= 0) goToPhase("victory_transform", 100);
+              else goToPhase("combat", 0);
+            }
+            break;
+
+          case "combat_ranged":
+            if (phaseTimer <= 0) {
+              feedback = "";
+              combatLocked = false;
+              espritBolt.active = false;
               if (frolloHealth <= 0) goToPhase("victory_transform", 100);
               else goToPhase("combat", 0);
             }
@@ -575,6 +728,7 @@
       function currentEspritImage() {
         switch (espritSprite.kind) {
           case "combat": return esprit.combat[espritSprite.frame % esprit.combat.length];
+          case "walk": return esprit.marche[espritSprite.frame % esprit.marche.length];
           case "esquive": return esprit.esquive;
           case "defense": return esprit.defense[espritSprite.frame];
           case "touche": return esprit.touche;
@@ -642,6 +796,33 @@
         ctx.fill();
       }
 
+      // v7 : tir à distance du joueur — même principe que la boule de
+      // feu de Frollo, en doré/blanc (couleur de l'Esprit) pour bien
+      // le distinguer visuellement.
+      function drawEspritBolt() {
+        if (!espritBolt.active) return;
+        const grad = ctx.createRadialGradient(espritBolt.x, espritBolt.y, 1, espritBolt.x, espritBolt.y, 11);
+        grad.addColorStop(0, "#ffffff");
+        grad.addColorStop(0.5, "#e8c468");
+        grad.addColorStop(1, "rgba(232,196,104,0)");
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(espritBolt.x, espritBolt.y, 11, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // v7 : aura dorée autour de l'Esprit pendant le combo à distance.
+      function drawAura() {
+        const c = espritCenter();
+        const grad = ctx.createRadialGradient(c.x, c.y, 4, c.x, c.y, 40);
+        grad.addColorStop(0, "rgba(232,196,104,0.55)");
+        grad.addColorStop(1, "rgba(232,196,104,0)");
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(c.x, c.y, 40, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
       function drawButton(rect, label, enabled) {
         ctx.fillStyle = enabled ? "#2b2347" : "rgba(43,35,71,0.4)";
         ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
@@ -701,21 +882,23 @@
       }
 
       function drawCombatUI() {
-        // v6 : Attaquer/Parer sont maintenant au clavier (Entrée /
-        // Espace-Flèche haut) + boutons tactiles — seul "Recharger"
-        // reste un bouton cliqué ici, puisque ce n'est pas une action
-        // de combat mais un changement de phase.
+        // v7 : Attaquer/Parer/Sauter sont au clavier + boutons
+        // tactiles — seul "Recharger" reste un bouton cliqué ici.
+        // Rappel des touches sur DEUX lignes, plus lisible.
+        ctx.fillStyle = "#e8c468";
+        ctx.font = "bold 11px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("◀ ▶ bouger   ↓ parer   ↑/Espace sauter (esquive)", CANVAS_W / 2, EXERCISE_TOP + 12);
         ctx.fillStyle = "#c9c2e0";
         ctx.font = "10px sans-serif";
-        ctx.textAlign = "center";
-        ctx.fillText("◀ ▶ bouger  —  Espace / ↑ sauter-parer  —  Entrée attaquer", CANVAS_W / 2, EXERCISE_TOP + 14);
+        ctx.fillText("Entrée : attaquer (proche de Frollo) — Entrée + saut : tir à distance", CANVAS_W / 2, EXERCISE_TOP + 27);
 
-        const rechRect = { x: CANVAS_W / 2 - 70, y: EXERCISE_TOP + 26, w: 140, h: 26 };
+        const rechRect = { x: CANVAS_W / 2 - 70, y: EXERCISE_TOP + 38, w: 140, h: 26 };
         const rechEnabled = !combatLocked;
         drawButton(rechRect, "🔄 Recharger", rechEnabled);
         if (rechEnabled) clickRects.push({ ...rechRect, onClick: tryRecharge });
 
-        drawFeedback(EXERCISE_TOP + 62);
+        drawFeedback(EXERCISE_TOP + 72);
       }
 
       function render() {
@@ -765,15 +948,18 @@
         drawCharges();
 
         // Personnages posés au sol — l'Esprit reçoit un petit bond
-        // visuel pendant jumpTimer (v6), sans affecter sa position de
+        // visuel pendant jumpTimer, sans affecter sa position de
         // référence (ESPRIT_BOX.y) utilisée pour viser la boule de feu.
         const jumpOffset = jumpTimer > 0 ? Math.sin((jumpTimer / JUMP_DURATION) * Math.PI) * JUMP_HEIGHT : 0;
         const espritDrawBox = { x: ESPRIT_BOX.x, y: ESPRIT_BOX.y - jumpOffset, w: ESPRIT_BOX.w, h: ESPRIT_BOX.h };
+
+        if (phase === "combat_ranged") drawAura();
 
         drawImgBox(frollo.demon[frolloAnimFrame], FROLLO_BOX, frolloFlash > 0, false);
         drawImgBox(currentEspritImage(), espritDrawBox, false, true);
 
         drawFireball();
+        drawEspritBolt();
 
         if (phase === "training") drawTrainingUI();
         else drawCombatUI();
