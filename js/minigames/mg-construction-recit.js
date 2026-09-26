@@ -219,14 +219,29 @@
 
     await MinigameUI.showInstructions({
       title: "Le Sceau du Mal-Dit",
-      objective: "ENTRAÎNEMENT : réponds aux questions (mélange de tout ce que tu as appris dans ce monde) pour débloquer des charges ⚔️ Attaque ou 🛡️ Défense, au hasard, jusqu'à 4 de chaque. Clique sur « Combattre ! » quand tu es prêt. COMBAT (au clavier) : ◀ ▶ pour te déplacer, ↓ pour PARER, ↑ ou Espace pour SAUTER (deux façons d'éviter une attaque de Frollo, si tu as une charge 🛡️). Entrée pour ATTAQUER — rapproche-toi de Frollo pour le toucher, ou saute en même temps pour un tir à distance qui touche de n'importe où. Plus de charges ? Le bouton 🔄 Recharger te ramène t'entraîner. Vide la barre de vie de Frollo avant de perdre tes 3 vies !"
+      objective: "Frollo a enlevé Cosette. ENTRAÎNEMENT : réponds aux questions pour débloquer des charges ⚔️ Attaque ou 🛡️ Défense (au hasard, jusqu'à 4 de chaque), puis clique sur « Combattre ! ». COMBAT : les touches ci-dessous restent affichées en haut de l'écran pendant le combat.",
+      html: `
+        <ul style="text-align:left; line-height:1.7; margin:0; padding-left:1.2em;">
+          <li><b>← →</b> : se déplacer</li>
+          <li><b>↓</b> : Parer (statique, consomme une charge 🛡️)</li>
+          <li><b>↑ / Espace</b> : Sauter (esquive, consomme une charge 🛡️)</li>
+          <li><b>Entrée</b> : Attaquer — il faut être proche de Frollo pour le toucher</li>
+          <li><b>Entrée pendant un saut</b> : tir à distance, touche de n'importe où</li>
+          <li><b>🔄 Recharger</b> (bouton) : retour à l'entraînement pour regagner des charges</li>
+        </ul>
+      `
     });
 
     return new Promise(resolve => {
 
-      canvas.width = CANVAS_W;
-      canvas.height = CANVAS_H;
+      // v8 : canevas en haute résolution (corrige le flou du texte
+      // des questions signalé par Julie), même principe que
+      // mg-coherence-paragraphe.js.
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = CANVAS_W * dpr;
+      canvas.height = CANVAS_H * dpr;
       const ctx = canvas.getContext("2d");
+      ctx.scale(dpr, dpr);
 
       // --- Assets ---
       const bgImage = loadBg(BG_SRC);
@@ -247,6 +262,13 @@
         transformation: loadChar("frolo-transformation-demon.jfif"),
         retransformation: loadChar("frolo-vaincu-retransformation-humain.jfif")
       };
+      // v8 : Cosette, captive de Frollo pendant tout le combat (les
+      // enjeux narratifs du nouvel acte 6 — voir hugo_scenes.json) —
+      // effrayée pendant le combat, soulagée une fois Frollo vaincu.
+      const cosette = {
+        captive: loadChar("cosette_pleure1.png"),
+        libre: loadChar("cosette_contente1.png")
+      };
 
       // --- Positions (v6 : personnages nettement réduits — l'Esprit
       // ~1cm à l'écran, Frollo exactement le double dans les deux
@@ -265,6 +287,9 @@
       const ESPRIT_BOX = { x: ESPRIT_BASE_X, y: GROUND_Y - ESPRIT_H, w: ESPRIT_W, h: ESPRIT_H };
       const FROLLO_BOX = { x: 480, y: GROUND_Y - FROLLO_H, w: FROLLO_W, h: FROLLO_H };
       const MELEE_RANGE = 95; // distance max (centre à centre) pour qu'un coup de mêlée touche
+      // v8 : Cosette, légèrement derrière/à gauche de Frollo (dessinée
+      // AVANT lui, donc partiellement cachée par sa silhouette).
+      const COSETTE_BOX = { x: FROLLO_BOX.x - 6, y: FROLLO_BOX.y + FROLLO_H * 0.22, w: 26, h: 40 };
 
       // --- État de partie ---
       let lives = MAX_LIVES;
@@ -496,8 +521,12 @@
 
       function getCanvasCoords(clientX, clientY) {
         const rect = canvas.getBoundingClientRect();
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
+        // v8 : canevas désormais en haute résolution (canvas.width =
+        // CANVAS_W*dpr, voir plus haut) — le mapping doit rester en
+        // coordonnées CSS (0..CANVAS_W), pas en pixels physiques,
+        // sinon tous les clics tombent à côté.
+        const scaleX = CANVAS_W / rect.width;
+        const scaleY = CANVAS_H / rect.height;
         return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
       }
 
@@ -707,16 +736,29 @@
       }
 
       // --- Rendu ---
+      // v8 : correctif de proportions signalé par Julie (le KO, entre
+      // autres, était étiré puisque toutes les images étaient forcées
+      // dans le même cadre w×h quel que soit leur ratio d'origine).
+      // On calcule maintenant un "contain" (comme object-fit: contain)
+      // à partir des dimensions réelles de l'image, ancré au sol (bas
+      // du cadre, centré horizontalement) pour que tous les sprites
+      // — même de proportions différentes — gardent les pieds à la
+      // même hauteur.
       function drawImgBox(img, box, flash, flip) {
         if (img && img.complete && img.naturalWidth > 0) {
+          const scale = Math.min(box.w / img.naturalWidth, box.h / img.naturalHeight);
+          const dw = img.naturalWidth * scale;
+          const dh = img.naturalHeight * scale;
+          const dx = box.x + (box.w - dw) / 2;
+          const dy = box.y + box.h - dh;
           ctx.save();
           if (flash) ctx.filter = "brightness(1.8) saturate(0.3)";
           if (flip) {
-            ctx.translate(box.x + box.w, box.y);
+            ctx.translate(dx + dw, dy);
             ctx.scale(-1, 1);
-            ctx.drawImage(img, 0, 0, box.w, box.h);
+            ctx.drawImage(img, 0, 0, dw, dh);
           } else {
-            ctx.drawImage(img, box.x, box.y, box.w, box.h);
+            ctx.drawImage(img, dx, dy, dw, dh);
           }
           ctx.restore();
         } else {
@@ -924,6 +966,8 @@
 
         if (phase === "victory_transform" || phase === "victory_key") {
           drawImgBox(frollo.retransformation, { x: CANVAS_W / 2 - 85, y: 70, w: 170, h: 220 }, false, false);
+          // v8 : Cosette libérée, soulagée, aux côtés de l'Esprit.
+          drawImgBox(cosette.libre, { x: ESPRIT_BOX.x + ESPRIT_BOX.w + 6, y: ESPRIT_BOX.y + 4, w: 28, h: 42 }, false, false);
           const img = esprit.victoire[Math.floor(phaseTimer / 20) % 2];
           drawImgBox(img, ESPRIT_BOX, false, true);
           if (phase === "victory_key" && cleImg) {
@@ -937,7 +981,7 @@
           ctx.font = "11px sans-serif";
           ctx.textAlign = "center";
           ctx.fillText(
-            phase === "victory_transform" ? "Le sceau se brise... Frollo reprend forme humaine." : "Un signe scintille dans les airs, un instant...",
+            phase === "victory_transform" ? "Le sceau se brise... Cosette est libre, Frollo reprend forme humaine." : "Un signe scintille dans les airs, un instant...",
             CANVAS_W / 2, 421
           );
           return;
@@ -955,6 +999,9 @@
 
         if (phase === "combat_ranged") drawAura();
 
+        // v8 : Cosette dessinée AVANT Frollo pour qu'il la cache
+        // partiellement — captive derrière lui pendant tout le combat.
+        drawImgBox(cosette.captive, COSETTE_BOX, false, false);
         drawImgBox(frollo.demon[frolloAnimFrame], FROLLO_BOX, frolloFlash > 0, false);
         drawImgBox(currentEspritImage(), espritDrawBox, false, true);
 
