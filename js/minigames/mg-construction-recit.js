@@ -590,7 +590,7 @@
         cleanup();
         await MinigameUI.showResult({
           passed: true,
-          message: "Le sceau se brise ! Frollo reprend forme humaine, vaincu et hagard. Une lueur dorée, en forme de clé, scintille un instant dans les airs avant de s'évanouir — un signe que le chemin vers la clé est désormais ouvert. Gavroche annonce qu'il accompagnera désormais l'Esprit dans ses prochaines aventures."
+          message: "Le sceau se brise ! Frollo reprend forme humaine, vaincu et hagard, et libère Cosette, saine et sauve. Une lueur dorée, en forme de clé, scintille un instant dans les airs avant de s'évanouir — un signe que le chemin vers la clé est désormais ouvert. Gavroche annonce qu'il accompagnera désormais l'Esprit dans ses prochaines aventures."
         });
         resolve({ passed: true, score: MAX_CHARGE, total: MAX_CHARGE });
       }
@@ -601,7 +601,7 @@
         cleanup();
         await MinigameUI.showResult({
           passed: false,
-          message: "Le Mal-Dit est trop puissant, cette fois. L'Esprit doit reprendre des forces avant de retenter l'assaut."
+          message: "Le Mal-Dit est trop puissant, cette fois — Cosette reste prisonnière. L'Esprit doit reprendre des forces avant de retenter l'assaut."
         });
         resolve({ passed: false, score: MAX_CHARGE - frolloHealth, total: MAX_CHARGE });
       }
@@ -960,7 +960,7 @@
           ctx.fillStyle = "#e85fc4";
           ctx.font = "11px sans-serif";
           ctx.textAlign = "center";
-          ctx.fillText("Frollo se tord de douleur... le Mal-Dit prend possession de lui !", CANVAS_W / 2, 421);
+          ctx.fillText("Frollo se tord de douleur... le Mal-Dit prend possession de lui, Cosette hurle de terreur !", CANVAS_W / 2, 421);
           return;
         }
 
