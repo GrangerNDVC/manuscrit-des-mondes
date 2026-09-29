@@ -4,13 +4,35 @@
    ⚠️ Ce fichier ne vit plus que dans les pages /mondes/*.html
    (ex. /mondes/hugo.html), plus dans le hub. Il gère :
    - l'affichage des 2 écrans propres à un monde (VN, mini-jeu)
-   - la machine à états pédagogique d'un acte (inchangée)
+   - la machine à états pédagogique d'un acte
    - le retour vers le hub (/index.html) une fois le monde fini
 
    Le nom "SceneManager" est conservé volontairement : tous les
    mini-jeux (mg-ponctuation.js, mg-ordre-mots.js, etc.) appellent
    SceneManager.registerMinigame(...) au chargement. Renommer
    l'objet aurait obligé à modifier ces 6 fichiers pour rien.
+
+   ---- CHANGEMENTS (session "Sceau du Mal-Dit obligatoire") ----
+   1. NOUVEAU : un acte peut porter le champ JSON
+      `"mandatory_minigame": true` (voir hugo_scenes.json,
+      "construction_recit"). Dans ce cas, après l'intro et le QCM,
+      l'acte saute ENTIÈREMENT l'ancien enchaînement formative →
+      [remédiation] → transfer → [remédiation] : le mini-jeu associé
+      à `minigame_notion` est joué directement, en boucle jusqu'à
+      réussite (isRemediation: false, car ce n'est plus une
+      remédiation mais l'évaluation elle-même), puis l'acte avance.
+      Les 4 sous-étapes de progression (qcm/vn_check/minigame/
+      vn_transfer) sont toutes marquées réussies d'un coup à la
+      victoire, pour rester cohérentes avec progressionMapper.js
+      sans qu'il ait besoin d'être modifié. Comportement des AUTRES
+      actes strictement inchangé (ce champ est absent chez eux).
+   2. CORRECTIF (bug préexistant, découvert en touchant ce fichier) :
+      `actData.qcmOutro` — des scènes narratives ajoutées dans
+      hugo_scenes.json après plusieurs QCM (ex. la défaite de
+      Thénardier, la réaction de Gavroche) — n'était JAMAIS joué :
+      rien dans runQcmLoop() ne le lisait. Corrigé : une fois le QCM
+      réussi sans faute, `actData.qcmOutro` (si présent) est joué
+      avant de continuer.
 
    Démarrage : chaque page de monde appelle, dans son propre
    petit script en bas de page :
@@ -96,7 +118,7 @@ const SceneManager = (() => {
   }
 
   /* ============================================================
-     MACHINE À ÉTATS D'UN ACTE (inchangée)
+     MACHINE À ÉTATS D'UN ACTE
      ============================================================ */
 
   async function startAct(worldId, actIndex) {
@@ -120,6 +142,22 @@ const SceneManager = (() => {
 
     if (actData.qcm) {
       await runQcmLoop(worldId, actId, actData);
+    }
+
+    // ---- Acte à mini-jeu OBLIGATOIRE (ex. le combat final d'un
+    // monde) : plus de formative/transfer VN, le mini-jeu lui-même
+    // est l'évaluation, rejoué jusqu'à réussite. ----
+    if (actData.mandatory_minigame) {
+      let passed = false;
+      while (!passed) {
+        const result = await playMinigameForNotion(worldId, actId, actData.minigame_notion, false);
+        passed = result.passed;
+      }
+      GameState.setActStep(worldId, actId, "vn_check_passed", true);
+      GameState.setActStep(worldId, actId, "minigame_passed", true);
+      GameState.setActStep(worldId, actId, "vn_transfer_passed", true);
+      advanceAct(worldId, actId);
+      return;
     }
 
     let formativeResult = await VNEngine.playFillBlank(actData.formative);
@@ -147,26 +185,15 @@ const SceneManager = (() => {
    * Boucle des "questions de cours" (QCM posé par le méchant de l'acte).
    *
    * Accepte actData.qcm sous deux formes :
-   *   - un TABLEAU de questions (nouveau format — voir acte "ponctuation")
-   *   - un objet UNIQUE (ancien format, encore utilisé par les 5 autres
-   *     actes qui n'ont pas été mis à jour) — traité comme un tableau
-   *     à une question, rétrocompatible sans rien changer côté données.
+   *   - un TABLEAU de questions (nouveau format)
+   *   - un objet UNIQUE (ancien format)
    *
    * Logique : les questions sont posées dans l'ordre. Une bonne réponse
    * passe à la suivante. Une mauvaise réponse déclenche IMMÉDIATEMENT
    * le mini-jeu en remédiation, puis relance TOUT le questionnaire
-   * depuis la première question (y compris celles déjà réussies) — on
-   * ne s'arrête que sur un passage complet et sans faute.
-   *
-   * ⚠️ CHANGEMENT DE COMPORTEMENT (cette session) : avant, le mini-jeu
-   * se déclenchait une fois de toute façon après le texte à trous
-   * formatif, indépendamment du résultat au QCM (qcm_passed était
-   * enregistré mais ne changeait rien au déroulement — signalé comme
-   * incohérent par Julie). Maintenant, le mini-jeu n'apparaît QUE si
-   * une question de cours est ratée : réussite directe = pas de
-   * mini-jeu imposé, échec = mini-jeu comme aide avant de retenter.
-   * "minigame_passed" est marqué true une fois cette boucle terminée
-   * (que le mini-jeu ait été nécessaire ou non).
+   * depuis la première question. Une fois le passage réussi sans
+   * faute, `actData.qcmOutro` (scènes narratives optionnelles, ex.
+   * réaction du méchant vaincu) est joué s'il existe.
    */
   async function runQcmLoop(worldId, actId, actData) {
     const qcmList = Array.isArray(actData.qcm) ? actData.qcm : [actData.qcm];
@@ -186,6 +213,10 @@ const SceneManager = (() => {
     }
     GameState.setActStep(worldId, actId, "qcm_passed", true);
     GameState.setActStep(worldId, actId, "minigame_passed", true);
+
+    if (actData.qcmOutro && actData.qcmOutro.length) {
+      await VNEngine.playScenes(actData.qcmOutro);
+    }
   }
 
   async function playMinigameForNotion(worldId, actId, notionId, isRemediation) {
