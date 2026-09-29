@@ -594,39 +594,52 @@
           "speakerSide": "left",
           "portraitLeft": "/assets/characters/Esmeralda_sourire.png",
           "portraitRight": "/assets/characters/esprit-content.png",
-          "text": "Venez. Casimodo vous attend en haut. Mais attention : depuis que le Chaos est passé par là, sa bibliothèque de vitraux est complètement mélangée."
+          "text": "Venez. Casimodo vous attend en haut. Mais attention : depuis que le Chaos est passé par là, sa bibliothèque de vitraux est complètement mélangée.",
+          "portraitCenter": "/assets/characters/gavroche-content.png"
         },
         {
           "background": "/assets/backgrounds/decors_Hugo_interieur_Notre_Dame.png",
           "speakerName": "L'Esprit de la Littérature",
           "speakerSide": "right",
-          "portraitLeft": null,
+          "portraitLeft": "/assets/characters/gavroche-neutre.png",
           "portraitRight": "/assets/characters/esprit-surpris.png",
           "text": "À l'intérieur, des dizaines de vitraux représentaient des scènes en désordre. Une grande silhouette se tenait au milieu, immobile."
         },
         {
           "background": "/assets/backgrounds/decors_Hugo_interieur_Notre_Dame.png",
           "speakerName": "Casimodo",
-          "speakerSide": "left",
-          "portraitLeft": "/assets/characters/Casimodo_surpris.png",
-          "portraitRight": "/assets/characters/esprit-neutre.png",
-          "text": "Casimodo se tourna lentement. Ses yeux s'illuminèrent en reconnaissant Gavroche."
+          "speakerSide": "center",
+          "portraitLeft": "/assets/characters/gavroche-surpris.png",
+          "text": "Casimodo se tourna lentement. Ses yeux s'illuminèrent en reconnaissant Gavroche.",
+          "portraitCenter": "/assets/characters/Casimodo_surpris.png",
+          "portraitRight": "/assets/characters/esprit-neutre.png"
         },
         {
           "background": "/assets/backgrounds/decors_Hugo_interieur_Notre_Dame.png",
           "speakerName": "Casimodo",
-          "speakerSide": "left",
-          "portraitLeft": "/assets/characters/Casimodo_neutre.png",
-          "portraitRight": "/assets/characters/esprit-neutre.png",
-          "text": "Chaque vitrail raconte un morceau d'une histoire. Mais ils sont rangés dans le désordre, et un paragraphe désordonné... ne raconte plus rien."
+          "speakerSide": "center",
+          "portraitLeft": "/assets/characters/gavroche-reflexion.png",
+          "text": "Chaque vitrail raconte un morceau d'une histoire. Mais ils sont rangés dans le désordre, et un paragraphe désordonné... ne raconte plus rien.",
+          "portraitCenter": "/assets/characters/Casimodo_neutre.png",
+          "portraitRight": "/assets/characters/esprit-neutre.png"
         },
         {
           "background": "/assets/backgrounds/decors_Hugo_interieur_Notre_Dame.png",
           "speakerName": "Casimodo",
+          "speakerSide": "center",
+          "portraitLeft": "/assets/characters/gavroche-surpris.png",
+          "text": "Casimodo s'arrêta net devant un vitrail plus sombre que les autres, où une silhouette semblait se débattre. Cette forme... je la reconnais. Le Mal-Dit l'a prise au piège ici, faute d'avoir pu s'enfuir plus loin.",
+          "portraitCenter": "/assets/characters/Casimodo_surpris.png",
+          "portraitRight": "/assets/characters/esprit-surpris.png"
+        },
+        {
+          "background": "/assets/backgrounds/decors_Hugo_interieur_Notre_Dame.png",
+          "speakerName": "Gavroche",
           "speakerSide": "left",
-          "portraitLeft": "/assets/characters/Casimodo_surpris.png",
-          "portraitRight": "/assets/characters/esprit-surpris.png",
-          "text": "Casimodo s'arrêta net devant un vitrail plus sombre que les autres, où une silhouette semblait se débattre. Cette forme... je la reconnais. Le Mal-Dit l'a prise au piège ici, faute d'avoir pu s'enfuir plus loin."
+          "portraitLeft": "/assets/characters/gavroche-reflexion.png",
+          "portraitCenter": "/assets/characters/Casimodo_neutre.png",
+          "portraitRight": "/assets/characters/esprit-neutre.png",
+          "text": "Gavroche se figea lui aussi, reconnaissant cette silhouette familière. Recule un peu, souffla-t-il à l'Esprit. Laisse Casimodo régler ça — c'est son affaire, dans sa propre maison."
         }
       ],
       "qcm": {
@@ -660,7 +673,7 @@
         "speakerSide": "left",
         "portraitLeft": "/assets/characters/Casimodo_neutre.png",
         "portraitRight": "/assets/characters/esprit-neutre.png",
-        "instructions": "Avec Casimodo, redonne au récit toute sa cohérence pour repousser le Mal-Dit. Replace ces trois phrases-vitraux dans l'ordre pour former un paragraphe cohérent.",
+        "instructions": "Avec Casimodo, redonne au récit toute sa cohérence pour repousser le Mal-Dit. Replace ces trois phrases dans l'ordre pour former un paragraphe cohérent.",
         "segments": [
           {
             "type": "reorder_blocks",
@@ -684,7 +697,7 @@
         "speakerSide": "left",
         "portraitLeft": "/assets/characters/Casimodo_neutre.png",
         "portraitRight": "/assets/characters/esprit-content.png",
-        "instructions": "Encore un vitrail à réparer avec Casimodo pour continuer à repousser le Mal-Dit. Remets ce paragraphe dans l'ordre pour continuer le récit.",
+        "instructions": "Encore un effort à deux avec Casimodo pour continuer à repousser le Mal-Dit. Remets ce paragraphe dans l'ordre pour continuer le récit.",
         "segments": [
           {
             "type": "reorder_blocks",
@@ -853,19 +866,51 @@
       "intro": [
         {
           "background": "/assets/backgrounds/decors_Hugo_Paris_Nuit.png",
-          "speakerName": "Jean Valjean",
+          "speakerName": "Gavroche",
           "speakerSide": "left",
-          "portraitLeft": "/assets/characters/Jean_Valjean.png",
+          "portraitLeft": "/assets/characters/gavroche-content.png",
           "portraitRight": "/assets/characters/esprit-content.png",
-          "text": "Vous avez l'œil. C'est ce qu'il faut, pour raconter une histoire qui tient debout. Mais voir l'essentiel n'est qu'une partie du chemin."
+          "text": "Gavroche prit congé de Jean Valjean d'un signe de tête respectueux, puis entraîna l'Esprit vers Paris. Le jour n'allait plus tarder à se lever sur les barricades."
+        },
+        {
+          "background": "/assets/backgrounds/decors_Hugo_baricades.png",
+          "speakerName": "",
+          "speakerSide": "right",
+          "portraitLeft": null,
+          "portraitRight": null,
+          "text": "Un cri déchira soudain la nuit, quelque part devant eux."
+        },
+        {
+          "background": "/assets/backgrounds/decors_Hugo_baricades.png",
+          "speakerName": "Cosette",
+          "speakerSide": "left",
+          "portraitLeft": "/assets/characters/cosette_pleure1.png",
+          "portraitRight": "/assets/characters/esprit-surpris.png",
+          "text": "Une silhouette familière surgit en courant, échevelée, le visage baigné de larmes. Cosette manqua de trébucher en les apercevant."
+        },
+        {
+          "background": "/assets/backgrounds/decors_Hugo_baricades.png",
+          "speakerName": "Cosette",
+          "speakerSide": "left",
+          "portraitLeft": "/assets/characters/cosette_pleure2.png",
+          "portraitRight": "/assets/characters/esprit-surpris.png",
+          "text": "Frollo... ce n'est plus lui ! Ses yeux sont devenus deux braises, sa voix n'a plus rien d'humain... Il faut que vous —"
+        },
+        {
+          "background": "/assets/backgrounds/decors_Hugo_baricades.png",
+          "speakerName": "",
+          "speakerSide": "left",
+          "portraitLeft": "/assets/characters/cosette_pleure3.png",
+          "portraitRight": "/assets/characters/esprit-surpris.png",
+          "text": "Une ombre gigantesque jaillit des décombres et se referma sur elle avant qu'elle ait pu finir sa phrase. Son cri s'éloigna, étouffé, tandis que la silhouette s'enfonçait déjà vers les ruines de la cathédrale."
         },
         {
           "background": "/assets/backgrounds/decors_Hugo_baricades.png",
           "speakerName": "Gavroche",
           "speakerSide": "left",
-          "portraitLeft": "/assets/characters/gavroche-enthousiaste.png",
-          "portraitRight": "/assets/characters/esprit-content.png",
-          "text": "Ils revinrent vers les barricades. La nuit commençait à pâlir. Gavroche grimpa sur un tonneau, l'air solennel."
+          "portraitLeft": "/assets/characters/gavroche-surpris.png",
+          "portraitRight": "/assets/characters/esprit-surpris.png",
+          "text": "Cosette !! ...Gavroche resta un instant pétrifié, puis serra les poings, livide."
         },
         {
           "background": "/assets/backgrounds/decors_Hugo_baricades.png",
@@ -873,15 +918,7 @@
           "speakerSide": "left",
           "portraitLeft": "/assets/characters/gavroche-reflexion.png",
           "portraitRight": "/assets/characters/esprit-reflexion.png",
-          "text": "Toute histoire, même la plus simple, a une forme. Un début où tout va bien, un problème qui arrive, des efforts pour le résoudre, et une fin."
-        },
-        {
-          "background": "/assets/backgrounds/decors_Hugo_baricades.png",
-          "speakerName": "Gavroche",
-          "speakerSide": "left",
-          "portraitLeft": "/assets/characters/gavroche-malicieux.png",
-          "portraitRight": "/assets/characters/esprit-reflexion.png",
-          "text": "Notre histoire à nous, par exemple : ça a commencé cette nuit, sur ces pavés. Tu veux voir si tu sais la raconter ?"
+          "text": "Le Mal-Dit l'a pris tout entier, cette fois. On fonce vers les ruines. Maintenant."
         }
       ],
       "qcm": {
@@ -907,98 +944,79 @@
         "feedbackCorrect": "...Tch. Va-t'en, alors. Tu as gagné.",
         "feedbackIncorrect": "Une histoire sans problème n'intéresse personne, petit."
       },
-      "formative": {
-        "background": "/assets/backgrounds/decors_Hugo_baricades.png",
-        "speakerName": "Gavroche",
-        "speakerSide": "left",
-        "portraitLeft": "/assets/characters/gavroche-reflexion.png",
-        "portraitRight": "/assets/characters/esprit-neutre.png",
-        "instructions": "Place ces cartes dans l'ordre du schéma narratif : situation initiale, élément déclencheur, péripéties, résolution, situation finale.",
-        "segments": [
-          {
-            "type": "narrative_order",
-            "cards": [
-              {
-                "text": "L'Esprit se réveillait, seul, sans souvenirs.",
-                "stage": "situation_initiale"
-              },
-              {
-                "text": "La voix de Victor Hugo lui confia sa mission.",
-                "stage": "element_declencheur"
-              },
-              {
-                "text": "Gavroche l'aida à traverser Paris, les égouts, Notre-Dame.",
-                "stage": "peripeties"
-              },
-              {
-                "text": "Ensemble, ils comprirent comment raconter une histoire.",
-                "stage": "resolution"
-              },
-              {
-                "text": "Gavroche obtint sa clé, prêt pour la suite du voyage.",
-                "stage": "situation_finale"
-              }
-            ]
-          }
-        ],
-        "successThreshold": 1.0
-      },
-      "transfer": {
-        "background": "/assets/backgrounds/decors_Hugo_baricades.png",
-        "speakerName": "Gavroche",
-        "speakerSide": "left",
-        "portraitLeft": "/assets/characters/gavroche-content.png",
-        "portraitRight": "/assets/characters/esprit-content.png",
-        "instructions": "Reconstitue le schéma narratif de cette nouvelle histoire pour continuer le récit.",
-        "segments": [
-          {
-            "type": "narrative_order",
-            "cards": [
-              {
-                "text": "Le soleil se levait enfin sur Paris.",
-                "stage": "situation_initiale"
-              },
-              {
-                "text": "Une lumière dorée jaillit de la poche de Gavroche.",
-                "stage": "element_declencheur"
-              },
-              {
-                "text": "L'Esprit et Gavroche regardèrent la clé apparaître.",
-                "stage": "peripeties"
-              },
-              {
-                "text": "Gavroche serra la clé contre lui, ému.",
-                "stage": "resolution"
-              },
-              {
-                "text": "Le chemin vers le monde suivant s'ouvrit devant eux.",
-                "stage": "situation_finale"
-              }
-            ]
-          }
-        ],
-        "successThreshold": 1.0
-      },
-      "minigame_notion": "construction_recit"
+      "minigame_notion": "construction_recit",
+      "mandatory_minigame": true
     }
   },
   "ending": {
     "scenes": [
       {
-        "background": "/assets/backgrounds/decors_Hugo_parvis_Notre_Dame.png",
-        "speakerName": "Gavroche",
-        "speakerSide": "left",
-        "portraitLeft": "/assets/characters/gavroche-enthousiaste.png",
-        "portraitRight": "/assets/characters/esprit-content.png",
-        "text": "Gavroche serra la première clé dans son poing et la leva vers le ciel. Une lueur dorée traversa Paris."
-      },
-      {
-        "background": "/assets/backgrounds/decors_Hugo_parvis_Notre_Dame.png",
+        "background": "/assets/backgrounds/decors_Hugo_baricades.png",
         "speakerName": "Gavroche",
         "speakerSide": "left",
         "portraitLeft": "/assets/characters/gavroche-content.png",
         "portraitRight": "/assets/characters/esprit-content.png",
-        "text": "Une seule clé, ça ne suffit pas pour ouvrir une serrure faite pour huit. Mais Gavroche la gardera précieusement jusqu'à ce que les sept autres soient réunies. Reviens nous voir quand tu veux, l'Esprit : ce monde restera ouvert pour toi."
+        "text": "Le silence retomba sur les barricades. Plus de hurlement, plus de silhouette monstrueuse — seulement Frollo, recroquevillé dans les gravats, hagard, redevenu lui-même."
+      },
+      {
+        "background": "/assets/backgrounds/decors_Hugo_baricades.png",
+        "speakerName": "Cosette",
+        "speakerSide": "left",
+        "portraitLeft": "/assets/characters/Cosette_sourire.png",
+        "portraitRight": "/assets/characters/esprit-content.png",
+        "text": "Cosette sortit de sa cachette, encore tremblante, mais souriante malgré tout. Vous l'avez vraiment fait... Vous avez raconté la fin de cette histoire-là, en tout cas."
+      },
+      {
+        "background": "/assets/backgrounds/decors_Hugo_baricades.png",
+        "speakerName": "Gavroche",
+        "speakerSide": "left",
+        "portraitLeft": "/assets/characters/gavroche-enthousiaste.png",
+        "portraitRight": "/assets/characters/esprit-content.png",
+        "text": "Gavroche posa une main sur l'épaule de l'Esprit, décidé. Mais celle-ci ne fait que commencer. Je viens avec toi, l'Esprit — dans ce monde, tu ne me quittes plus d'une semelle."
+      },
+      {
+        "background": "/assets/backgrounds/decors_Hugo_baricades.png",
+        "speakerName": "Cosette",
+        "speakerSide": "left",
+        "portraitLeft": "/assets/characters/Cosette_sourire.png",
+        "portraitRight": "/assets/characters/esprit-content.png",
+        "text": "Cosette les regarda s'éloigner vers l'aube naissante, le seau abandonné dans l'herbe. Allez, filez, tous les deux — Paris compte encore sur vous. Et sur les mots qu'on ne lui a pas encore rendus."
+      },
+      {
+        "background": "/assets/backgrounds/decors-hugo-univers.jfif",
+        "speakerName": "",
+        "speakerSide": "right",
+        "portraitLeft": null,
+        "portraitRight": null,
+        "text": "Les pages du livre se refermèrent doucement sur Paris, sur Gavroche, sur Cosette. Autour de l'Esprit, il n'y avait plus que les étoiles — l'espace entre les mondes, silencieux et sans fin.",
+        "autoAdvanceMs": 3200
+      },
+      {
+        "background": "/assets/backgrounds/decors-hugo-univers.jfif",
+        "speakerName": "Jean Valjean",
+        "speakerSide": "center",
+        "portraitLeft": null,
+        "portraitCenter": "/assets/characters/Jean_Valjean.png",
+        "portraitRight": null,
+        "text": "Une silhouette familière apparut, seule, au milieu du ciel étoilé. Ce n'était plus tout à fait l'homme fatigué de la route de Paris. Tu as bien travaillé, l'Esprit. Là où j'ai souvent échoué à trouver les mots, toi et tes amis les avez retrouvés."
+      },
+      {
+        "background": "/assets/backgrounds/decors-hugo-univers.jfif",
+        "speakerName": "Jean Valjean",
+        "speakerSide": "center",
+        "portraitLeft": null,
+        "portraitCenter": "/assets/characters/Jean_Valjean.png",
+        "portraitRight": null,
+        "text": "Il ouvrit la main. Une clé de bronze y reposait, tournant lentement sur elle-même. Je ne suis pas tout à fait Jean Valjean, tu sais — pas seulement lui. Je suis ce que Victor Hugo aurait voulu être, ce qu'il croyait possible en chacun de nous. Prends-la. Une seule clé ne suffit pas à ouvrir une serrure faite pour huit — mais sans elle, aucune des sept autres n'aura de sens."
+      },
+      {
+        "background": "/assets/backgrounds/decors-hugo-univers.jfif",
+        "speakerName": "",
+        "speakerSide": "right",
+        "portraitLeft": null,
+        "portraitRight": null,
+        "text": "La clé se posa, légère, dans la lumière de l'Esprit. Quand celui-ci releva les yeux, la silhouette s'était déjà dissoute parmi les étoiles. Reviens nous voir quand tu veux, l'Esprit : ce monde restera ouvert pour toi.",
+        "autoAdvanceMs": 3600
       }
     ]
   }
